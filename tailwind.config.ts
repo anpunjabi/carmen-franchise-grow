@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,11 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				carmen: {
-					'purple': '#9b87f5',
-					'light-purple': '#e5deff',
-					'dark-purple': '#7E69AB',
-					'deeper-purple': '#6E59A5',
-					'navy': '#1A1F2C',
+					'navy': '#002D4F',  // Dark navy blue from logo
+					'blue': '#1A5B8F',  // Medium blue from logo
+					'light-blue': '#6B9AC7', // Lighter blue from logo
+					'lavender': '#B4B6E7', // Light lavender from logo
 					'gray': '#F7F9FA'
 				}
 			},
@@ -120,9 +120,9 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'carmen-gradient': 'linear-gradient(to right, #7E69AB, #9b87f5)',
-				'carmen-gradient-light': 'linear-gradient(to right, #9b87f5, #e5deff)',
-				'carmen-gradient-dark': 'linear-gradient(to right, #6E59A5, #7E69AB)'
+				'carmen-gradient': 'linear-gradient(to right, #002D4F, #1A5B8F)',
+				'carmen-gradient-light': 'linear-gradient(to right, #1A5B8F, #6B9AC7)',
+				'carmen-gradient-dark': 'linear-gradient(to right, #001E36, #002D4F)'
 			},
 			boxShadow: {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',

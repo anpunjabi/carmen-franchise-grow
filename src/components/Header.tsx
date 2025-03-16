@@ -39,8 +39,8 @@ const Header = () => {
           <div className="flex items-center">
             <a href="#" className="flex-shrink-0">
               <img 
-                className="h-12 md:h-16 w-auto" 
-                src="/lovable-uploads/40d79691-f7a4-491a-8173-d8fa907dac30.png" 
+                className="h-16 md:h-20 w-auto" 
+                src="/lovable-uploads/ce0d528b-e6e0-4e11-acd3-5b3a9f26ebf5.png" 
                 alt="Carmen BPM Logo" 
               />
             </a>
@@ -52,7 +52,7 @@ const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-carmen-navy hover:text-carmen-purple transition-colors duration-200 font-medium text-sm"
+                className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
               >
                 {item.name}
               </a>
@@ -69,7 +69,7 @@ const Header = () => {
           <div className="flex md:hidden">
             <button
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-purple focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-blue focus:outline-none"
               aria-controls="mobile-menu"
               aria-expanded="false"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,7 +99,7 @@ const Header = () => {
             <a
               key={item.name}
               href={item.href}
-              className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-purple hover:bg-carmen-light-purple/30"
+              className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10"
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.name}
