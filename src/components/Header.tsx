@@ -35,11 +35,11 @@ const Header = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-20">
+        <div className="flex justify-between items-center h-20 md:h-24">
           <div className="flex items-center">
             <a href="#" className="flex-shrink-0">
               <img 
-                className="h-10 w-auto" 
+                className="h-12 md:h-16 w-auto" 
                 src="/lovable-uploads/40d79691-f7a4-491a-8173-d8fa907dac30.png" 
                 alt="Carmen BPM Logo" 
               />
@@ -52,13 +52,13 @@ const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-carmen-teal transition-colors duration-200 font-medium text-sm"
+                className="text-carmen-navy hover:text-carmen-purple transition-colors duration-200 font-medium text-sm"
               >
                 {item.name}
               </a>
             ))}
             <Button 
-              className="carmen-btn ml-4"
+              className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform"
               onClick={() => window.location.href = '#contact'}
             >
               Build with Us
@@ -69,7 +69,7 @@ const Header = () => {
           <div className="flex md:hidden">
             <button
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-carmen-teal focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-purple focus:outline-none"
               aria-controls="mobile-menu"
               aria-expanded="false"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,7 +99,7 @@ const Header = () => {
             <a
               key={item.name}
               href={item.href}
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-carmen-teal hover:bg-gray-50"
+              className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-purple hover:bg-carmen-light-purple/30"
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.name}
@@ -107,7 +107,7 @@ const Header = () => {
           ))}
           <div className="px-3 py-2">
             <Button 
-              className="carmen-btn w-full"
+              className="bg-carmen-gradient text-white w-full hover:opacity-90 transition-all duration-300"
               onClick={() => {
                 window.location.href = '#contact';
                 setMobileMenuOpen(false);
