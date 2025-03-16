@@ -65,8 +65,8 @@ export default {
 				},
 				carmen: {
 					'navy': '#002D4F',  // Dark navy blue from logo
-					'blue': '#1A5B8F',  // Medium blue from logo
-					'light-blue': '#6B9AC7', // Lighter blue from logo
+					'blue': '#0A4273',  // Medium blue from logo/shirt
+					'light-blue': '#3A6898', // Lighter blue from logo/shirt
 					'lavender': '#B4B6E7', // Light lavender from logo
 					'gray': '#F7F9FA'
 				}
@@ -120,8 +120,8 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'carmen-gradient': 'linear-gradient(to right, #002D4F, #1A5B8F)',
-				'carmen-gradient-light': 'linear-gradient(to right, #1A5B8F, #6B9AC7)',
+				'carmen-gradient': 'linear-gradient(to right, #002D4F, #0A4273)',
+				'carmen-gradient-light': 'linear-gradient(to right, #0A4273, #3A6898)',
 				'carmen-gradient-dark': 'linear-gradient(to right, #001E36, #002D4F)'
 			},
 			boxShadow: {
