@@ -105,19 +105,24 @@ const Modules = () => {
 
           {/* Right side - Collage display */}
           <div className="relative h-[400px] md:h-[500px] fade-in-up bg-gray-50/50 rounded-xl overflow-hidden">
-            {modules.map((module, index) => (
-              <div 
-                key={module.id}
-                className={`absolute inset-0 transition-all duration-500 ${
-                  activeTab === module.id ? "opacity-100 scale-100 z-10" : "opacity-0 scale-95 z-0"
-                }`}
-              >
-                <ModuleCollage 
-                  data={module.collage} 
-                  variant={index % 4} 
-                />
-              </div>
-            ))}
+            {modules.map((module, index) => {
+              const currentModule = modules.find(m => m.id === activeTab);
+              if (!currentModule) return null;
+              
+              return (
+                <div 
+                  key={module.id}
+                  className={`absolute inset-0 transition-all duration-500 ${
+                    activeTab === module.id ? "opacity-100 scale-100 z-10" : "opacity-0 scale-95 z-0"
+                  }`}
+                >
+                  <ModuleCollage 
+                    data={module.collage} 
+                    variant={index % 4} 
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
