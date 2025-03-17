@@ -30,7 +30,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" 
                 onClick={() => window.location.href = '#contact'}>
-                Build with Us
+                Get Started 
                 <ArrowRight size={16} className="ml-2" />
               </Button>
               <Button 
