@@ -12,20 +12,20 @@ interface ModuleSelectorProps {
 const ModuleSelector: React.FC<ModuleSelectorProps> = ({ modules, activeTab, setActiveTab }) => {
   return (
     <div className="space-y-4 fade-in-up">
-      <p className="text-lg font-medium text-gray-800 mb-4">Select a module to learn more:</p>
+      <p className="text-lg font-medium text-carmen-navy mb-4">Select a module to learn more:</p>
       {modules.map((module) => (
         <Button
           key={module.id}
           variant="outline"
-          className={`w-full justify-start text-left py-6 px-6 rounded-xl transition-all duration-300 ${
+          className={`w-full justify-start text-left py-6 px-6 rounded-2xl transition-all duration-300 ${
             activeTab === module.id 
-              ? "bg-carmen-navy/5 border-carmen-navy border-2 text-carmen-navy shadow-md" 
-              : "hover:bg-gray-50 text-gray-700 border-gray-200"
+              ? "bg-white border-carmen-teal border-2 text-carmen-navy shadow-soft" 
+              : "hover:bg-white text-gray-700 border-white/50 bg-white/50"
           }`}
           onClick={() => setActiveTab(module.id)}
         >
           <div className="flex items-center gap-4">
-            <div className={`rounded-full p-2 ${activeTab === module.id ? 'bg-carmen-navy text-white' : 'bg-gray-100 text-gray-600'}`}>
+            <div className={`rounded-full p-2.5 ${activeTab === module.id ? 'bg-carmen-teal text-white' : 'bg-carmen-sand text-carmen-blue'}`}>
               {module.icon}
             </div>
             <div>

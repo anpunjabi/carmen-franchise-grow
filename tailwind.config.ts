@@ -67,8 +67,13 @@ export default {
 					'navy': '#002D4F',  // Dark navy blue from logo
 					'blue': '#0A4273',  // Medium blue from logo/shirt
 					'light-blue': '#3A6898', // Lighter blue from logo/shirt
-					'lavender': '#B4B6E7', // Light lavender from logo
-					'gray': '#F7F9FA'
+					'teal': '#4A8B9E',  // Teal from shirt
+					'soft-teal': '#6EACBA', // Softer teal from shirt
+					'lavender': '#B4B6E7', // Light lavender accent
+					'sky': '#9DCBEB',   // Sky blue accent
+					'sand': '#F5F0E6',  // Warm sand background
+					'cream': '#FFF9F0', // Cream background
+					'gray': '#F7F9FA'   // Light gray background
 				}
 			},
 			borderRadius: {
@@ -120,14 +125,17 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'carmen-gradient': 'linear-gradient(to right, #002D4F, #0A4273)',
-				'carmen-gradient-light': 'linear-gradient(to right, #0A4273, #3A6898)',
-				'carmen-gradient-dark': 'linear-gradient(to right, #001E36, #002D4F)'
+				'carmen-gradient': 'linear-gradient(to right, #0A4273, #4A8B9E)',
+				'carmen-gradient-light': 'linear-gradient(to right, #3A6898, #6EACBA)',
+				'carmen-gradient-dark': 'linear-gradient(to right, #002D4F, #0A4273)',
+				'carmen-gradient-soft': 'linear-gradient(to right, #6EACBA, #9DCBEB)',
+				'pattern-dots': "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1H1.5M5.5 1H6M10 1H10.5M14.5 1H15M19 1H19.5M1 5.5H1.5M5.5 5.5H6M10 5.5H10.5M14.5 5.5H15M19 5.5H19.5M1 10H1.5M5.5 10H6M10 10H10.5M14.5 10H15M19 10H19.5M1 14.5H1.5M5.5 14.5H6M10 14.5H10.5M14.5 14.5H15M19 14.5H19.5M1 19H1.5M5.5 19H6M10 19H10.5M14.5 19H15M19 19H19.5' stroke='rgba(10, 66, 115, 0.1)' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")"
 			},
 			boxShadow: {
 				'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
 				'glass-lg': '0 8px 32px rgba(0, 0, 0, 0.1)',
-				'glass-xl': '0 16px 40px rgba(0, 0, 0, 0.15)'
+				'glass-xl': '0 16px 40px rgba(0, 0, 0, 0.15)',
+				'soft': '0 8px 30px rgba(74, 139, 158, 0.15)'
 			}
 		}
 	},
