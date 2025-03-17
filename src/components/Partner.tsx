@@ -55,7 +55,7 @@ const Partner = () => {
           animationDelay: '0.3s'
         }}>
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 md:p-8 shadow-glass border border-white/20">
-              <h3 className="text-xl font-semibold mb-6">Build with Us</h3>
+              <h3 className="text-xl font-semibold mb-6">Get Started</h3>
               
               <form className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
