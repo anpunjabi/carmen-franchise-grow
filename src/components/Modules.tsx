@@ -34,7 +34,7 @@ const Modules = () => {
           />
 
           {/* Right side - Collage display */}
-          <div className="relative h-[400px] md:h-[500px] fade-in-up bg-gray-50/50 rounded-xl overflow-hidden">
+          <div className="relative h-[450px] md:h-[550px] fade-in-up bg-gray-50/50 rounded-xl overflow-hidden">
             {modules.map((module, index) => (
               <div 
                 key={module.id}
@@ -44,6 +44,7 @@ const Modules = () => {
               >
                 <ModuleCollage 
                   data={module.collage} 
+                  description={module.description}
                   variant={index % 4} 
                 />
               </div>
