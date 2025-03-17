@@ -51,7 +51,7 @@
 }
 
 .carmen-btn {
-  @apply relative overflow-hidden bg-carmen-gradient transition-all duration-300 text-white font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform;
+  @apply relative overflow-hidden bg-gradient-to-r from-[#0069e4] to-[#4a89f8] transition-all duration-300 text-white font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform;
 }
 
 .carmen-btn::before {
