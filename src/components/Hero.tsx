@@ -19,7 +19,7 @@ const Hero = () => {
                 Flexible BPM Builder
               </p>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-carmen-navy mb-6 leading-tight text-balance">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
               Finding business software that fits
               <span className="bg-carmen-gradient bg-clip-text text-transparent"> shouldn't be this hard</span>
             </h1>
