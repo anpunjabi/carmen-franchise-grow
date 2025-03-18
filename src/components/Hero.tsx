@@ -20,8 +20,8 @@ const Hero = () => {
               </p>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-carmen-navy mb-6 leading-tight text-balance">
-              Build Your Perfect
-              <span className="bg-carmen-gradient bg-clip-text text-transparent"> BPM Solution</span>
+              Finding business software that fits
+              <span className="bg-carmen-gradient bg-clip-text text-transparent"> shouldn't be this hard</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
               Carmen is a flexible, modular BPM builder that adapts to your business needs, not the other way around. Create a custom solution with only the features you need.
