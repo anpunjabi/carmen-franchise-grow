@@ -1,44 +1,26 @@
 
 import { 
-  Layers, 
-  Settings, 
-  MessageSquare, 
-  Puzzle, 
-  Shield, 
-  BarChart 
+  Grid3X3, 
+  LayoutGrid, 
+  Columns3
 } from 'lucide-react';
 
 const Features = () => {
   const featuresList = [
     {
-      icon: <Layers size={24} className="text-carmen-teal" />,
+      icon: <Grid3X3 size={24} className="text-carmen-blue" />,
       title: 'Modular Architecture',
       description: 'Add only the modules you need, when you need them, avoiding bloated software.'
     },
     {
-      icon: <Settings size={24} className="text-carmen-blue" />,
+      icon: <LayoutGrid size={24} className="text-carmen-blue" />,
       title: 'Fully Customizable',
       description: 'Tailor the workflow engine to match your exact business processes and requirements.'
     },
     {
-      icon: <MessageSquare size={24} className="text-carmen-soft-teal" />,
+      icon: <Columns3 size={24} className="text-carmen-blue" />,
       title: 'AI-Powered Configuration',
       description: 'Use our AI chat to effortlessly customize Carmen to fit your business needs.'
-    },
-    {
-      icon: <Puzzle size={24} className="text-carmen-blue" />,
-      title: 'Seamless Integration',
-      description: 'Connect with your existing tools and software through our flexible API.'
-    },
-    {
-      icon: <Shield size={24} className="text-carmen-teal" />,
-      title: 'Enterprise Security',
-      description: 'Bank-grade security to protect your sensitive business processes and data.'
-    },
-    {
-      icon: <BarChart size={24} className="text-carmen-soft-teal" />,
-      title: 'Advanced Analytics',
-      description: 'Gain insights into your processes with built-in reporting and analytics.'
     }
   ];
 
@@ -66,11 +48,11 @@ const Features = () => {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex flex-col md:flex-row gap-8 justify-center">
           {featuresList.map((feature, index) => (
             <div 
               key={index} 
-              className="bg-carmen-sand rounded-3xl p-6 shadow-soft border border-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 fade-in-up"
+              className="bg-carmen-sand rounded-3xl p-6 shadow-soft border border-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 fade-in-up flex-1"
               style={{ animationDelay: `${0.1 + index * 0.1}s` }}
             >
               <div className="rounded-full bg-white w-14 h-14 flex items-center justify-center mb-4 shadow-sm">
