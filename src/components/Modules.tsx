@@ -17,11 +17,6 @@ const Modules = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 fade-in-up">
-          <div className="inline-block px-4 py-1 mb-4 rounded-full bg-[#0069e4]/10 border border-[#0069e4]/30">
-            <p className="text-[#0069e4] text-sm font-medium">
-              Flexible Modules
-            </p>
-          </div>
           <h2 className="text-3xl md:text-5xl font-bold text-[#0049a4] mb-4">
             Featured <span className="bg-gradient-to-r from-[#0069e4] to-[#4a89f8] bg-clip-text text-transparent">Modules</span>
           </h2>

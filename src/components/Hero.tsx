@@ -14,11 +14,6 @@ const Hero = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{animationDelay: '0.1s'}}>
-            <div className="inline-block px-4 py-1 mb-6 rounded-full bg-carmen-sky/20 border border-carmen-sky/30">
-              <p className="text-carmen-blue text-sm font-medium">
-                Flexible BPM Builder
-              </p>
-            </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
               Finding business software that fits
               <span className="bg-carmen-gradient bg-clip-text text-transparent"> shouldn't be this hard</span>
