@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
 import Modules from '@/components/Modules';
+import PartnerWithUs from '@/components/PartnerWithUs';
 import Partner from '@/components/Partner';
 import Footer from '@/components/Footer';
 
@@ -37,6 +38,7 @@ const Index = () => {
         <Hero />
         <Features />
         <Modules />
+        <PartnerWithUs />
         <Partner />
       </main>
       <Footer />
