@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -69,10 +70,6 @@ export default {
 					'lavender': '#bbc1ff',  // Light lavender accent from hair
 					'sky': '#8ab5ff',     // Sky blue accent
 					'white': '#ffffff',    // Pure white background
-					'teal': '#2dd4bf',    // Teal accent color
-					'soft-teal': '#99f6e4', // Soft teal color
-					'sand': '#f9f5f0',    // Sand/cream background
-					'cream': '#FFFAF0',   // Lighter cream color
 				}
 			},
 			borderRadius: {
