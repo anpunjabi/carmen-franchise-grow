@@ -4,13 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight } from 'lucide-react';
 
 const PartnershipCard = ({ 
-  type, 
   title, 
   description, 
   bgColor, 
   images 
 }: { 
-  type: string;
   title: string;
   description: string;
   bgColor: string;
@@ -19,8 +17,7 @@ const PartnershipCard = ({
   <Card className={`overflow-hidden border-none shadow-soft ${bgColor} h-full`}>
     <CardContent className="p-8 flex flex-col h-full">
       <div className="mb-6">
-        <p className="text-sm font-medium opacity-80">{type}</p>
-        <h3 className="text-3xl md:text-4xl font-bold mt-2">{title}</h3>
+        <h3 className="text-3xl md:text-4xl font-bold">{title}</h3>
       </div>
       <p className="text-lg mb-8">{description}</p>
       <div className="mt-auto grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -59,7 +56,6 @@ const Partnerships = () => {
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           <div className="fade-in-up" style={{ animationDelay: "0.2s" }}>
             <PartnershipCard
-              type="Our program"
               title="Build for Others"
               description="Have you identified market demand for a particular BPM tool? Build it with Carmen."
               bgColor="bg-carmen-sky/30"
@@ -69,7 +65,6 @@ const Partnerships = () => {
           
           <div className="fade-in-up" style={{ animationDelay: "0.4s" }}>
             <PartnershipCard
-              type="Our service"
               title="Affiliate Program"
               description="Refer clients to Carmen BPM and earn commissions while providing your customers with the best BPM solution."
               bgColor="bg-carmen-lavender/30"
