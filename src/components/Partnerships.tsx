@@ -61,7 +61,7 @@ const Partnerships = () => {
             <PartnershipCard
               type="Our program"
               title="Build for Others"
-              description="Help businesses implement Carmen BPM and earn partnership revenue while growing your consulting practice."
+              description="Have you identified market demand for a particular BPM tool? Build it with Carmen."
               bgColor="bg-carmen-sky/30"
               images={Array(6).fill('')}
             />
