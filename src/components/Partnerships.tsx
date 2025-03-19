@@ -39,7 +39,7 @@ const PartnershipCard = ({
 
 const Partnerships = () => {
   return (
-    <section className="bg-carmen-navy text-white py-20">
+    <section className="bg-gradient-to-r from-carmen-sky to-carmen-sky/50 text-white py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16 fade-in-up">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
