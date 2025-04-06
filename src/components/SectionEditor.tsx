@@ -3,6 +3,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
 
+// Define interfaces for our data types
+interface ThemeSettings {
+  sectionVisibility?: Record<string, boolean>;
+  [key: string]: any;
+}
+
+interface ThemeData {
+  theme: ThemeSettings;
+}
+
 const SectionEditor = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   
@@ -16,7 +26,7 @@ const SectionEditor = () => {
           .eq('bpm_id', 'landing-page')
           .single();
         
-        if (data && !error && data.theme?.sectionVisibility) {
+        if (data && !error && data.theme && typeof data.theme === 'object' && data.theme.sectionVisibility) {
           applySectionVisibility(data.theme.sectionVisibility);
         }
       } catch (error) {
@@ -27,19 +37,19 @@ const SectionEditor = () => {
     loadSectionVisibility();
     
     // Listen for edit mode changes
-    const handleEditModeChange = (event) => {
+    const handleEditModeChange = (event: CustomEvent) => {
       setIsEditMode(event.detail.isEditMode);
     };
     
-    window.addEventListener('editmodechange', handleEditModeChange);
+    window.addEventListener('editmodechange', handleEditModeChange as EventListener);
     
     return () => {
-      window.removeEventListener('editmodechange', handleEditModeChange);
+      window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
     };
   }, []);
   
   // Apply stored visibility settings to sections
-  const applySectionVisibility = (visibilitySettings) => {
+  const applySectionVisibility = (visibilitySettings: Record<string, boolean>) => {
     Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
       const section = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (section) {
@@ -97,7 +107,9 @@ const SectionEditor = () => {
           label.textContent = sectionId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
           controlsDiv.appendChild(label);
           
-          section.style.position = 'relative';
+          // Use setAttribute for setting style instead of direct property assignment
+          const sectionElement = section as HTMLElement;
+          sectionElement.style.position = 'relative';
           section.appendChild(controlsDiv);
         }
       });
