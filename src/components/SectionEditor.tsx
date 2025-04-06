@@ -20,16 +20,20 @@ const SectionEditor = () => {
     // Load saved section visibility settings from Supabase
     const loadSectionVisibility = async () => {
       try {
+        console.log('Loading section visibility from Supabase');
         const { data, error } = await supabase
           .from('bpm_theme_settings')
           .select('theme')
           .eq('bpm_id', 'landing-page')
           .single();
         
+        console.log('Section visibility data:', data, 'Error:', error);
+        
         if (data && !error) {
           // Cast the data to the correct type and check if it has sectionVisibility
           const themeData = data as ThemeData;
           if (themeData.theme && themeData.theme.sectionVisibility) {
+            console.log('Applying section visibility:', themeData.theme.sectionVisibility);
             applySectionVisibility(themeData.theme.sectionVisibility);
           }
         }
@@ -42,6 +46,7 @@ const SectionEditor = () => {
     
     // Listen for edit mode changes
     const handleEditModeChange = (event: CustomEvent) => {
+      console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
     };
     
@@ -68,9 +73,11 @@ const SectionEditor = () => {
   
   useEffect(() => {
     if (isEditMode) {
+      console.log('Entering edit mode, adding section controls');
       // Add edit controls to each section when in edit mode
       document.querySelectorAll('[data-section-id]').forEach(section => {
         const sectionId = section.getAttribute('data-section-id');
+        console.log('Setting up controls for section:', sectionId);
         
         // Check if controls already exist
         if (!section.querySelector('.section-edit-controls')) {
@@ -91,6 +98,7 @@ const SectionEditor = () => {
           
           toggleButton.addEventListener('click', () => {
             const isSectionVisible = !section.classList.contains('hidden');
+            console.log('Toggle section visibility for:', sectionId, 'current:', isSectionVisible);
             
             if (isSectionVisible) {
               section.classList.add('hidden');
@@ -118,6 +126,7 @@ const SectionEditor = () => {
         }
       });
     } else {
+      console.log('Leaving edit mode, removing section controls');
       // Remove edit controls when not in edit mode
       document.querySelectorAll('.section-edit-controls').forEach(control => {
         control.remove();

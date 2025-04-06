@@ -20,14 +20,24 @@ const UserMenu = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('Carmen Admin')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (data && !error) {
-          setIsCarmenAdmin(data['Carmen Admin'] || false);
+        console.log('Checking admin status for user:', user.id, user.email);
+        try {
+          const { data, error } = await supabase
+            .from('users')
+            .select('"Carmen Admin"')
+            .eq('user_id', user.id)
+            .single();
+          
+          console.log('Admin check response:', { data, error });
+          
+          if (data && !error) {
+            setIsCarmenAdmin(data['Carmen Admin'] === true);
+            console.log('User Carmen Admin status:', data['Carmen Admin']);
+          } else if (error) {
+            console.error('Error checking admin status:', error);
+          }
+        } catch (e) {
+          console.error('Exception checking admin status:', e);
         }
       }
     };
