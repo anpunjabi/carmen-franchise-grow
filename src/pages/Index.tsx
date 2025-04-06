@@ -7,6 +7,7 @@ import Modules from '@/components/Modules';
 import Partnerships from '@/components/Partnerships';
 import Partner from '@/components/Partner';
 import Footer from '@/components/Footer';
+import SectionEditor from '@/components/SectionEditor';
 
 const Index = () => {
   useEffect(() => {
@@ -34,12 +35,23 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <SectionEditor />
       <main className="flex-grow">
-        <Hero />
-        <Features />
-        <Modules />
-        <Partnerships />
-        <Partner />
+        <div data-section-id="hero">
+          <Hero />
+        </div>
+        <div data-section-id="features">
+          <Features />
+        </div>
+        <div data-section-id="modules">
+          <Modules />
+        </div>
+        <div data-section-id="partnerships">
+          <Partnerships />
+        </div>
+        <div data-section-id="partner">
+          <Partner />
+        </div>
       </main>
       <Footer />
     </div>

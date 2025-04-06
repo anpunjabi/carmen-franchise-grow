@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -8,11 +8,32 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { Edit, LogOut, Save } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('Carmen Admin')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (data && !error) {
+          setIsCarmenAdmin(data['Carmen Admin'] || false);
+        }
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   if (!user) return null;
 
@@ -25,6 +46,45 @@ const UserMenu = () => {
   const handleSignOut = async () => {
     await signOut();
     setIsOpen(false);
+  };
+
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    setIsOpen(false);
+    
+    // Dispatch event to notify that edit mode changed
+    window.dispatchEvent(new CustomEvent('editmodechange', { 
+      detail: { isEditMode: !isEditMode }
+    }));
+  };
+
+  const saveEdits = async () => {
+    // Get the current visibility states of sections
+    const sectionVisibility = {};
+    const sections = document.querySelectorAll('[data-section-id]');
+    
+    sections.forEach(section => {
+      const sectionId = section.getAttribute('data-section-id');
+      const isVisible = !section.classList.contains('hidden');
+      sectionVisibility[sectionId] = isVisible;
+    });
+
+    // Save to Supabase
+    try {
+      const { error } = await supabase
+        .from('bpm_theme_settings')
+        .upsert({ 
+          bpm_id: 'landing-page', 
+          theme: { sectionVisibility }
+        }, { onConflict: 'bpm_id' });
+      
+      if (error) throw error;
+      
+      // Exit edit mode
+      toggleEditMode();
+    } catch (error) {
+      console.error('Error saving section visibility:', error);
+    }
   };
 
   return (
@@ -41,6 +101,27 @@ const UserMenu = () => {
           <p className="text-sm font-medium truncate px-2 py-1">
             {user.email}
           </p>
+          
+          {isCarmenAdmin && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start px-2"
+              onClick={isEditMode ? saveEdits : toggleEditMode}
+            >
+              {isEditMode ? (
+                <>
+                  <Save className="mr-2 h-4 w-4 text-green-500" />
+                  Save Edits
+                </>
+              ) : (
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </>
+              )}
+            </Button>
+          )}
+          
           <Button
             variant="ghost"
             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 px-2"
