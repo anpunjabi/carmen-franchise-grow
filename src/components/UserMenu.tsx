@@ -32,7 +32,7 @@ const UserMenu = () => {
       <PopoverTrigger asChild>
         <button className="focus:outline-none">
           <Avatar className="h-9 w-9 bg-carmen-gradient text-white cursor-pointer">
-            <AvatarFallback>{getInitials()}</AvatarFallback>
+            <AvatarFallback className="text-white font-medium">{getInitials()}</AvatarFallback>
           </Avatar>
         </button>
       </PopoverTrigger>
