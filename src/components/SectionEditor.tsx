@@ -26,8 +26,12 @@ const SectionEditor = () => {
           .eq('bpm_id', 'landing-page')
           .single();
         
-        if (data && !error && data.theme && typeof data.theme === 'object' && data.theme.sectionVisibility) {
-          applySectionVisibility(data.theme.sectionVisibility);
+        if (data && !error) {
+          // Cast the data to the correct type and check if it has sectionVisibility
+          const themeData = data as ThemeData;
+          if (themeData.theme && themeData.theme.sectionVisibility) {
+            applySectionVisibility(themeData.theme.sectionVisibility);
+          }
         }
       } catch (error) {
         console.error('Error loading section visibility:', error);
