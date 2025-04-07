@@ -87,11 +87,12 @@ const UserMenu = () => {
 
     // Save to Supabase using the dedicated landing_page_settings table
     try {
-      const { error } = await supabase
+      // Use 'any' type assertion to bypass TypeScript table name checking
+      const { error } = await (supabase as any)
         .from('landing_page_settings')
         .update({ 
           section_visibility: sectionVisibility,
-          updated_at: new Date()
+          updated_at: new Date().toISOString() // Convert Date to ISO string format
         })
         .eq('id', 1); // Use the first record (we only have one)
       
