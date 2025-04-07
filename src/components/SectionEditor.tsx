@@ -1,7 +1,9 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, PanelLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import SectionManagerSidebar from './SectionManagerSidebar';
 
 // Define interfaces for our data types
 interface ThemeSettings {
@@ -15,6 +17,7 @@ interface ThemeData {
 
 const SectionEditor = () => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   useEffect(() => {
     // Load saved section visibility settings from Supabase
@@ -48,6 +51,13 @@ const SectionEditor = () => {
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
+      
+      // Open sidebar automatically when entering edit mode
+      if (event.detail.isEditMode) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
@@ -125,16 +135,59 @@ const SectionEditor = () => {
           section.appendChild(controlsDiv);
         }
       });
+
+      // Add the sidebar toggle button if it doesn't exist
+      if (!document.querySelector('#section-sidebar-toggle')) {
+        const toggleButton = document.createElement('button');
+        toggleButton.id = 'section-sidebar-toggle';
+        toggleButton.className = 'fixed left-4 top-20 z-50 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-gray-100';
+        toggleButton.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg>
+          <span class="sr-only">Toggle Section Manager</span>
+        `;
+        
+        toggleButton.addEventListener('click', () => {
+          setIsSidebarOpen(prevState => !prevState);
+        });
+        
+        document.body.appendChild(toggleButton);
+      }
     } else {
       console.log('Leaving edit mode, removing section controls');
       // Remove edit controls when not in edit mode
       document.querySelectorAll('.section-edit-controls').forEach(control => {
         control.remove();
       });
+      
+      // Remove the sidebar toggle button
+      const toggleButton = document.querySelector('#section-sidebar-toggle');
+      if (toggleButton) {
+        toggleButton.remove();
+      }
     }
+    
+    // Clean up function to remove controls and button when component unmounts
+    return () => {
+      document.querySelectorAll('.section-edit-controls').forEach(control => {
+        control.remove();
+      });
+      
+      const toggleButton = document.querySelector('#section-sidebar-toggle');
+      if (toggleButton) {
+        toggleButton.remove();
+      }
+    };
   }, [isEditMode]);
   
-  return null; // This component doesn't render anything, it just adds functionality
+  return (
+    <>
+      <SectionManagerSidebar 
+        isOpen={isSidebarOpen} 
+        onOpenChange={setIsSidebarOpen} 
+        isEditMode={isEditMode} 
+      />
+    </>
+  );
 };
 
 export default SectionEditor;
