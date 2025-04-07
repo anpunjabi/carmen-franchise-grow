@@ -1,9 +1,9 @@
 
 import { useEffect, useState } from 'react';
-import { Eye, EyeOff, PanelLeft } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Toggle } from '@/components/ui/toggle';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Section {
   id: string;
@@ -81,17 +81,26 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
               className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
             >
               <span className="font-medium">{section.name}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleSectionVisibility(section.id)}
-                className="p-0 w-8 h-8"
-              >
-                {section.isVisible ? 
-                  <Eye className="h-4 w-4 text-green-500" title="Hide Section" /> : 
-                  <EyeOff className="h-4 w-4 text-red-500" title="Show Section" />
-                }
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSectionVisibility(section.id)}
+                      className="p-0 w-8 h-8"
+                    >
+                      {section.isVisible ? 
+                        <Eye className="h-4 w-4 text-green-500" /> : 
+                        <EyeOff className="h-4 w-4 text-red-500" />
+                      }
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {section.isVisible ? 'Hide Section' : 'Show Section'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           ))}
         </div>
@@ -101,3 +110,4 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 };
 
 export default SectionManagerSidebar;
+
