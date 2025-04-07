@@ -1,5 +1,4 @@
-
-import { LogIn, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -89,12 +88,6 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4 mb-4 md:mb-0">
-              {!user && (
-                <a href="#" className="flex items-center text-gray-600 hover:text-carmen-blue">
-                  <LogIn size={20} className="mr-2" /> Sign In
-                </a>
-              )}
-              <div className="hidden md:block h-4 w-px bg-gray-300"></div>
               <div className="relative flex md:w-64">
                 <input
                   type="email"
