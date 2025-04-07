@@ -10,12 +10,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Edit, LogOut, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -69,6 +72,9 @@ const UserMenu = () => {
   };
 
   const saveEdits = async () => {
+    // Show saving state
+    setIsSaving(true);
+    
     // Get the current visibility states of sections
     const sectionVisibility = {};
     const sections = document.querySelectorAll('[data-section-id]');
@@ -90,10 +96,34 @@ const UserMenu = () => {
       
       if (error) throw error;
       
+      // Show success toast
+      toast({
+        title: "Changes saved",
+        description: "Section visibility settings have been updated.",
+      });
+      
       // Exit edit mode
-      toggleEditMode();
+      setIsEditMode(false);
+      
+      // Notify other components about edit mode change
+      window.dispatchEvent(new CustomEvent('editmodechange', { 
+        detail: { isEditMode: false }
+      }));
+      
     } catch (error) {
       console.error('Error saving section visibility:', error);
+      
+      // Show error toast
+      toast({
+        title: "Error saving changes",
+        description: "There was a problem saving your settings.",
+        variant: "destructive",
+      });
+    } finally {
+      // Hide saving state
+      setIsSaving(false);
+      // Close the menu
+      setIsOpen(false);
     }
   };
 
@@ -117,11 +147,12 @@ const UserMenu = () => {
               variant="ghost"
               className="w-full justify-start px-2"
               onClick={isEditMode ? saveEdits : toggleEditMode}
+              disabled={isSaving}
             >
               {isEditMode ? (
                 <>
                   <Save className="mr-2 h-4 w-4 text-green-500" />
-                  Save Edits
+                  {isSaving ? "Saving..." : "Save Edits"}
                 </>
               ) : (
                 <>
