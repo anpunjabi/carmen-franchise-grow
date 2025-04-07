@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
 
 // Define interfaces for our data types
-interface ThemeSettings {
-  sectionVisibility?: Record<string, boolean>;
-  [key: string]: any;
+interface SectionVisibility {
+  [key: string]: boolean;
 }
 
-interface ThemeData {
-  theme: ThemeSettings;
+interface LandingPageSettings {
+  id: number;
+  section_visibility: SectionVisibility;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const SectionEditor = () => {
@@ -23,21 +25,20 @@ const SectionEditor = () => {
     // Load saved section visibility settings from Supabase
     const loadSectionVisibility = async () => {
       try {
-        console.log('Loading section visibility from Supabase');
+        console.log('Loading section visibility from landing_page_settings');
         const { data, error } = await supabase
-          .from('bpm_theme_settings')
-          .select('theme')
-          .eq('bpm_id', 'landing-page')
+          .from('landing_page_settings')
+          .select('*')
+          .eq('id', 1)
           .single();
         
         console.log('Section visibility data:', data, 'Error:', error);
         
         if (data && !error) {
-          // Cast the data to the correct type and check if it has sectionVisibility
-          const themeData = data as ThemeData;
-          if (themeData.theme && themeData.theme.sectionVisibility) {
-            console.log('Applying section visibility:', themeData.theme.sectionVisibility);
-            applySectionVisibility(themeData.theme.sectionVisibility);
+          const settings = data as LandingPageSettings;
+          if (settings.section_visibility) {
+            console.log('Applying section visibility:', settings.section_visibility);
+            applySectionVisibility(settings.section_visibility);
           }
         }
       } catch (error) {
@@ -68,7 +69,7 @@ const SectionEditor = () => {
   }, []);
   
   // Apply stored visibility settings to sections
-  const applySectionVisibility = (visibilitySettings: Record<string, boolean>) => {
+  const applySectionVisibility = (visibilitySettings: SectionVisibility) => {
     Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
       const section = document.querySelector(`[data-section-id="${sectionId}"]`);
       if (section) {

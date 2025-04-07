@@ -1214,6 +1214,27 @@ export type Database = {
           },
         ]
       }
+      landing_page_settings: {
+        Row: {
+          created_at: string | null
+          id: number
+          section_visibility: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          section_visibility?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          section_visibility?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       module_permissions: {
         Row: {
           action: string

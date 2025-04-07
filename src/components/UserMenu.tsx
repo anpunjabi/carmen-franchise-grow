@@ -85,14 +85,15 @@ const UserMenu = () => {
       sectionVisibility[sectionId] = isVisible;
     });
 
-    // Save to Supabase
+    // Save to Supabase using the dedicated landing_page_settings table
     try {
       const { error } = await supabase
-        .from('bpm_theme_settings')
-        .upsert({ 
-          bpm_id: 'landing-page', 
-          theme: { sectionVisibility }
-        }, { onConflict: 'bpm_id' });
+        .from('landing_page_settings')
+        .update({ 
+          section_visibility: sectionVisibility,
+          updated_at: new Date()
+        })
+        .eq('id', 1); // Use the first record (we only have one)
       
       if (error) throw error;
       

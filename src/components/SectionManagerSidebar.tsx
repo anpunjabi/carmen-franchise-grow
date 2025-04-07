@@ -110,4 +110,3 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 };
 
 export default SectionManagerSidebar;
-
