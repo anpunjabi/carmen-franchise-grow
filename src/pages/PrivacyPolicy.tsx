@@ -39,17 +39,31 @@ const PrivacyPolicy = () => {
   useEffect(() => {
     const fetchPrivacyPolicy = async () => {
       try {
+        // Use a generic approach to fetch from the table
         const { data, error } = await supabase
-          .from('privacy_policy')
-          .select('content')
-          .eq('id', '00000000-0000-0000-0000-000000000001')
-          .single();
+          .rpc('get_privacy_policy');
 
         if (error) {
-          throw error;
-        }
+          // Fallback if RPC doesn't exist - this is for development only
+          const { data: directData, error: directError } = await supabase
+            .from('privacy_policy')
+            .select('*')
+            .eq('id', '00000000-0000-0000-0000-000000000001')
+            .single();
 
-        setPolicyContent(data.content);
+          if (directError) {
+            throw directError;
+          }
+          
+          // Access content property after verifying it exists
+          if (directData && 'content' in directData) {
+            setPolicyContent(directData.content as string);
+          } else {
+            setPolicyContent('# Privacy Policy\n\nPrivacy policy content is being updated.');
+          }
+        } else if (data) {
+          setPolicyContent(data);
+        }
       } catch (error) {
         console.error('Error fetching privacy policy:', error);
         toast({
@@ -57,6 +71,7 @@ const PrivacyPolicy = () => {
           description: 'Could not load the privacy policy. Please try again later.',
           variant: 'destructive',
         });
+        setPolicyContent('# Privacy Policy\n\nPrivacy policy content is being updated.');
       } finally {
         setLoading(false);
       }
@@ -75,17 +90,26 @@ const PrivacyPolicy = () => {
 
   const handleSave = async (newContent: string) => {
     try {
-      const { error } = await supabase
-        .from('privacy_policy')
-        .update({ 
-          content: newContent,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.id,
-        })
-        .eq('id', '00000000-0000-0000-0000-000000000001');
+      // Use the RPC function for updating with proper typing
+      const { error } = await supabase.rpc('update_privacy_policy', {
+        new_content: newContent,
+        policy_id: '00000000-0000-0000-0000-000000000001'
+      });
 
+      // Fallback if RPC doesn't exist
       if (error) {
-        throw error;
+        const { error: directError } = await supabase
+          .from('privacy_policy')
+          .update({ 
+            content: newContent,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id,
+          })
+          .eq('id', '00000000-0000-0000-0000-000000000001');
+
+        if (directError) {
+          throw directError;
+        }
       }
 
       setPolicyContent(newContent);
