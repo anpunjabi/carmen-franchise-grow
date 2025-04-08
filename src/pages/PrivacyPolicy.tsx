@@ -39,30 +39,34 @@ const PrivacyPolicy = () => {
   useEffect(() => {
     const fetchPrivacyPolicy = async () => {
       try {
-        // Use a generic approach to fetch from the table
-        const { data, error } = await supabase
-          .rpc('get_privacy_policy');
-
-        if (error) {
-          // Fallback if RPC doesn't exist - this is for development only
-          const { data: directData, error: directError } = await supabase
+        // Use a direct fetch with full paths since RPC functions are not in TypeScript types
+        const response = await fetch(
+          `https://wfseyqycafobpolltezw.supabase.co/rest/v1/rpc/get_privacy_policy`,
+          {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc2V5cXljYWZvYnBvbGx0ZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyNDA2NDksImV4cCI6MjA1NTgxNjY0OX0.Qcx6-wRNPIScaAfoYQ1fMEUyWN1hgcuaRIG66uINUe8',
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (response.ok) {
+          // RPC function returns directly the text
+          const content = await response.text();
+          setPolicyContent(content);
+        } else {
+          // Fallback if RPC call fails - this is for development only
+          const { data, error } = await supabase
             .from('privacy_policy')
-            .select('*')
+            .select('content')
             .eq('id', '00000000-0000-0000-0000-000000000001')
             .single();
 
-          if (directError) {
-            throw directError;
+          if (error) {
+            throw error;
           }
           
-          // Access content property after verifying it exists
-          if (directData && 'content' in directData) {
-            setPolicyContent(directData.content as string);
-          } else {
-            setPolicyContent('# Privacy Policy\n\nPrivacy policy content is being updated.');
-          }
-        } else if (data) {
-          setPolicyContent(data);
+          setPolicyContent(data.content);
         }
       } catch (error) {
         console.error('Error fetching privacy policy:', error);
@@ -90,15 +94,26 @@ const PrivacyPolicy = () => {
 
   const handleSave = async (newContent: string) => {
     try {
-      // Use the RPC function for updating with proper typing
-      const { error } = await supabase.rpc('update_privacy_policy', {
-        new_content: newContent,
-        policy_id: '00000000-0000-0000-0000-000000000001'
-      });
+      // Use direct fetch for the RPC function to avoid type errors
+      const response = await fetch(
+        `https://wfseyqycafobpolltezw.supabase.co/rest/v1/rpc/update_privacy_policy`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc2V5cXljYWZvYnBvbGx0ZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyNDA2NDksImV4cCI6MjA1NTgxNjY0OX0.Qcx6-wRNPIScaAfoYQ1fMEUyWN1hgcuaRIG66uINUe8',
+            'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data.session?.access_token)}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            new_content: newContent,
+            policy_id: '00000000-0000-0000-0000-000000000001'
+          })
+        }
+      );
 
-      // Fallback if RPC doesn't exist
-      if (error) {
-        const { error: directError } = await supabase
+      if (!response.ok) {
+        // Fallback if RPC doesn't exist or fails
+        const { error } = await supabase
           .from('privacy_policy')
           .update({ 
             content: newContent,
@@ -107,8 +122,8 @@ const PrivacyPolicy = () => {
           })
           .eq('id', '00000000-0000-0000-0000-000000000001');
 
-        if (directError) {
-          throw directError;
+        if (error) {
+          throw error;
         }
       }
 
