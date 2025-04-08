@@ -26,13 +26,16 @@ const Header = () => {
 
   const navigation = [{
     name: 'Features',
-    href: '#features'
+    href: '#features',
+    id: 'nav-features'
   }, {
     name: 'Modules',
-    href: '#modules'
+    href: '#modules',
+    id: 'nav-modules'
   }, {
     name: 'Partner',
-    href: '#partner'
+    href: '#partner',
+    id: 'nav-partner'
   }];
 
   const openAuthModal = () => {
@@ -42,7 +45,7 @@ const Header = () => {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-white'}`}>
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-white'}`} data-section-id="header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20 md:h-24">
             <div className="flex items-center">
@@ -58,6 +61,7 @@ const Header = () => {
                   key={item.name} 
                   href={item.href} 
                   className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
+                  data-editable-id={item.id}
                 >
                   {item.name}
                 </a>
@@ -70,6 +74,7 @@ const Header = () => {
                   <Button 
                     className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform" 
                     onClick={openAuthModal}
+                    data-editable-id="login-button"
                   >
                     Log In
                   </Button>
@@ -83,6 +88,7 @@ const Header = () => {
                 <Button 
                   className="bg-carmen-gradient text-white mr-2 hover:opacity-90 transition-all duration-300 px-4 py-2" 
                   onClick={openAuthModal}
+                  data-editable-id="login-button-mobile"
                 >
                   Log In
                 </Button>
@@ -100,6 +106,7 @@ const Header = () => {
                 aria-controls="mobile-menu" 
                 aria-expanded="false" 
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                data-editable-id="mobile-menu-button"
               >
                 <span className="sr-only">Open main menu</span>
                 {mobileMenuOpen ? 
@@ -125,6 +132,7 @@ const Header = () => {
                 href={item.href} 
                 className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10" 
                 onClick={() => setMobileMenuOpen(false)}
+                data-editable-id={`${item.id}-mobile`}
               >
                 {item.name}
               </a>
@@ -136,6 +144,7 @@ const Header = () => {
                   window.location.href = '#contact';
                   setMobileMenuOpen(false);
                 }}
+                data-editable-id="contact-button-mobile"
               >
                 Build with Us
               </Button>

@@ -84,6 +84,16 @@ const UserMenu = () => {
       const isVisible = !section.classList.contains('hidden');
       sectionVisibility[sectionId] = isVisible;
     });
+    
+    // Get the current visibility states of editable elements
+    const elementVisibility = {};
+    const elements = document.querySelectorAll('[data-editable-id]');
+    
+    elements.forEach(element => {
+      const elementId = element.getAttribute('data-editable-id');
+      const isVisible = !element.classList.contains('hidden');
+      elementVisibility[elementId] = isVisible;
+    });
 
     // Save to Supabase using the dedicated landing_page_settings table
     try {
@@ -92,6 +102,7 @@ const UserMenu = () => {
         .from('landing_page_settings')
         .update({ 
           section_visibility: sectionVisibility,
+          element_visibility: elementVisibility,
           updated_at: new Date().toISOString() // Convert Date to ISO string format
         })
         .eq('id', 1); // Use the first record (we only have one)
@@ -101,7 +112,7 @@ const UserMenu = () => {
       // Show success toast
       toast({
         title: "Changes saved",
-        description: "Section visibility settings have been updated.",
+        description: "Section and element visibility settings have been updated.",
       });
       
       // Exit edit mode
@@ -113,7 +124,7 @@ const UserMenu = () => {
       }));
       
     } catch (error) {
-      console.error('Error saving section visibility:', error);
+      console.error('Error saving visibility settings:', error);
       
       // Show error toast
       toast({
