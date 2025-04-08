@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Section {
   id: string;
@@ -168,12 +169,12 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-80">
-        <SheetHeader className="mb-4">
+      <SheetContent side="left" className="w-80 p-0 flex flex-col">
+        <SheetHeader className="p-4 pb-0">
           <SheetTitle>Manage Visibility</SheetTitle>
         </SheetHeader>
         
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between p-4 pb-2">
           <span className="text-sm font-medium">Show Elements Only</span>
           <Switch 
             checked={showElementsOnly}
@@ -181,55 +182,94 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           />
         </div>
         
-        {!showElementsOnly && (
-          <>
-            <h3 className="text-sm font-medium mb-2">Page Sections</h3>
-            <div className="flex flex-col space-y-2 mb-4">
-              {sections.map(section => (
-                <div 
-                  key={section.id} 
-                  className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
-                >
-                  <span className="font-medium">{section.name}</span>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleSectionVisibility(section.id)}
-                          className="p-0 w-8 h-8"
-                        >
-                          {section.isVisible ? 
-                            <Eye className="h-4 w-4 text-green-500" /> : 
-                            <EyeOff className="h-4 w-4 text-red-500" />
-                          }
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {section.isVisible ? 'Hide Section' : 'Show Section'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              ))}
-            </div>
-            <Separator className="my-4" />
-          </>
-        )}
-        
-        <h3 className="text-sm font-medium mb-2">Elements</h3>
-        
-        {/* Grouped elements */}
-        {Object.entries(groupedElements).map(([sectionId, elements]) => {
-          // Find the section name
-          const sectionName = sections.find(s => s.id === sectionId)?.name || sectionId;
+        <ScrollArea className="flex-1 overflow-auto px-4">
+          {!showElementsOnly && (
+            <>
+              <h3 className="text-sm font-medium mb-2">Page Sections</h3>
+              <div className="flex flex-col space-y-2 mb-4">
+                {sections.map(section => (
+                  <div 
+                    key={section.id} 
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
+                  >
+                    <span className="font-medium">{section.name}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSectionVisibility(section.id)}
+                            className="p-0 w-8 h-8"
+                          >
+                            {section.isVisible ? 
+                              <Eye className="h-4 w-4 text-green-500" /> : 
+                              <EyeOff className="h-4 w-4 text-red-500" />
+                            }
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {section.isVisible ? 'Hide Section' : 'Show Section'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                ))}
+              </div>
+              <Separator className="my-4" />
+            </>
+          )}
           
-          return (
-            <div key={sectionId} className="mb-4">
-              <h4 className="text-xs font-medium text-gray-500 mb-1 pl-2">{sectionName}</h4>
+          <h3 className="text-sm font-medium mb-2">Elements</h3>
+          
+          {/* Grouped elements */}
+          {Object.entries(groupedElements).map(([sectionId, elements]) => {
+            // Find the section name
+            const sectionName = sections.find(s => s.id === sectionId)?.name || sectionId;
+            
+            return (
+              <div key={sectionId} className="mb-4">
+                <h4 className="text-xs font-medium text-gray-500 mb-1 pl-2">{sectionName}</h4>
+                <div className="flex flex-col space-y-1 pl-2">
+                  {elements.map(element => (
+                    <div 
+                      key={element.id} 
+                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted"
+                    >
+                      <span className="text-sm">{element.name}</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleElementVisibility(element.id)}
+                              className="p-0 w-7 h-7"
+                            >
+                              {element.isVisible ? 
+                                <Eye className="h-3.5 w-3.5 text-green-500" /> : 
+                                <EyeOff className="h-3.5 w-3.5 text-red-500" />
+                              }
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {element.isVisible ? 'Hide Element' : 'Show Element'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Ungrouped elements */}
+          {ungroupedElements.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-xs font-medium text-gray-500 mb-1 pl-2">Other Elements</h4>
               <div className="flex flex-col space-y-1 pl-2">
-                {elements.map(element => (
+                {ungroupedElements.map(element => (
                   <div 
                     key={element.id} 
                     className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted"
@@ -259,45 +299,8 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
                 ))}
               </div>
             </div>
-          );
-        })}
-        
-        {/* Ungrouped elements */}
-        {ungroupedElements.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-xs font-medium text-gray-500 mb-1 pl-2">Other Elements</h4>
-            <div className="flex flex-col space-y-1 pl-2">
-              {ungroupedElements.map(element => (
-                <div 
-                  key={element.id} 
-                  className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted"
-                >
-                  <span className="text-sm">{element.name}</span>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleElementVisibility(element.id)}
-                          className="p-0 w-7 h-7"
-                        >
-                          {element.isVisible ? 
-                            <Eye className="h-3.5 w-3.5 text-green-500" /> : 
-                            <EyeOff className="h-3.5 w-3.5 text-red-500" />
-                          }
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {element.isVisible ? 'Hide Element' : 'Show Element'}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </ScrollArea>
       </SheetContent>
     </Sheet>
   );
