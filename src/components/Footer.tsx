@@ -2,6 +2,7 @@
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const { user } = useAuth();
@@ -32,7 +33,7 @@ const Footer = () => {
         { label: "About Us", href: "#", id: "link-about-us" },
         { label: "Careers", href: "#", id: "link-careers" },
         { label: "Contact Us", href: "#contact", id: "link-contact-us" },
-        { label: "Privacy Policy", href: "#", id: "link-privacy-policy" }
+        { label: "Privacy Policy", href: "/privacy-policy", id: "link-privacy-policy", isPage: true }
       ]
     }
   ];
@@ -73,12 +74,21 @@ const Footer = () => {
               <ul className="space-y-2">
                 {column.links.map((link, linkIndex) => (
                   <li key={linkIndex} data-editable-id={link.id}>
-                    <a 
-                      href={link.href} 
-                      className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
-                    >
-                      {link.label}
-                    </a>
+                    {link.isPage ? (
+                      <Link 
+                        to={link.href} 
+                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a 
+                        href={link.href} 
+                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

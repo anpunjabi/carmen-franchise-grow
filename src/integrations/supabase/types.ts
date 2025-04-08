@@ -1280,6 +1280,27 @@ export type Database = {
           },
         ]
       }
+      privacy_policy: {
+        Row: {
+          content: string
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       provider_assignment_history: {
         Row: {
           assignment_id: string | null
