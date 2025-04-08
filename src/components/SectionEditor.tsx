@@ -17,7 +17,7 @@ interface ElementVisibility {
 interface LandingPageSettings {
   id: number;
   section_visibility: SectionVisibility;
-  element_visibility?: ElementVisibility;
+  element_visibility: ElementVisibility;
   created_at?: string;
   updated_at?: string;
 }

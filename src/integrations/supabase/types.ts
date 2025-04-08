@@ -1217,18 +1217,21 @@ export type Database = {
       landing_page_settings: {
         Row: {
           created_at: string | null
+          element_visibility: Json
           id: number
           section_visibility: Json
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          element_visibility?: Json
           id?: number
           section_visibility?: Json
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          element_visibility?: Json
           id?: number
           section_visibility?: Json
           updated_at?: string | null

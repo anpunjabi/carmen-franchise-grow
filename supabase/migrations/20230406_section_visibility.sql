@@ -1,4 +1,5 @@
 
+
 -- Check if the bpm_theme_settings table exists, if not create it
 DO $$
 BEGIN
@@ -17,7 +18,7 @@ $$;
 INSERT INTO public.bpm_theme_settings (bpm_id, theme)
 VALUES (
     'landing-page', 
-    '{"sectionVisibility": {"hero": true, "features": true, "modules": true, "partnerships": true, "partner": true}}'::jsonb
+    '{"sectionVisibility": {"hero": true, "features": true, "modules": true, "partnerships": true, "partner": true}, "elementVisibility": {}}'::jsonb
 )
 ON CONFLICT (bpm_id) DO NOTHING;
 
@@ -53,3 +54,4 @@ WITH CHECK (
         AND "Carmen Admin" = true
     )
 );
+
