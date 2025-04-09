@@ -145,6 +145,7 @@ const BookingSection = () => {
               
               {step === 1 && (
                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                  <p className="text-carmen-teal font-medium mb-4">Please select a date to continue</p>
                   <Calendar
                     mode="single"
                     selected={date}
@@ -171,6 +172,7 @@ const BookingSection = () => {
                       Change
                     </Button>
                   </div>
+                  <p className="text-carmen-teal font-medium mb-4">Please select a time slot to continue</p>
                   <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2">
                     {timeSlots.map((slot, idx) => (
                       <Button
@@ -289,19 +291,37 @@ const BookingSection = () => {
                   </Button>
                 </form>
               ) : (
-                <div className="h-full flex flex-col justify-center items-center p-8 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
-                  <div className="mb-4 text-carmen-teal">
-                    <CalendarIcon className="h-16 w-16 mx-auto" />
+                <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+                  <h3 className="text-xl font-semibold text-carmen-navy mb-4">What to Expect</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <div className="bg-carmen-cream p-2 rounded-full mr-3">
+                        <Check className="h-5 w-5 text-carmen-teal" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-carmen-navy">Personalized Demo</h4>
+                        <p className="text-gray-600 text-sm">We'll tailor the presentation to your specific industry and needs.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-carmen-cream p-2 rounded-full mr-3">
+                        <Clock className="h-5 w-5 text-carmen-teal" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-carmen-navy">30-Minute Session</h4>
+                        <p className="text-gray-600 text-sm">Efficient overview with time for your questions.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <div className="bg-carmen-cream p-2 rounded-full mr-3">
+                        <CalendarIcon className="h-5 w-5 text-carmen-teal" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-carmen-navy">Google Calendar Invite</h4>
+                        <p className="text-gray-600 text-sm">You'll receive a calendar invite with a Google Meet link.</p>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold text-carmen-navy mb-2">Schedule Your Demo</h3>
-                  <p className="text-gray-600 mb-4">
-                    Select a date and time that works for you, and our team will guide you through how Carmen can transform your business processes.
-                  </p>
-                  {step === 1 ? (
-                    <p className="text-carmen-teal font-medium">Please select a date to continue</p>
-                  ) : (
-                    <p className="text-carmen-teal font-medium">Please select a time slot to continue</p>
-                  )}
                 </div>
               )}
             </div>
