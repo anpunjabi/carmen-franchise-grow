@@ -8,6 +8,7 @@ import Partnerships from '@/components/Partnerships';
 import Partner from '@/components/Partner';
 import Footer from '@/components/Footer';
 import SectionEditor from '@/components/SectionEditor';
+import BookingSection from '@/components/BookingSection';
 
 const Index = () => {
   useEffect(() => {
@@ -45,6 +46,9 @@ const Index = () => {
         </div>
         <div data-section-id="modules">
           <Modules />
+        </div>
+        <div data-section-id="booking">
+          <BookingSection />
         </div>
         <div data-section-id="partnerships">
           <Partnerships />
