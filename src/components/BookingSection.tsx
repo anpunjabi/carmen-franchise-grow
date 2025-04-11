@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Clock, Check } from 'lucide-react';
+import { CalendarIcon, Clock, Check, Wrench, Star } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -296,29 +296,29 @@ const BookingSection = () => {
                   <div className="space-y-4">
                     <div className="flex items-start">
                       <div className="bg-carmen-cream p-2 rounded-full mr-3">
-                        <Check className="h-5 w-5 text-carmen-teal" />
+                        <Clock className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">Personalized Demo</h4>
+                        <h4 className="font-medium text-carmen-navy">Personalized 30-Minute Demo</h4>
                         <p className="text-gray-600 text-sm">We'll tailor the presentation to your specific industry and needs.</p>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <div className="bg-carmen-cream p-2 rounded-full mr-3">
-                        <Clock className="h-5 w-5 text-carmen-teal" />
+                        <Wrench className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">30-Minute Session</h4>
-                        <p className="text-gray-600 text-sm">Efficient overview with time for your questions.</p>
+                        <h4 className="font-medium text-carmen-navy">Free Customization</h4>
+                        <p className="text-gray-600 text-sm">We'll fine tune Carmen to your business needs within 48 hours.</p>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <div className="bg-carmen-cream p-2 rounded-full mr-3">
-                        <CalendarIcon className="h-5 w-5 text-carmen-teal" />
+                        <Star className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">Google Calendar Invite</h4>
-                        <p className="text-gray-600 text-sm">You'll receive a calendar invite with a Google Meet link.</p>
+                        <h4 className="font-medium text-carmen-navy">Free Trial</h4>
+                        <p className="text-gray-600 text-sm">Test out Carmen for a month - we're sure you'll love working with her.</p>
                       </div>
                     </div>
                   </div>

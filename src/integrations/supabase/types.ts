@@ -531,7 +531,7 @@ export type Database = {
       }
       bpm_theme_settings_history: {
         Row: {
-          bpm_id: string
+          bpm_id: string | null
           change_type: string | null
           changed_at: string | null
           history_id: string
@@ -539,7 +539,7 @@ export type Database = {
           old_values: Json
         }
         Insert: {
-          bpm_id: string
+          bpm_id?: string | null
           change_type?: string | null
           changed_at?: string | null
           history_id?: string
@@ -547,7 +547,7 @@ export type Database = {
           old_values?: Json
         }
         Update: {
-          bpm_id?: string
+          bpm_id?: string | null
           change_type?: string | null
           changed_at?: string | null
           history_id?: string
@@ -789,7 +789,7 @@ export type Database = {
           display_order: number | null
           id: string
           is_active: boolean | null
-          original_id: string
+          original_id: string | null
           pricing_rules_metadata: Json | null
           updated_at: string | null
           updated_by: string | null
@@ -807,7 +807,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
-          original_id: string
+          original_id?: string | null
           pricing_rules_metadata?: Json | null
           updated_at?: string | null
           updated_by?: string | null
@@ -825,7 +825,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
-          original_id?: string
+          original_id?: string | null
           pricing_rules_metadata?: Json | null
           updated_at?: string | null
           updated_by?: string | null
@@ -851,7 +851,7 @@ export type Database = {
         Row: {
           action: string
           changes: Json | null
-          client_id: string
+          client_id: string | null
           created_at: string | null
           id: string
           module_instance_id: string
@@ -862,7 +862,7 @@ export type Database = {
         Insert: {
           action: string
           changes?: Json | null
-          client_id: string
+          client_id?: string | null
           created_at?: string | null
           id?: string
           module_instance_id: string
@@ -873,7 +873,7 @@ export type Database = {
         Update: {
           action?: string
           changes?: Json | null
-          client_id?: string
+          client_id?: string | null
           created_at?: string | null
           id?: string
           module_instance_id?: string
@@ -950,7 +950,7 @@ export type Database = {
         Row: {
           action: string
           changes: Json | null
-          client_service_id: string
+          client_service_id: string | null
           created_at: string | null
           id: string
           new_values: Json | null
@@ -960,7 +960,7 @@ export type Database = {
         Insert: {
           action: string
           changes?: Json | null
-          client_service_id: string
+          client_service_id?: string | null
           created_at?: string | null
           id?: string
           new_values?: Json | null
@@ -970,7 +970,7 @@ export type Database = {
         Update: {
           action?: string
           changes?: Json | null
-          client_service_id?: string
+          client_service_id?: string | null
           created_at?: string | null
           id?: string
           new_values?: Json | null
@@ -1079,7 +1079,7 @@ export type Database = {
           changes: Json
           created_at: string | null
           id: string
-          item_id: string
+          item_id: string | null
           new_values: Json | null
           old_values: Json | null
           user_id: string
@@ -1090,7 +1090,7 @@ export type Database = {
           changes: Json
           created_at?: string | null
           id?: string
-          item_id: string
+          item_id?: string | null
           new_values?: Json | null
           old_values?: Json | null
           user_id: string
@@ -1101,7 +1101,7 @@ export type Database = {
           changes?: Json
           created_at?: string | null
           id?: string
-          item_id?: string
+          item_id?: string | null
           new_values?: Json | null
           old_values?: Json | null
           user_id?: string
@@ -1436,7 +1436,7 @@ export type Database = {
         Row: {
           change_type: string | null
           changed_at: string | null
-          compensation_id: string
+          compensation_id: string | null
           module_instance_id: string
           new_values: Json
           old_values: Json
@@ -1446,7 +1446,7 @@ export type Database = {
         Insert: {
           change_type?: string | null
           changed_at?: string | null
-          compensation_id: string
+          compensation_id?: string | null
           module_instance_id: string
           new_values: Json
           old_values: Json
@@ -1456,7 +1456,7 @@ export type Database = {
         Update: {
           change_type?: string | null
           changed_at?: string | null
-          compensation_id?: string
+          compensation_id?: string | null
           module_instance_id?: string
           new_values?: Json
           old_values?: Json
@@ -1464,6 +1464,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "provider_compensation_history_compensation_id_fkey"
+            columns: ["compensation_id"]
+            isOneToOne: false
+            referencedRelation: "provider_compensation"
+            referencedColumns: ["compensation_id"]
+          },
           {
             foreignKeyName: "provider_compensation_history_compensation_id_fkey2"
             columns: ["compensation_id"]
@@ -1883,7 +1890,7 @@ export type Database = {
           id: string
           new_values: Json | null
           old_values: Json | null
-          service_instance_id: string
+          service_instance_id: string | null
           user_id: string
         }
         Insert: {
@@ -1893,7 +1900,7 @@ export type Database = {
           id?: string
           new_values?: Json | null
           old_values?: Json | null
-          service_instance_id: string
+          service_instance_id?: string | null
           user_id: string
         }
         Update: {
@@ -1903,7 +1910,7 @@ export type Database = {
           id?: string
           new_values?: Json | null
           old_values?: Json | null
-          service_instance_id?: string
+          service_instance_id?: string | null
           user_id?: string
         }
         Relationships: [
