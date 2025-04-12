@@ -171,13 +171,12 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   };
 
+  // Load saved content from Supabase
   useEffect(() => {
-    // Load saved content from Supabase
     const loadContent = async () => {
       try {
         console.log('Loading content for ID:', id);
         
-        // Use type assertion to tell TypeScript about our content_edits table
         const { data, error } = await (supabase as any)
           .from('content_edits')
           .select('content')
@@ -187,7 +186,9 @@ const EditableText: React.FC<EditableTextProps> = ({
         if (data && !error) {
           console.log('Content loaded:', data.content);
           setLoadedContent(data.content);
-        } else if (error) {
+        } else if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error code
+          console.error('Error loading content:', error);
+        } else {
           console.log('No saved content found, using default');
         }
         
