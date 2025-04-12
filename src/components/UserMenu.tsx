@@ -99,7 +99,7 @@ const UserMenu = () => {
     const sectionOrder = {};
     const orderedSections = document.querySelectorAll('[data-section-id]');
     
-    orderedSections.forEach((section) => {
+    orderedSections.forEach((section, index) => {
       const sectionId = section.getAttribute('data-section-id');
       const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
       if (sectionId) {
@@ -107,10 +107,12 @@ const UserMenu = () => {
       }
     });
 
+    console.log('Saving section order:', sectionOrder);
+
     // Save to Supabase using the dedicated landing_page_settings table
     try {
       // Use 'any' type assertion to bypass TypeScript table name checking
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('landing_page_settings')
         .update({ 
           section_visibility: sectionVisibility,

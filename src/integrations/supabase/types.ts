@@ -1240,6 +1240,7 @@ export type Database = {
           created_at: string | null
           element_visibility: Json
           id: number
+          section_order: Json
           section_visibility: Json
           updated_at: string | null
         }
@@ -1247,6 +1248,7 @@ export type Database = {
           created_at?: string | null
           element_visibility?: Json
           id?: number
+          section_order?: Json
           section_visibility?: Json
           updated_at?: string | null
         }
@@ -1254,6 +1256,7 @@ export type Database = {
           created_at?: string | null
           element_visibility?: Json
           id?: number
+          section_order?: Json
           section_visibility?: Json
           updated_at?: string | null
         }

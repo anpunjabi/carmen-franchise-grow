@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -33,7 +34,7 @@ const SectionEditor = () => {
     const loadVisibilitySettings = async () => {
       try {
         console.log('Loading visibility settings from landing_page_settings');
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('landing_page_settings')
           .select('*')
           .eq('id', 1)
@@ -114,7 +115,14 @@ const SectionEditor = () => {
     if (!mainElement) return;
 
     const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
+    if (sections.length === 0) {
+      console.log('No sections found to reorder');
+      return;
+    }
     
+    console.log('Found sections to reorder:', sections.length);
+    
+    // Sort sections based on the saved order
     sections.sort((a, b) => {
       const aId = a.getAttribute('data-section-id') || '';
       const bId = b.getAttribute('data-section-id') || '';
@@ -123,13 +131,17 @@ const SectionEditor = () => {
       return aOrder - bOrder;
     });
     
+    // Apply reordering to DOM
     sections.forEach(section => {
       mainElement.appendChild(section);
     });
 
+    // Update data-section-order attributes
     sections.forEach((section, index) => {
       section.setAttribute('data-section-order', `${index}`);
     });
+    
+    console.log('Section reordering applied successfully');
   };
   
   useEffect(() => {
