@@ -3,14 +3,17 @@ import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 const Footer = () => {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
+  const [visibleLinks, setVisibleLinks] = useState<Record<string, boolean>>({});
   
   const footerLinks = [
     {
       title: "Product",
+      id: "footer-product",
       links: [
         { label: "Features", href: "#features", id: "link-features" },
         { label: "Modules", href: "#modules", id: "link-modules" },
@@ -20,6 +23,7 @@ const Footer = () => {
     },
     {
       title: "Resources",
+      id: "footer-resources",
       links: [
         { label: "Documentation", href: "#", id: "link-documentation" },
         { label: "Blog", href: "#", id: "link-blog" },
@@ -29,6 +33,7 @@ const Footer = () => {
     },
     {
       title: "Company",
+      id: "footer-company",
       links: [
         { label: "About Us", href: "#", id: "link-about-us" },
         { label: "Careers", href: "#", id: "link-careers" },
@@ -37,6 +42,39 @@ const Footer = () => {
       ]
     }
   ];
+
+  // Check which section headers should be visible based on their links' visibility
+  useEffect(() => {
+    const checkVisibility = () => {
+      const newVisibleLinks: Record<string, boolean> = {};
+      
+      footerLinks.forEach(column => {
+        // A section is visible if at least one of its links is visible
+        const hasVisibleLink = column.links.some(link => {
+          const element = document.querySelector(`[data-editable-id="${link.id}"]`);
+          return element && !element.classList.contains('hidden');
+        });
+        
+        newVisibleLinks[column.id] = hasVisibleLink;
+      });
+      
+      setVisibleLinks(newVisibleLinks);
+    };
+    
+    // Initial check
+    checkVisibility();
+    
+    // Listen for edit mode changes to update visibility
+    const handleEditModeChange = () => {
+      setTimeout(checkVisibility, 100); // Small delay to ensure DOM updates
+    };
+    
+    window.addEventListener('editmodechange', handleEditModeChange);
+    
+    return () => {
+      window.removeEventListener('editmodechange', handleEditModeChange);
+    };
+  }, []);
 
   return (
     <footer className="bg-white border-t border-gray-200" data-section-id="footer">
@@ -69,30 +107,33 @@ const Footer = () => {
           </div>
           
           {footerLinks.map((column, index) => (
-            <div key={index}>
-              <h3 className="text-carmen-navy font-medium mb-4">{column.title}</h3>
-              <ul className="space-y-2">
-                {column.links.map((link, linkIndex) => (
-                  <li key={linkIndex} data-editable-id={link.id}>
-                    {link.isPage ? (
-                      <Link 
-                        to={link.href} 
-                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
-                      >
-                        {link.label}
-                      </Link>
-                    ) : (
-                      <a 
-                        href={link.href} 
-                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
-                      >
-                        {link.label}
-                      </a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            // Only render the column if it has visible links
+            visibleLinks[column.id] && (
+              <div key={index} data-editable-id={column.id}>
+                <h3 className="text-carmen-navy font-medium mb-4">{column.title}</h3>
+                <ul className="space-y-2">
+                  {column.links.map((link, linkIndex) => (
+                    <li key={linkIndex} data-editable-id={link.id}>
+                      {link.isPage ? (
+                        <Link 
+                          to={link.href} 
+                          className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                        >
+                          {link.label}
+                        </Link>
+                      ) : (
+                        <a 
+                          href={link.href} 
+                          className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                        >
+                          {link.label}
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
           ))}
         </div>
         
