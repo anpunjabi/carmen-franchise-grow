@@ -33,6 +33,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   const contentRef = useRef<HTMLElement | null>(null);
   const [originalContent, setOriginalContent] = useState<string>('');
   const [contentLoaded, setContentLoaded] = useState(false);
+  const [loadedContent, setLoadedContent] = useState<string | null>(null);
 
   // Check if user is in admin edit mode
   useEffect(() => {
@@ -124,6 +125,9 @@ const EditableText: React.FC<EditableTextProps> = ({
               throw error;
             }
             
+            // Update the loadedContent state with the new content
+            setLoadedContent(newContent);
+            
             toast({
               title: "Content updated",
               description: "Text has been saved successfully.",
@@ -180,9 +184,9 @@ const EditableText: React.FC<EditableTextProps> = ({
           .eq('id', id)
           .single();
         
-        if (data && !error && contentRef.current) {
+        if (data && !error) {
           console.log('Content loaded:', data.content);
-          contentRef.current.innerHTML = data.content;
+          setLoadedContent(data.content);
         } else if (error) {
           console.log('No saved content found, using default');
         }
@@ -197,6 +201,13 @@ const EditableText: React.FC<EditableTextProps> = ({
     loadContent();
   }, [id]);
 
+  // Update the ref content when loadedContent changes
+  useEffect(() => {
+    if (contentRef.current && loadedContent) {
+      contentRef.current.innerHTML = loadedContent;
+    }
+  }, [loadedContent, contentRef]);
+
   // Create the element based on the "as" prop
   const Component = as as any;
 
@@ -210,10 +221,9 @@ const EditableText: React.FC<EditableTextProps> = ({
       data-editable-text-id={id}
       suppressContentEditableWarning={true}
     >
-      {!contentLoaded ? children : null}
+      {(!loadedContent && contentLoaded) ? children : null}
     </Component>
   );
 };
 
 export default EditableText;
-
