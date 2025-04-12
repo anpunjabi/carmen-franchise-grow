@@ -9,6 +9,7 @@ import { CalendarIcon, Clock, Check, Wrench, Star } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import EditableText from './EditableText';
 
 type TimeSlot = {
   hour: number;
@@ -120,10 +121,12 @@ const BookingSection = () => {
     <section className="py-16 bg-white" id="book-appointment">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">Book a Demo</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <EditableText id="booking-title" as="h2" className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
+            Book a Demo
+          </EditableText>
+          <EditableText id="booking-description" as="p" className="text-lg text-gray-600 max-w-2xl mx-auto">
             Schedule a 30-minute call with a Carmen team member to see how our BPM solution can help your business.
-          </p>
+          </EditableText>
         </div>
 
         <div className="max-w-4xl mx-auto bg-carmen-cream rounded-2xl p-6 shadow-soft border border-gray-100">
@@ -292,15 +295,21 @@ const BookingSection = () => {
                 </form>
               ) : (
                 <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                  <h3 className="text-xl font-semibold text-carmen-navy mb-4">What to Expect</h3>
+                  <EditableText id="booking-what-to-expect" as="h3" className="text-xl font-semibold text-carmen-navy mb-4">
+                    What to Expect
+                  </EditableText>
                   <div className="space-y-4">
                     <div className="flex items-start">
                       <div className="bg-carmen-cream p-2 rounded-full mr-3">
                         <Clock className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">Personalized 30-Minute Demo</h4>
-                        <p className="text-gray-600 text-sm">We'll tailor the presentation to your specific industry and needs.</p>
+                        <EditableText id="booking-demo-title" as="h4" className="font-medium text-carmen-navy">
+                          Personalized 30-Minute Demo
+                        </EditableText>
+                        <EditableText id="booking-demo-description" as="p" className="text-gray-600 text-sm">
+                          We'll tailor the presentation to your specific industry and needs.
+                        </EditableText>
                       </div>
                     </div>
                     <div className="flex items-start">
@@ -308,8 +317,12 @@ const BookingSection = () => {
                         <Wrench className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">Free Customization</h4>
-                        <p className="text-gray-600 text-sm">We'll fine tune Carmen to your business needs within 48 hours.</p>
+                        <EditableText id="booking-customization-title" as="h4" className="font-medium text-carmen-navy">
+                          Free Customization
+                        </EditableText>
+                        <EditableText id="booking-customization-description" as="p" className="text-gray-600 text-sm">
+                          We'll fine tune Carmen to your business needs within 48 hours.
+                        </EditableText>
                       </div>
                     </div>
                     <div className="flex items-start">
@@ -317,8 +330,12 @@ const BookingSection = () => {
                         <Star className="h-5 w-5 text-carmen-teal" />
                       </div>
                       <div>
-                        <h4 className="font-medium text-carmen-navy">Free Trial</h4>
-                        <p className="text-gray-600 text-sm">Test out Carmen for a month - we're sure you'll love working with her.</p>
+                        <EditableText id="booking-trial-title" as="h4" className="font-medium text-carmen-navy">
+                          Free Trial
+                        </EditableText>
+                        <EditableText id="booking-trial-description" as="p" className="text-gray-600 text-sm">
+                          Test out Carmen for a month - we're sure you'll love working with her.
+                        </EditableText>
                       </div>
                     </div>
                   </div>

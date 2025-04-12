@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import EditableText from './EditableText';
 
 const Footer = () => {
   const { user } = useAuth();
@@ -66,11 +67,11 @@ const Footer = () => {
     };
     
     // Initial check
-    setTimeout(checkVisibility, 300); // More delay to ensure DOM is fully loaded
+    setTimeout(checkVisibility, 300);
     
     // Listen for edit mode changes to update visibility
     const handleEditModeChange = () => {
-      setTimeout(checkVisibility, 300); // Small delay to ensure DOM updates
+      setTimeout(checkVisibility, 300);
     };
     
     window.addEventListener('editmodechange', handleEditModeChange);
@@ -93,9 +94,9 @@ const Footer = () => {
               />
             </a>
             
-            <p className="text-gray-600 mb-6 max-w-md">
+            <EditableText id="footer-tagline" as="p" className="text-gray-600 mb-6 max-w-md">
               Carmen provides flexible, modular BPM solutions that adapt to your business processes, not the other way around.
-            </p>
+            </EditableText>
             
             <div className="flex items-center space-x-4">
               <a href="#" className="w-10 h-10 rounded-full bg-carmen-light-blue/20 flex items-center justify-center text-carmen-blue hover:bg-carmen-blue hover:text-white transition-colors duration-200" data-editable-id="social-linkedin">
@@ -112,7 +113,9 @@ const Footer = () => {
           
           {footerLinks.map((column, index) => (
             <div key={index} data-editable-id={column.id} className={!visibleLinks[column.id] ? 'hidden' : ''}>
-              <h3 className="text-carmen-navy font-medium mb-4">{column.title}</h3>
+              <EditableText id={`footer-column-title-${index}`} as="h3" className="text-carmen-navy font-medium mb-4">
+                {column.title}
+              </EditableText>
               <ul className="space-y-2">
                 {column.links.map((link, linkIndex) => (
                   <li key={linkIndex} data-editable-id={link.id}>
@@ -121,14 +124,18 @@ const Footer = () => {
                         to={link.href} 
                         className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
                       >
-                        {link.label}
+                        <EditableText id={`footer-link-${column.id}-${linkIndex}`} as="span">
+                          {link.label}
+                        </EditableText>
                       </Link>
                     ) : (
                       <a 
                         href={link.href} 
                         className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
                       >
-                        {link.label}
+                        <EditableText id={`footer-link-${column.id}-${linkIndex}`} as="span">
+                          {link.label}
+                        </EditableText>
                       </a>
                     )}
                   </li>
@@ -156,9 +163,9 @@ const Footer = () => {
               </div>
             </div>
             
-            <p className="text-gray-500 text-sm">
+            <EditableText id="footer-copyright" as="p" className="text-gray-500 text-sm">
               © {currentYear} Carmen BPM. All rights reserved.
-            </p>
+            </EditableText>
           </div>
         </div>
       </div>
