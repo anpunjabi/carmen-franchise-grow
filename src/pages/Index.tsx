@@ -40,28 +40,28 @@ const Index = () => {
       <Header />
       <SectionEditor />
       <main className="flex-grow">
-        <div data-section-id="hero">
+        <div data-section-id="hero" data-section-order="0">
           <Hero />
         </div>
-        <div data-section-id="hero-secondary">
+        <div data-section-id="hero-secondary" data-section-order="1">
           <HeroSecondary />
         </div>
-        <div data-section-id="hero-tertiary">
+        <div data-section-id="hero-tertiary" data-section-order="2">
           <HeroTertiary />
         </div>
-        <div data-section-id="features">
+        <div data-section-id="features" data-section-order="3">
           <Features />
         </div>
-        <div data-section-id="modules">
+        <div data-section-id="modules" data-section-order="4">
           <Modules />
         </div>
-        <div data-section-id="booking">
+        <div data-section-id="booking" data-section-order="5">
           <BookingSection />
         </div>
-        <div data-section-id="partnerships">
+        <div data-section-id="partnerships" data-section-order="6">
           <Partnerships />
         </div>
-        <div data-section-id="partner">
+        <div data-section-id="partner" data-section-order="7">
           <Partner />
         </div>
       </main>

@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,6 +12,7 @@ interface Section {
   id: string;
   name: string;
   isVisible: boolean;
+  order?: number;
 }
 
 interface EditableElement {
@@ -39,18 +40,22 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       const sectionElements = document.querySelectorAll('[data-section-id]');
       const sectionsArray: Section[] = [];
       
-      sectionElements.forEach(section => {
+      sectionElements.forEach((section, index) => {
         const sectionId = section.getAttribute('data-section-id') || '';
         const isVisible = !section.classList.contains('hidden');
         const name = sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
         
         sectionsArray.push({
           id: sectionId,
           name,
-          isVisible
+          isVisible,
+          order
         });
       });
       
+      // Sort sections by order
+      sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
       setSections(sectionsArray);
 
       // Get editable elements
@@ -150,6 +155,62 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     console.log(`Toggled element "${elementId}" visibility to:`, !isCurrentlyVisible);
   };
 
+  // Move section up in the DOM order
+  const moveSectionUp = (sectionId: string, currentIndex: number) => {
+    if (currentIndex <= 0) return; // Already at the top
+    
+    const prevSection = sections[currentIndex - 1];
+    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+    const prevSectionEl = document.querySelector(`[data-section-id="${prevSection.id}"]`);
+    
+    if (!section || !prevSectionEl || !section.parentNode) return;
+    
+    // Move in the DOM
+    section.parentNode.insertBefore(section, prevSectionEl);
+    
+    // Update order attributes
+    section.setAttribute('data-section-order', `${currentIndex - 1}`);
+    prevSectionEl.setAttribute('data-section-order', `${currentIndex}`);
+    
+    // Update our state to reflect the new order
+    const updatedSections = [...sections];
+    [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
+      [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
+    
+    setSections(updatedSections);
+    console.log(`Moved section "${sectionId}" up in order`);
+  };
+  
+  // Move section down in the DOM order
+  const moveSectionDown = (sectionId: string, currentIndex: number) => {
+    if (currentIndex >= sections.length - 1) return; // Already at the bottom
+    
+    const nextSection = sections[currentIndex + 1];
+    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+    const nextSectionEl = document.querySelector(`[data-section-id="${nextSection.id}"]`);
+    
+    if (!section || !nextSectionEl || !section.parentNode) return;
+    
+    // Move in the DOM
+    if (nextSectionEl.nextSibling) {
+      section.parentNode.insertBefore(section, nextSectionEl.nextSibling);
+    } else {
+      section.parentNode.appendChild(section);
+    }
+    
+    // Update order attributes
+    section.setAttribute('data-section-order', `${currentIndex + 1}`);
+    nextSectionEl.setAttribute('data-section-order', `${currentIndex}`);
+    
+    // Update our state to reflect the new order
+    const updatedSections = [...sections];
+    [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
+      [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
+    
+    setSections(updatedSections);
+    console.log(`Moved section "${sectionId}" down in order`);
+  };
+
   if (!isEditMode) return null;
 
   // Group elements by section
@@ -171,7 +232,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-80 p-0 flex flex-col">
         <SheetHeader className="p-4 pb-0">
-          <SheetTitle>Manage Visibility</SheetTitle>
+          <SheetTitle>Element and Section Manager</SheetTitle>
         </SheetHeader>
         
         <div className="flex items-center justify-between p-4 pb-2">
@@ -187,32 +248,68 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
             <>
               <h3 className="text-sm font-medium mb-2">Page Sections</h3>
               <div className="flex flex-col space-y-2 mb-4">
-                {sections.map(section => (
+                {sections.map((section, index) => (
                   <div 
                     key={section.id} 
                     className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
                   >
                     <span className="font-medium">{section.name}</span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleSectionVisibility(section.id)}
-                            className="p-0 w-8 h-8"
-                          >
-                            {section.isVisible ? 
-                              <Eye className="h-4 w-4 text-green-500" /> : 
-                              <EyeOff className="h-4 w-4 text-red-500" />
-                            }
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {section.isVisible ? 'Hide Section' : 'Show Section'}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex items-center space-x-1">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => moveSectionUp(section.id, index)}
+                              disabled={index === 0}
+                              className="p-0 w-8 h-8"
+                            >
+                              <MoveUp className="h-4 w-4 text-gray-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Move Section Up</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => moveSectionDown(section.id, index)}
+                              disabled={index === sections.length - 1}
+                              className="p-0 w-8 h-8"
+                            >
+                              <MoveDown className="h-4 w-4 text-gray-500" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Move Section Down</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleSectionVisibility(section.id)}
+                              className="p-0 w-8 h-8"
+                            >
+                              {section.isVisible ? 
+                                <Eye className="h-4 w-4 text-green-500" /> : 
+                                <EyeOff className="h-4 w-4 text-red-500" />
+                              }
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {section.isVisible ? 'Hide Section' : 'Show Section'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 ))}
               </div>

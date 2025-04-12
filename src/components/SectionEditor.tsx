@@ -112,6 +112,13 @@ const SectionEditor = () => {
     if (isEditMode) {
       console.log('Entering edit mode, adding section and element controls');
       
+      // Add order attributes to each section for tracking order
+      document.querySelectorAll('[data-section-id]').forEach((section, index) => {
+        if (!section.hasAttribute('data-section-order')) {
+          section.setAttribute('data-section-order', `${index}`);
+        }
+      });
+      
       // Add edit controls to each section when in edit mode
       document.querySelectorAll('[data-section-id]').forEach(section => {
         const sectionId = section.getAttribute('data-section-id');
@@ -219,7 +226,7 @@ const SectionEditor = () => {
         toggleButton.className = 'fixed left-4 top-20 z-50 p-3 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-gray-100';
         toggleButton.innerHTML = `
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/></svg>
-          <span class="sr-only">Toggle Section Manager</span>
+          <span class="sr-only">Toggle Element and Section Manager</span>
         `;
         
         toggleButton.addEventListener('click', () => {
