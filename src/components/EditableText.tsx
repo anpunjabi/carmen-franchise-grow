@@ -14,15 +14,15 @@ interface EditableTextProps {
 const EditableText: React.FC<EditableTextProps> = ({ 
   id, 
   children, 
-  as: Component = 'span', 
-  className 
+  as = 'span', 
+  className = ''
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
-  const contentRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLElement | null>(null);
   const [originalContent, setOriginalContent] = useState<string>('');
 
   // Check if user is in admin edit mode
@@ -169,6 +169,9 @@ const EditableText: React.FC<EditableTextProps> = ({
     
     loadContent();
   }, [id]);
+
+  // Create the element based on the "as" prop
+  const Component = as as React.ElementType;
 
   return (
     <Component
