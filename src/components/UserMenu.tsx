@@ -95,6 +95,18 @@ const UserMenu = () => {
       elementVisibility[elementId] = isVisible;
     });
 
+    // Get the current order of sections
+    const sectionOrder = {};
+    const orderedSections = document.querySelectorAll('[data-section-id]');
+    
+    orderedSections.forEach((section) => {
+      const sectionId = section.getAttribute('data-section-id');
+      const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
+      if (sectionId) {
+        sectionOrder[sectionId] = orderIndex;
+      }
+    });
+
     // Save to Supabase using the dedicated landing_page_settings table
     try {
       // Use 'any' type assertion to bypass TypeScript table name checking
@@ -103,6 +115,7 @@ const UserMenu = () => {
         .update({ 
           section_visibility: sectionVisibility,
           element_visibility: elementVisibility,
+          section_order: sectionOrder,
           updated_at: new Date().toISOString() // Convert Date to ISO string format
         })
         .eq('id', 1); // Use the first record (we only have one)

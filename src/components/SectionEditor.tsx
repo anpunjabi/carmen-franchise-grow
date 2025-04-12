@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
 
-// Define interfaces for our data types
 interface SectionVisibility {
   [key: string]: boolean;
 }
@@ -14,10 +12,15 @@ interface ElementVisibility {
   [key: string]: boolean;
 }
 
+interface SectionOrder {
+  [key: string]: number;
+}
+
 interface LandingPageSettings {
   id: number;
   section_visibility: SectionVisibility;
   element_visibility: ElementVisibility;
+  section_order: SectionOrder;
   created_at?: string;
   updated_at?: string;
 }
@@ -27,11 +30,9 @@ const SectionEditor = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   useEffect(() => {
-    // Load saved section visibility settings from Supabase
     const loadVisibilitySettings = async () => {
       try {
         console.log('Loading visibility settings from landing_page_settings');
-        // Use 'any' type assertion to bypass TypeScript table name checking
         const { data, error } = await (supabase as any)
           .from('landing_page_settings')
           .select('*')
@@ -41,7 +42,6 @@ const SectionEditor = () => {
         console.log('Visibility settings data:', data, 'Error:', error);
         
         if (data && !error) {
-          // Use type assertion to safely convert the data
           const settings = data as unknown as LandingPageSettings;
           if (settings.section_visibility) {
             console.log('Applying section visibility:', settings.section_visibility);
@@ -52,6 +52,11 @@ const SectionEditor = () => {
             console.log('Applying element visibility:', settings.element_visibility);
             applyElementVisibility(settings.element_visibility);
           }
+
+          if (settings.section_order) {
+            console.log('Applying section order:', settings.section_order);
+            applySectionOrder(settings.section_order);
+          }
         }
       } catch (error) {
         console.error('Error loading visibility settings:', error);
@@ -60,12 +65,10 @@ const SectionEditor = () => {
     
     loadVisibilitySettings();
     
-    // Listen for edit mode changes
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
       
-      // Open sidebar automatically when entering edit mode
       if (event.detail.isEditMode) {
         setIsSidebarOpen(true);
       } else {
@@ -80,7 +83,6 @@ const SectionEditor = () => {
     };
   }, []);
   
-  // Apply stored visibility settings to sections
   const applySectionVisibility = (visibilitySettings: SectionVisibility) => {
     Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
       const section = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -94,7 +96,6 @@ const SectionEditor = () => {
     });
   };
   
-  // Apply stored visibility settings to editable elements
   const applyElementVisibility = (visibilitySettings: ElementVisibility) => {
     Object.entries(visibilitySettings).forEach(([elementId, isVisible]) => {
       const element = document.querySelector(`[data-editable-id="${elementId}"]`);
@@ -107,24 +108,44 @@ const SectionEditor = () => {
       }
     });
   };
+
+  const applySectionOrder = (orderSettings: SectionOrder) => {
+    const mainElement = document.querySelector('main');
+    if (!mainElement) return;
+
+    const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
+    
+    sections.sort((a, b) => {
+      const aId = a.getAttribute('data-section-id') || '';
+      const bId = b.getAttribute('data-section-id') || '';
+      const aOrder = orderSettings[aId] !== undefined ? orderSettings[aId] : 999;
+      const bOrder = orderSettings[bId] !== undefined ? orderSettings[bId] : 999;
+      return aOrder - bOrder;
+    });
+    
+    sections.forEach(section => {
+      mainElement.appendChild(section);
+    });
+
+    sections.forEach((section, index) => {
+      section.setAttribute('data-section-order', `${index}`);
+    });
+  };
   
   useEffect(() => {
     if (isEditMode) {
       console.log('Entering edit mode, adding section and element controls');
       
-      // Add order attributes to each section for tracking order
       document.querySelectorAll('[data-section-id]').forEach((section, index) => {
         if (!section.hasAttribute('data-section-order')) {
           section.setAttribute('data-section-order', `${index}`);
         }
       });
       
-      // Add edit controls to each section when in edit mode
       document.querySelectorAll('[data-section-id]').forEach(section => {
         const sectionId = section.getAttribute('data-section-id');
         console.log('Setting up controls for section:', sectionId);
         
-        // Check if controls already exist
         if (!section.querySelector('.section-edit-controls')) {
           const controlsDiv = document.createElement('div');
           controlsDiv.className = 'section-edit-controls absolute top-4 right-4 z-50 bg-white/80 backdrop-blur-sm rounded-md shadow-md p-2 flex items-center';
@@ -133,7 +154,6 @@ const SectionEditor = () => {
           toggleButton.className = 'p-1 rounded-full hover:bg-gray-100';
           toggleButton.innerHTML = `<span class="sr-only">Toggle Visibility</span>`;
           
-          // Set initial icon based on current visibility
           const isVisible = !section.classList.contains('hidden');
           const icon = isVisible ? 
             `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>` : 
@@ -158,25 +178,21 @@ const SectionEditor = () => {
           
           controlsDiv.appendChild(toggleButton);
           
-          // Add section name label
           const label = document.createElement('span');
           label.className = 'ml-2 text-xs font-medium text-gray-700';
           label.textContent = sectionId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           controlsDiv.appendChild(label);
           
-          // Use setAttribute for setting style instead of direct property assignment
           const sectionElement = section as HTMLElement;
           sectionElement.style.position = 'relative';
           section.appendChild(controlsDiv);
         }
       });
 
-      // Add edit controls to each editable element when in edit mode
       document.querySelectorAll('[data-editable-id]').forEach(element => {
         const elementId = element.getAttribute('data-editable-id');
         console.log('Setting up controls for editable element:', elementId);
         
-        // Check if controls already exist
         if (!element.querySelector('.element-edit-controls')) {
           const controlsDiv = document.createElement('div');
           controlsDiv.className = 'element-edit-controls absolute top-0 right-0 z-50 bg-white/80 backdrop-blur-sm rounded-md shadow-md p-1 flex items-center';
@@ -185,7 +201,6 @@ const SectionEditor = () => {
           toggleButton.className = 'p-1 rounded-full hover:bg-gray-100';
           toggleButton.innerHTML = `<span class="sr-only">Toggle Visibility</span>`;
           
-          // Set initial icon based on current visibility
           const isVisible = !element.classList.contains('hidden');
           const icon = isVisible ? 
             `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>` : 
@@ -210,7 +225,6 @@ const SectionEditor = () => {
           
           controlsDiv.appendChild(toggleButton);
           
-          // Use setAttribute for setting style instead of direct property assignment
           const elementParent = element.parentElement;
           if (elementParent) {
             elementParent.style.position = 'relative';
@@ -219,7 +233,6 @@ const SectionEditor = () => {
         }
       });
 
-      // Add the sidebar toggle button if it doesn't exist
       if (!document.querySelector('#section-sidebar-toggle')) {
         const toggleButton = document.createElement('button');
         toggleButton.id = 'section-sidebar-toggle';
@@ -237,19 +250,16 @@ const SectionEditor = () => {
       }
     } else {
       console.log('Leaving edit mode, removing section controls');
-      // Remove edit controls when not in edit mode
       document.querySelectorAll('.section-edit-controls, .element-edit-controls').forEach(control => {
         control.remove();
       });
       
-      // Remove the sidebar toggle button
       const toggleButton = document.querySelector('#section-sidebar-toggle');
       if (toggleButton) {
         toggleButton.remove();
       }
     }
     
-    // Clean up function to remove controls and button when component unmounts
     return () => {
       document.querySelectorAll('.section-edit-controls, .element-edit-controls').forEach(control => {
         control.remove();
