@@ -11,6 +11,14 @@ interface EditableTextProps {
   className?: string;
 }
 
+// Define the content_edits interface to match our database structure
+interface ContentEdit {
+  id: string;
+  content: string;
+  created_at?: string;
+  updated_at: string;
+}
+
 const EditableText: React.FC<EditableTextProps> = ({ 
   id, 
   children, 
@@ -94,14 +102,15 @@ const EditableText: React.FC<EditableTextProps> = ({
         // Save the edited content to Supabase
         const newContent = contentRef.current.innerHTML;
         try {
-          const { error } = await supabase
+          // Use type assertion to tell TypeScript about our content_edits table
+          const { error } = await (supabase as any)
             .from('content_edits')
             .upsert(
               { 
                 id, 
                 content: newContent,
                 updated_at: new Date().toISOString()
-              },
+              } as ContentEdit,
               { onConflict: 'id' }
             );
           
@@ -156,7 +165,8 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Load saved content from Supabase
     const loadContent = async () => {
       try {
-        const { data, error } = await supabase
+        // Use type assertion to tell TypeScript about our content_edits table
+        const { data, error } = await (supabase as any)
           .from('content_edits')
           .select('content')
           .eq('id', id)
@@ -174,7 +184,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   }, [id]);
 
   // Create the element based on the "as" prop
-  const Component = as as React.ElementType;
+  const Component = as as any;
 
   return (
     <Component
