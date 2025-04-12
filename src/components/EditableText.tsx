@@ -32,6 +32,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   const { toast } = useToast();
   const contentRef = useRef<HTMLElement | null>(null);
   const [originalContent, setOriginalContent] = useState<string>('');
+  const [contentLoaded, setContentLoaded] = useState(false);
 
   // Check if user is in admin edit mode
   useEffect(() => {
@@ -101,41 +102,46 @@ const EditableText: React.FC<EditableTextProps> = ({
         
         // Save the edited content to Supabase
         const newContent = contentRef.current.innerHTML;
-        try {
-          // Use type assertion to tell TypeScript about our content_edits table
-          const { error } = await (supabase as any)
-            .from('content_edits')
-            .upsert(
-              { 
-                id, 
-                content: newContent,
-                updated_at: new Date().toISOString()
-              } as ContentEdit,
-              { onConflict: 'id' }
-            );
-          
-          if (error) {
+        
+        if (newContent !== originalContent) {
+          try {
+            console.log('Saving content for ID:', id, 'Content:', newContent);
+            
+            // Use type assertion to tell TypeScript about our content_edits table
+            const { error } = await (supabase as any)
+              .from('content_edits')
+              .upsert(
+                { 
+                  id, 
+                  content: newContent,
+                  updated_at: new Date().toISOString()
+                } as ContentEdit,
+                { onConflict: 'id' }
+              );
+            
+            if (error) {
+              console.error('Error saving edited content:', error);
+              throw error;
+            }
+            
+            toast({
+              title: "Content updated",
+              description: "Text has been saved successfully.",
+            });
+          } catch (error) {
             console.error('Error saving edited content:', error);
-            throw error;
+            
+            // Revert to original content on error
+            if (contentRef.current) {
+              contentRef.current.innerHTML = originalContent;
+            }
+            
+            toast({
+              title: "Error saving changes",
+              description: "There was a problem updating the text.",
+              variant: "destructive",
+            });
           }
-          
-          toast({
-            title: "Content updated",
-            description: "Text has been saved successfully.",
-          });
-        } catch (error) {
-          console.error('Error saving edited content:', error);
-          
-          // Revert to original content on error
-          if (contentRef.current) {
-            contentRef.current.innerHTML = originalContent;
-          }
-          
-          toast({
-            title: "Error saving changes",
-            description: "There was a problem updating the text.",
-            variant: "destructive",
-          });
         }
       }
       
@@ -165,6 +171,8 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Load saved content from Supabase
     const loadContent = async () => {
       try {
+        console.log('Loading content for ID:', id);
+        
         // Use type assertion to tell TypeScript about our content_edits table
         const { data, error } = await (supabase as any)
           .from('content_edits')
@@ -173,10 +181,16 @@ const EditableText: React.FC<EditableTextProps> = ({
           .single();
         
         if (data && !error && contentRef.current) {
+          console.log('Content loaded:', data.content);
           contentRef.current.innerHTML = data.content;
+        } else if (error) {
+          console.log('No saved content found, using default');
         }
+        
+        setContentLoaded(true);
       } catch (error) {
         console.error('Error loading content:', error);
+        setContentLoaded(true);
       }
     };
     
@@ -196,9 +210,10 @@ const EditableText: React.FC<EditableTextProps> = ({
       data-editable-text-id={id}
       suppressContentEditableWarning={true}
     >
-      {children}
+      {!contentLoaded ? children : null}
     </Component>
   );
 };
 
 export default EditableText;
+
