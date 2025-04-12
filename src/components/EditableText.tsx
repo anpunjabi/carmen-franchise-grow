@@ -94,7 +94,7 @@ const EditableText: React.FC<EditableTextProps> = ({
         // Save the edited content to Supabase
         const newContent = contentRef.current.innerHTML;
         try {
-          const { error } = await (supabase as any)
+          const { error } = await supabase
             .from('content_edits')
             .upsert(
               { 
@@ -105,7 +105,10 @@ const EditableText: React.FC<EditableTextProps> = ({
               { onConflict: 'id' }
             );
           
-          if (error) throw error;
+          if (error) {
+            console.error('Error saving edited content:', error);
+            throw error;
+          }
           
           toast({
             title: "Content updated",
@@ -153,7 +156,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     // Load saved content from Supabase
     const loadContent = async () => {
       try {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('content_edits')
           .select('content')
           .eq('id', id)
