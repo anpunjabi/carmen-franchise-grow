@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import HeroSecondary from '@/components/HeroSecondary';
+import HeroTertiary from '@/components/HeroTertiary';
 import Features from '@/components/Features';
 import Modules from '@/components/Modules';
 import Partnerships from '@/components/Partnerships';
@@ -44,6 +45,9 @@ const Index = () => {
         </div>
         <div data-section-id="hero-secondary">
           <HeroSecondary />
+        </div>
+        <div data-section-id="hero-tertiary">
+          <HeroTertiary />
         </div>
         <div data-section-id="features">
           <Features />
