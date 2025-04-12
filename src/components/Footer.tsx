@@ -8,7 +8,11 @@ import { useEffect, useState } from 'react';
 const Footer = () => {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
-  const [visibleLinks, setVisibleLinks] = useState<Record<string, boolean>>({});
+  const [visibleLinks, setVisibleLinks] = useState<Record<string, boolean>>({
+    'footer-product': true,
+    'footer-resources': true,
+    'footer-company': true
+  });
   
   const footerLinks = [
     {
@@ -62,11 +66,11 @@ const Footer = () => {
     };
     
     // Initial check
-    checkVisibility();
+    setTimeout(checkVisibility, 300); // More delay to ensure DOM is fully loaded
     
     // Listen for edit mode changes to update visibility
     const handleEditModeChange = () => {
-      setTimeout(checkVisibility, 100); // Small delay to ensure DOM updates
+      setTimeout(checkVisibility, 300); // Small delay to ensure DOM updates
     };
     
     window.addEventListener('editmodechange', handleEditModeChange);
@@ -107,33 +111,30 @@ const Footer = () => {
           </div>
           
           {footerLinks.map((column, index) => (
-            // Only render the column if it has visible links
-            visibleLinks[column.id] && (
-              <div key={index} data-editable-id={column.id}>
-                <h3 className="text-carmen-navy font-medium mb-4">{column.title}</h3>
-                <ul className="space-y-2">
-                  {column.links.map((link, linkIndex) => (
-                    <li key={linkIndex} data-editable-id={link.id}>
-                      {link.isPage ? (
-                        <Link 
-                          to={link.href} 
-                          className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
-                        >
-                          {link.label}
-                        </Link>
-                      ) : (
-                        <a 
-                          href={link.href} 
-                          className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
-                        >
-                          {link.label}
-                        </a>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
+            <div key={index} data-editable-id={column.id} className={!visibleLinks[column.id] ? 'hidden' : ''}>
+              <h3 className="text-carmen-navy font-medium mb-4">{column.title}</h3>
+              <ul className="space-y-2">
+                {column.links.map((link, linkIndex) => (
+                  <li key={linkIndex} data-editable-id={link.id}>
+                    {link.isPage ? (
+                      <Link 
+                        to={link.href} 
+                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a 
+                        href={link.href} 
+                        className="text-gray-600 hover:text-carmen-blue transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
         
