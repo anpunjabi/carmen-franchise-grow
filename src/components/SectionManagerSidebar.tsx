@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown, RefreshCw } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -7,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Section {
   id: string;
@@ -27,19 +29,22 @@ interface SectionManagerSidebarProps {
   onOpenChange: (open: boolean) => void;
   isEditMode: boolean;
   settingsLoaded?: boolean;
+  isLoading?: boolean;
 }
 
 const SectionManagerSidebar = ({ 
   isOpen, 
   onOpenChange, 
   isEditMode, 
-  settingsLoaded = false 
+  settingsLoaded = false,
+  isLoading = false
 }: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const { toast } = useToast();
+  const [loadingFailed, setLoadingFailed] = useState(false);
 
   // Check if user is in admin edit mode
   useEffect(() => {
@@ -49,11 +54,12 @@ const SectionManagerSidebar = ({
   }, [isOpen, isEditMode, settingsLoaded]);
 
   const loadSectionsAndElements = useCallback(() => {
-    setIsLoading(true);
+    setLocalLoading(true);
+    setLoadingFailed(false);
     console.log('Loading sections and elements...');
     
     // Use a timeout to ensure the DOM is ready
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       try {
         // Get sections
         const sectionElements = Array.from(document.querySelectorAll('[data-section-id]'));
@@ -78,12 +84,12 @@ const SectionManagerSidebar = ({
         setSections(sectionsArray);
         console.log('Loaded sections:', sectionsArray.length, sectionsArray.map(s => s.id));
 
-        // Get editable elements
-        const editableElementNodes = Array.from(document.querySelectorAll('[data-editable-id]'));
+        // Get editable elements (both data-editable-id and data-editable-text-id)
+        const editableElementNodes = Array.from(document.querySelectorAll('[data-editable-id], [data-editable-text-id]'));
         const elementsArray: EditableElement[] = [];
         
         editableElementNodes.forEach(element => {
-          const elementId = element.getAttribute('data-editable-id') || '';
+          const elementId = element.getAttribute('data-editable-id') || element.getAttribute('data-editable-text-id') || '';
           const isVisible = !element.classList.contains('hidden');
           
           // Find the nearest section parent
@@ -117,18 +123,22 @@ const SectionManagerSidebar = ({
             name = name.replace('Social ', '') + ' Icon';
           }
           
-          elementsArray.push({
-            id: elementId,
-            name,
-            isVisible,
-            parentSection
-          });
+          // Don't add duplicates
+          if (!elementsArray.some(e => e.id === elementId)) {
+            elementsArray.push({
+              id: elementId,
+              name,
+              isVisible,
+              parentSection
+            });
+          }
         });
         
         setEditableElements(elementsArray);
         console.log('Loaded elements:', elementsArray.length, elementsArray.map(e => e.id));
         
         if (sectionsArray.length === 0 && elementsArray.length === 0) {
+          setLoadingFailed(true);
           toast({
             title: "No sections or elements found",
             description: "Make sure your components have data-section-id or data-editable-id attributes.",
@@ -143,15 +153,18 @@ const SectionManagerSidebar = ({
         }
       } catch (error) {
         console.error('Error loading sections and elements:', error);
+        setLoadingFailed(true);
         toast({
           title: "Error",
           description: "Failed to load sections and elements.",
           variant: "destructive"
         });
       } finally {
-        setIsLoading(false);
+        setLocalLoading(false);
       }
-    }, 1000);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
   }, [toast]);
 
   // Toggle section visibility
@@ -177,8 +190,11 @@ const SectionManagerSidebar = ({
 
   // Toggle element visibility
   const toggleElementVisibility = (elementId: string) => {
-    const element = document.querySelector(`[data-editable-id="${elementId}"]`);
-    if (!element) return;
+    const element = document.querySelector(`[data-editable-id="${elementId}"], [data-editable-text-id="${elementId}"]`);
+    if (!element) {
+      console.log(`Element not found: ${elementId}`);
+      return;
+    }
     
     const isCurrentlyVisible = !element.classList.contains('hidden');
     
@@ -267,6 +283,9 @@ const SectionManagerSidebar = ({
     }
   });
 
+  // Handle combined loading state
+  const isLoadingContent = isLoading || localLoading;
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-80 p-0 flex flex-col">
@@ -278,9 +297,9 @@ const SectionManagerSidebar = ({
               variant="ghost" 
               onClick={loadSectionsAndElements} 
               className="h-8 w-8" 
-              disabled={isLoading}
+              disabled={isLoadingContent}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoadingContent ? 'animate-spin' : ''}`} />
               <span className="sr-only">Refresh</span>
             </Button>
           </div>
@@ -295,9 +314,29 @@ const SectionManagerSidebar = ({
         </div>
         
         <ScrollArea className="flex-1 overflow-auto px-4">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-20">
-              <p className="text-sm text-muted-foreground">Loading sections and elements...</p>
+          {isLoadingContent ? (
+            <div className="space-y-4 py-2">
+              <Skeleton className="h-4 w-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            </div>
+          ) : loadingFailed ? (
+            <div className="py-8 text-center">
+              <p className="text-lg text-muted-foreground mb-4">Could not load elements</p>
+              <Button onClick={loadSectionsAndElements} className="mx-auto">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Try Again
+              </Button>
             </div>
           ) : (
             <>

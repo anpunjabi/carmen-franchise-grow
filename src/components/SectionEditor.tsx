@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -30,6 +31,7 @@ const SectionEditor = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
   const findAllSectionElements = useCallback(() => {
@@ -39,19 +41,24 @@ const SectionEditor = () => {
       return [];
     }
     
+    // Get all sections, including those that might be hidden
     const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
     console.log('Found sections:', sections.length, sections.map(s => s.getAttribute('data-section-id')));
     return sections;
   }, []);
 
   const findAllEditableElements = useCallback(() => {
-    const elements = Array.from(document.querySelectorAll('[data-editable-id]'));
-    console.log('Found editable elements:', elements.length, elements.map(el => el.getAttribute('data-editable-id')));
+    // Get all editable elements, including those in hidden sections
+    const elements = Array.from(document.querySelectorAll('[data-editable-id], [data-editable-text-id]'));
+    console.log('Found editable elements:', elements.length, elements.map(el => 
+      el.getAttribute('data-editable-id') || el.getAttribute('data-editable-text-id')
+    ));
     return elements;
   }, []);
   
   const loadVisibilitySettings = useCallback(async () => {
     try {
+      setIsLoading(true);
       console.log('Loading visibility settings from landing_page_settings');
       const { data, error } = await supabase
         .from('landing_page_settings')
@@ -64,6 +71,7 @@ const SectionEditor = () => {
       if (data && !error) {
         const settings = data as unknown as LandingPageSettings;
         
+        // Use a longer timeout to ensure the DOM is fully loaded
         setTimeout(() => {
           if (settings.section_visibility) {
             console.log('Applying section visibility:', settings.section_visibility);
@@ -81,7 +89,10 @@ const SectionEditor = () => {
           }
           
           setSettingsLoaded(true);
-        }, 500);
+          setIsLoading(false);
+        }, 1000);
+      } else {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error loading visibility settings:', error);
@@ -90,6 +101,7 @@ const SectionEditor = () => {
         description: "Could not load visibility settings.",
         variant: "destructive"
       });
+      setIsLoading(false);
     }
   }, [toast]);
   
@@ -117,12 +129,12 @@ const SectionEditor = () => {
           childList: true,
           subtree: true,
           attributes: true,
-          attributeFilter: ['class', 'style']
+          attributeFilter: ['class', 'style', 'data-section-id', 'data-editable-id', 'data-editable-text-id']
         });
       }
       
       return () => observer.disconnect();
-    }, 1500);
+    }, 2000); // Increased initial delay to ensure DOM is ready
     
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
@@ -145,7 +157,7 @@ const SectionEditor = () => {
             element.classList.remove('editable-element');
           });
         }
-      }, 500);
+      }, 1000);
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
@@ -177,7 +189,7 @@ const SectionEditor = () => {
     console.log('Applying visibility to elements:', elements.length);
     
     elements.forEach((element) => {
-      const elementId = element.getAttribute('data-editable-id');
+      const elementId = element.getAttribute('data-editable-id') || element.getAttribute('data-editable-text-id');
       if (elementId && visibilitySettings[elementId] !== undefined) {
         if (visibilitySettings[elementId]) {
           element.classList.remove('hidden');
@@ -229,6 +241,7 @@ const SectionEditor = () => {
         onOpenChange={setIsSidebarOpen} 
         isEditMode={isEditMode} 
         settingsLoaded={settingsLoaded}
+        isLoading={isLoading}
       />
       {isEditMode && (
         <Button
