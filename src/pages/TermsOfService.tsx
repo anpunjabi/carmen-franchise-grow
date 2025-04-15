@@ -39,32 +39,16 @@ const TermsOfService = () => {
   useEffect(() => {
     const fetchTermsOfService = async () => {
       try {
-        const response = await fetch(
-          `https://wfseyqycafobpolltezw.supabase.co/rest/v1/rpc/get_terms_of_service`,
-          {
-            headers: {
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc2V5cXljYWZvYnBvbGx0ZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyNDA2NDksImV4cCI6MjA1NTgxNjY0OX0.Qcx6-wRNPIScaAfoYQ1fMEUyWN1hgcuaRIG66uINUe8',
-              'Content-Type': 'application/json'
-            }
-          }
-        );
+        // Use the RPC function to get the terms of service
+        const { data, error } = await supabase
+          .rpc('get_terms_of_service');
         
-        if (response.ok) {
-          const content = await response.text();
-          setTermsContent(content);
-        } else {
-          const { data, error } = await supabase
-            .from('terms_of_service')
-            .select('content')
-            .eq('id', '00000000-0000-0000-0000-000000000001')
-            .single();
-
-          if (error) {
-            throw error;
-          }
-          
-          setTermsContent(data.content);
+        if (error) {
+          throw error;
         }
+        
+        // The RPC function returns the content directly as a string
+        setTermsContent(data || '# Terms of Service\n\nTerms of service content is being updated.');
       } catch (error) {
         console.error('Error fetching Terms of Service:', error);
         toast({
@@ -91,35 +75,15 @@ const TermsOfService = () => {
 
   const handleSave = async (newContent: string) => {
     try {
-      const response = await fetch(
-        `https://wfseyqycafobpolltezw.supabase.co/rest/v1/rpc/update_terms_of_service`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indmc2V5cXljYWZvYnBvbGx0ZXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAyNDA2NDksImV4cCI6MjA1NTgxNjY0OX0.Qcx6-wRNPIScaAfoYQ1fMEUyWN1hgcuaRIG66uINUe8',
-            'Authorization': `Bearer ${supabase.auth.getSession().then(({ data }) => data.session?.access_token)}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            new_content: newContent,
-            terms_id: '00000000-0000-0000-0000-000000000001'
-          })
-        }
-      );
+      // Use the RPC function to update the terms of service
+      const { error } = await supabase
+        .rpc('update_terms_of_service', {
+          new_content: newContent,
+          terms_id: '00000000-0000-0000-0000-000000000001'
+        });
 
-      if (!response.ok) {
-        const { error } = await supabase
-          .from('terms_of_service')
-          .update({ 
-            content: newContent,
-            updated_at: new Date().toISOString(),
-            updated_by: user?.id,
-          })
-          .eq('id', '00000000-0000-0000-0000-000000000001');
-
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw error;
       }
 
       setTermsContent(newContent);
