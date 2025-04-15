@@ -1,10 +1,9 @@
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
-import { useToast } from '@/hooks/use-toast';
 
 interface SectionVisibility {
   [key: string]: boolean;
@@ -30,49 +29,21 @@ interface LandingPageSettings {
 const SectionEditor = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   
-  const findAllSectionElements = useCallback(() => {
-    const mainElement = document.querySelector('main');
-    if (!mainElement) {
-      console.log('Main element not found');
-      return [];
-    }
-    
-    // Get all sections, including those that might be hidden
-    const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
-    console.log('Found sections:', sections.length, sections.map(s => s.getAttribute('data-section-id')));
-    return sections;
-  }, []);
-
-  const findAllEditableElements = useCallback(() => {
-    // Get all editable elements, including those in hidden sections
-    const elements = Array.from(document.querySelectorAll('[data-editable-id], [data-editable-text-id]'));
-    console.log('Found editable elements:', elements.length, elements.map(el => 
-      el.getAttribute('data-editable-id') || el.getAttribute('data-editable-text-id')
-    ));
-    return elements;
-  }, []);
-  
-  const loadVisibilitySettings = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      console.log('Loading visibility settings from landing_page_settings');
-      const { data, error } = await supabase
-        .from('landing_page_settings')
-        .select('*')
-        .eq('id', 1)
-        .single();
-      
-      console.log('Visibility settings data:', data, 'Error:', error);
-      
-      if (data && !error) {
-        const settings = data as unknown as LandingPageSettings;
+  useEffect(() => {
+    const loadVisibilitySettings = async () => {
+      try {
+        console.log('Loading visibility settings from landing_page_settings');
+        const { data, error } = await supabase
+          .from('landing_page_settings')
+          .select('*')
+          .eq('id', 1)
+          .single();
         
-        // Use a longer timeout to ensure the DOM is fully loaded
-        setTimeout(() => {
+        console.log('Visibility settings data:', data, 'Error:', error);
+        
+        if (data && !error) {
+          const settings = data as unknown as LandingPageSettings;
           if (settings.section_visibility) {
             console.log('Applying section visibility:', settings.section_visibility);
             applySectionVisibility(settings.section_visibility);
@@ -87,95 +58,43 @@ const SectionEditor = () => {
             console.log('Applying section order:', settings.section_order);
             applySectionOrder(settings.section_order);
           }
-          
-          setSettingsLoaded(true);
-          setIsLoading(false);
-        }, 1000);
-      } else {
-        setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading visibility settings:', error);
       }
-    } catch (error) {
-      console.error('Error loading visibility settings:', error);
-      toast({
-        title: "Error",
-        description: "Could not load visibility settings.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-  }, [toast]);
-  
-  useEffect(() => {
-    const initialLoadTimer = setTimeout(() => {
-      loadVisibilitySettings();
-      
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList' || mutation.type === 'attributes') {
-            if (isEditMode) {
-              console.log('DOM mutation detected, refreshing elements');
-              const editableElements = [...findAllSectionElements(), ...findAllEditableElements()];
-              editableElements.forEach((element) => {
-                element.classList.add('editable-element');
-              });
-            }
-          }
-        });
-      });
-      
-      const mainElement = document.querySelector('main');
-      if (mainElement) {
-        observer.observe(mainElement, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          attributeFilter: ['class', 'style', 'data-section-id', 'data-editable-id', 'data-editable-text-id']
-        });
-      }
-      
-      return () => observer.disconnect();
-    }, 2000); // Increased initial delay to ensure DOM is ready
+    };
+    
+    loadVisibilitySettings();
     
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
       
       if (event.detail.isEditMode) {
-        loadVisibilitySettings();
+        setIsSidebarOpen(true);
+        document.querySelectorAll('[data-section-id], [data-editable-id]').forEach((element) => {
+          element.classList.add('editable-element');
+        });
+      } else {
+        setIsSidebarOpen(false);
+        document.querySelectorAll('.editable-element').forEach((element) => {
+          element.classList.remove('editable-element');
+        });
       }
-      
-      setTimeout(() => {
-        if (event.detail.isEditMode) {
-          setIsSidebarOpen(true);
-          const editableElements = [...findAllSectionElements(), ...findAllEditableElements()];
-          editableElements.forEach((element) => {
-            element.classList.add('editable-element');
-          });
-        } else {
-          setIsSidebarOpen(false);
-          document.querySelectorAll('.editable-element').forEach((element) => {
-            element.classList.remove('editable-element');
-          });
-        }
-      }, 1000);
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
     
     return () => {
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
-      clearTimeout(initialLoadTimer);
     };
-  }, [findAllSectionElements, findAllEditableElements, loadVisibilitySettings, isEditMode]);
+  }, []);
   
   const applySectionVisibility = (visibilitySettings: SectionVisibility) => {
-    const sections = findAllSectionElements();
-    console.log('Applying visibility to sections:', sections.length);
-    
-    sections.forEach((section) => {
-      const sectionId = section.getAttribute('data-section-id');
-      if (sectionId && visibilitySettings[sectionId] !== undefined) {
-        if (visibilitySettings[sectionId]) {
+    Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
+      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (section) {
+        if (isVisible) {
           section.classList.remove('hidden');
         } else {
           section.classList.add('hidden');
@@ -185,13 +104,10 @@ const SectionEditor = () => {
   };
   
   const applyElementVisibility = (visibilitySettings: ElementVisibility) => {
-    const elements = findAllEditableElements();
-    console.log('Applying visibility to elements:', elements.length);
-    
-    elements.forEach((element) => {
-      const elementId = element.getAttribute('data-editable-id') || element.getAttribute('data-editable-text-id');
-      if (elementId && visibilitySettings[elementId] !== undefined) {
-        if (visibilitySettings[elementId]) {
+    Object.entries(visibilitySettings).forEach(([elementId, isVisible]) => {
+      const element = document.querySelector(`[data-editable-id="${elementId}"]`);
+      if (element) {
+        if (isVisible) {
           element.classList.remove('hidden');
         } else {
           element.classList.add('hidden');
@@ -202,12 +118,9 @@ const SectionEditor = () => {
 
   const applySectionOrder = (orderSettings: SectionOrder) => {
     const mainElement = document.querySelector('main');
-    if (!mainElement) {
-      console.log('Main element not found');
-      return;
-    }
+    if (!mainElement) return;
 
-    const sections = findAllSectionElements();
+    const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
     if (sections.length === 0) {
       console.log('No sections found to reorder');
       return;
@@ -215,6 +128,7 @@ const SectionEditor = () => {
     
     console.log('Found sections to reorder:', sections.length);
     
+    // Sort sections based on the saved order
     sections.sort((a, b) => {
       const aId = a.getAttribute('data-section-id') || '';
       const bId = b.getAttribute('data-section-id') || '';
@@ -223,10 +137,12 @@ const SectionEditor = () => {
       return aOrder - bOrder;
     });
     
+    // Apply reordering to DOM
     sections.forEach(section => {
       mainElement.appendChild(section);
     });
 
+    // Update data-section-order attributes
     sections.forEach((section, index) => {
       section.setAttribute('data-section-order', `${index}`);
     });
@@ -240,8 +156,6 @@ const SectionEditor = () => {
         isOpen={isSidebarOpen} 
         onOpenChange={setIsSidebarOpen} 
         isEditMode={isEditMode} 
-        settingsLoaded={settingsLoaded}
-        isLoading={isLoading}
       />
       {isEditMode && (
         <Button
@@ -258,3 +172,4 @@ const SectionEditor = () => {
 };
 
 export default SectionEditor;
+
