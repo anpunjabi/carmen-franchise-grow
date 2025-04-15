@@ -1,15 +1,15 @@
-
 import { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Clock, Check, Wrench, Star } from 'lucide-react';
+import { CalendarIcon, Clock, Check, Wrench, Star, Mail } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import EditableText from './EditableText';
+import { createClient } from '@supabase/supabase-js';
 
 type TimeSlot = {
   hour: number;
@@ -27,8 +27,8 @@ const BookingSection = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [meetingLink, setMeetingLink] = useState<string | null>(null);
 
-  // Generate time slots between 9am and 5pm
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = [];
     for (let hour = 9; hour < 17; hour++) {
@@ -72,41 +72,41 @@ const BookingSection = () => {
 
     setIsSubmitting(true);
 
-    // Create appointment datetime
-    const appointmentDate = new Date(date);
-    appointmentDate.setHours(selectedTimeSlot.hour);
-    appointmentDate.setMinutes(selectedTimeSlot.minute);
+    const supabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL as string,
+      import.meta.env.VITE_SUPABASE_ANON_KEY as string
+    );
 
-    try {
-      // To be implemented in the next step
-      // This is where we'll call the Supabase Edge Function
-      
-      toast({
-        title: "Booking request submitted!",
-        description: "We'll contact you to confirm your appointment soon.",
-      });
-      
-      // Reset form
-      setDate(undefined);
-      setSelectedTimeSlot(null);
-      setName('');
-      setEmail('');
-      setPhone('');
-      setMessage('');
-      setStep(1);
-    } catch (error) {
-      console.error('Error submitting booking:', error);
-      toast({
-        title: "Something went wrong",
-        description: "Unable to submit your booking request. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+    const { data, error } = await supabase.functions.invoke('schedule-demo-meeting', {
+      body: {
+        name,
+        email,
+        phone,
+        message,
+        appointmentDate: date.toISOString(),
+      },
+    });
+
+    if (error) throw error;
+    
+    console.log('Meeting scheduled:', data);
+    
+    if (data.meeting?.link) {
+      setMeetingLink(data.meeting.link);
     }
+    
+    toast({
+      title: "Booking confirmed!",
+      description: "Your demo session has been scheduled. Check your email for the calendar invitation.",
+    });
+    
+    setName('');
+    setEmail('');
+    setPhone('');
+    setMessage('');
+    setStep(4);
   };
 
-  // Determine if a date should be disabled (weekends or past dates)
   const isDateDisabled = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -116,6 +116,42 @@ const BookingSection = () => {
     
     return isBefore(date, today) || isWeekend;
   };
+
+  const ConfirmationView = () => (
+    <div className="p-6 text-center">
+      <div className="w-16 h-16 bg-carmen-teal/10 text-carmen-teal rounded-full flex items-center justify-center mx-auto mb-4">
+        <Check className="h-8 w-8" />
+      </div>
+      <h3 className="text-xl font-bold text-carmen-navy mb-2">Your demo is scheduled!</h3>
+      <p className="text-gray-600 mb-4">
+        We've sent a calendar invitation to your email. You'll receive a Google Meet link to join at your scheduled time.
+      </p>
+      {meetingLink && (
+        <div className="p-4 bg-carmen-cream rounded-lg mb-4">
+          <p className="font-medium text-carmen-navy mb-2">Google Meet Link:</p>
+          <a 
+            href={meetingLink} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-carmen-teal hover:underline break-all"
+          >
+            {meetingLink}
+          </a>
+        </div>
+      )}
+      <Button 
+        onClick={() => {
+          setDate(undefined);
+          setSelectedTimeSlot(null);
+          setStep(1);
+          setMeetingLink(null);
+        }}
+        className="bg-carmen-gradient mt-4"
+      >
+        Book Another Demo
+      </Button>
+    </div>
+  );
 
   return (
     <section className="py-16 bg-white" id="book-appointment">
@@ -134,16 +170,21 @@ const BookingSection = () => {
             <div className="md:w-1/2">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold text-carmen-navy">
-                  {step === 1 ? 'Select a Date' : step === 2 ? 'Choose a Time' : 'Your Information'}
+                  {step === 1 ? 'Select a Date' : 
+                   step === 2 ? 'Choose a Time' : 
+                   step === 3 ? 'Your Information' :
+                   'Confirmation'}
                 </h3>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className={cn("w-8 h-8 rounded-full flex items-center justify-center mr-2", 
-                    step >= 1 ? "bg-carmen-teal text-white" : "bg-gray-200")}>1</span>
-                  <span className={cn("w-8 h-8 rounded-full flex items-center justify-center mr-2", 
-                    step >= 2 ? "bg-carmen-teal text-white" : "bg-gray-200")}>2</span>
-                  <span className={cn("w-8 h-8 rounded-full flex items-center justify-center", 
-                    step >= 3 ? "bg-carmen-teal text-white" : "bg-gray-200")}>3</span>
-                </div>
+                {step < 4 && (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <span className={cn("w-8 h-8 rounded-full flex items-center justify-center mr-2", 
+                      step >= 1 ? "bg-carmen-teal text-white" : "bg-gray-200")}>1</span>
+                    <span className={cn("w-8 h-8 rounded-full flex items-center justify-center mr-2", 
+                      step >= 2 ? "bg-carmen-teal text-white" : "bg-gray-200")}>2</span>
+                    <span className={cn("w-8 h-8 rounded-full flex items-center justify-center", 
+                      step >= 3 ? "bg-carmen-teal text-white" : "bg-gray-200")}>3</span>
+                  </div>
+                )}
               </div>
               
               {step === 1 && (
@@ -238,6 +279,8 @@ const BookingSection = () => {
                   </div>
                 </div>
               )}
+              
+              {step === 4 && <ConfirmationView />}
             </div>
 
             <div className="md:w-1/2">
@@ -290,9 +333,21 @@ const BookingSection = () => {
                     className="w-full bg-carmen-gradient hover:opacity-90"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Submitting..." : "Book Appointment"}
+                    {isSubmitting ? "Scheduling..." : "Book Appointment"}
                   </Button>
                 </form>
+              ) : step === 4 ? (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <div className="w-20 h-20 bg-carmen-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Mail className="h-10 w-10 text-carmen-teal" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-carmen-navy mb-2">Check Your Email</h3>
+                    <p className="text-gray-600">
+                      We've sent you a calendar invitation with all the details for your demo session.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="h-full bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                   <EditableText id="booking-what-to-expect" as="h3" className="text-xl font-semibold text-carmen-navy mb-4">
