@@ -22,15 +22,41 @@ serve(async (req) => {
   }
 
   try {
-    const { name, email, phone, message, appointmentDate }: BookingRequest = await req.json();
+    const requestData = await req.json();
+    console.log('Received request data:', requestData);
+    
+    const { name, email, phone, message, appointmentDate }: BookingRequest = requestData;
+
+    if (!name || !email || !appointmentDate) {
+      console.error('Missing required fields:', { name, email, appointmentDate });
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     console.log('Processing demo booking request:', { name, email, appointmentDate });
 
     // Create JWT client using service account credentials
+    const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
+    if (!privateKey) {
+      console.error('GMAIL_PRIVATE_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const auth = new google.auth.JWT(
       Deno.env.get('GMAIL_CLIENT_EMAIL'),
       undefined,
-      Deno.env.get('GMAIL_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      privateKey.replace(/\\n/g, '\n'),
       [
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/calendar.events',
@@ -51,6 +77,13 @@ serve(async (req) => {
     // Format for Google Calendar API
     const startTime = appointmentDateTime.toISOString();
     const endTime = endDateTime.toISOString();
+
+    console.log('Appointment time details:', {
+      appointmentDate,
+      parsedDate: appointmentDateTime,
+      startTime,
+      endTime
+    });
 
     // Create meeting description with user details
     const meetingDescription = `

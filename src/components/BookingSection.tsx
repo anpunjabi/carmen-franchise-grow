@@ -9,7 +9,7 @@ import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } fr
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import EditableText from './EditableText';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 type TimeSlot = {
   hour: number;
@@ -72,39 +72,54 @@ const BookingSection = () => {
 
     setIsSubmitting(true);
 
-    const supabase = createClient(
-      import.meta.env.VITE_SUPABASE_URL as string,
-      import.meta.env.VITE_SUPABASE_ANON_KEY as string
-    );
+    try {
+      const appointmentDateTime = new Date(date);
+      appointmentDateTime.setHours(selectedTimeSlot.hour);
+      appointmentDateTime.setMinutes(selectedTimeSlot.minute);
+      
+      console.log('Scheduling demo meeting with date:', appointmentDateTime.toISOString());
+      
+      const { data, error } = await supabase.functions.invoke('schedule-demo-meeting', {
+        body: {
+          name,
+          email,
+          phone,
+          message,
+          appointmentDate: appointmentDateTime.toISOString(),
+        },
+      });
 
-    const { data, error } = await supabase.functions.invoke('schedule-demo-meeting', {
-      body: {
-        name,
-        email,
-        phone,
-        message,
-        appointmentDate: date.toISOString(),
-      },
-    });
-
-    if (error) throw error;
-    
-    console.log('Meeting scheduled:', data);
-    
-    if (data.meeting?.link) {
-      setMeetingLink(data.meeting.link);
+      if (error) {
+        console.error('Error calling schedule-demo-meeting:', error);
+        throw error;
+      }
+      
+      console.log('Meeting scheduled:', data);
+      
+      if (data.meeting?.link) {
+        setMeetingLink(data.meeting.link);
+      }
+      
+      toast({
+        title: "Booking confirmed!",
+        description: "Your demo session has been scheduled. Check your email for the calendar invitation.",
+      });
+      
+      setName('');
+      setEmail('');
+      setPhone('');
+      setMessage('');
+      setStep(4);
+    } catch (error) {
+      console.error('Error scheduling demo meeting:', error);
+      toast({
+        title: "Booking failed",
+        description: "There was an error scheduling your meeting. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    toast({
-      title: "Booking confirmed!",
-      description: "Your demo session has been scheduled. Check your email for the calendar invitation.",
-    });
-    
-    setName('');
-    setEmail('');
-    setPhone('');
-    setMessage('');
-    setStep(4);
   };
 
   const isDateDisabled = (date: Date) => {
