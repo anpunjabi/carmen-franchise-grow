@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -34,21 +33,21 @@ const SectionEditor = () => {
   const { toast } = useToast();
   
   const findAllSectionElements = useCallback(() => {
-    console.log('Finding all section elements');
-    // Using querySelectorAll with a more specific selector focused on main
     const mainElement = document.querySelector('main');
-    if (mainElement) {
-      return Array.from(mainElement.querySelectorAll('[data-section-id]'));
-    } else {
-      const allSections = Array.from(document.querySelectorAll('[data-section-id]'));
-      console.log('Found sections (no main element):', allSections.length);
-      return allSections;
+    if (!mainElement) {
+      console.log('Main element not found');
+      return [];
     }
+    
+    const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
+    console.log('Found sections:', sections.length, sections.map(s => s.getAttribute('data-section-id')));
+    return sections;
   }, []);
 
   const findAllEditableElements = useCallback(() => {
-    console.log('Finding all editable elements');
-    return Array.from(document.querySelectorAll('[data-editable-id]'));
+    const elements = Array.from(document.querySelectorAll('[data-editable-id]'));
+    console.log('Found editable elements:', elements.length, elements.map(el => el.getAttribute('data-editable-id')));
+    return elements;
   }, []);
   
   const loadVisibilitySettings = useCallback(async () => {
@@ -65,7 +64,6 @@ const SectionEditor = () => {
       if (data && !error) {
         const settings = data as unknown as LandingPageSettings;
         
-        // Use setTimeout to ensure DOM is fully rendered
         setTimeout(() => {
           if (settings.section_visibility) {
             console.log('Applying section visibility:', settings.section_visibility);
@@ -96,21 +94,44 @@ const SectionEditor = () => {
   }, [toast]);
   
   useEffect(() => {
-    // We delay the initial load to ensure all components are mounted
     const initialLoadTimer = setTimeout(() => {
       loadVisibilitySettings();
-    }, 1000);
+      
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' || mutation.type === 'attributes') {
+            if (isEditMode) {
+              console.log('DOM mutation detected, refreshing elements');
+              const editableElements = [...findAllSectionElements(), ...findAllEditableElements()];
+              editableElements.forEach((element) => {
+                element.classList.add('editable-element');
+              });
+            }
+          }
+        });
+      });
+      
+      const mainElement = document.querySelector('main');
+      if (mainElement) {
+        observer.observe(mainElement, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['class', 'style']
+        });
+      }
+      
+      return () => observer.disconnect();
+    }, 1500);
     
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
       
-      // When entering edit mode, force a refresh of settings
       if (event.detail.isEditMode) {
         loadVisibilitySettings();
       }
       
-      // Use setTimeout to ensure DOM stability
       setTimeout(() => {
         if (event.detail.isEditMode) {
           setIsSidebarOpen(true);
@@ -124,7 +145,7 @@ const SectionEditor = () => {
             element.classList.remove('editable-element');
           });
         }
-      }, 300);
+      }, 500);
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
@@ -133,7 +154,7 @@ const SectionEditor = () => {
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
       clearTimeout(initialLoadTimer);
     };
-  }, [findAllSectionElements, findAllEditableElements, loadVisibilitySettings]);
+  }, [findAllSectionElements, findAllEditableElements, loadVisibilitySettings, isEditMode]);
   
   const applySectionVisibility = (visibilitySettings: SectionVisibility) => {
     const sections = findAllSectionElements();
@@ -182,7 +203,6 @@ const SectionEditor = () => {
     
     console.log('Found sections to reorder:', sections.length);
     
-    // Sort sections based on the saved order
     sections.sort((a, b) => {
       const aId = a.getAttribute('data-section-id') || '';
       const bId = b.getAttribute('data-section-id') || '';
@@ -191,12 +211,10 @@ const SectionEditor = () => {
       return aOrder - bOrder;
     });
     
-    // Apply reordering to DOM
     sections.forEach(section => {
       mainElement.appendChild(section);
     });
 
-    // Update data-section-order attributes
     sections.forEach((section, index) => {
       section.setAttribute('data-section-order', `${index}`);
     });

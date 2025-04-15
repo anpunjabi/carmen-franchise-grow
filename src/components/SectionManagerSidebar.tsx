@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown, RefreshCw } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -30,47 +29,34 @@ interface SectionManagerSidebarProps {
   settingsLoaded?: boolean;
 }
 
-const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode, settingsLoaded = false }: SectionManagerSidebarProps) => {
+const SectionManagerSidebar = ({ 
+  isOpen, 
+  onOpenChange, 
+  isEditMode, 
+  settingsLoaded = false 
+}: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const findAllSectionElements = useCallback(() => {
-    // First try to find sections within the main element as they should be there
-    const mainElement = document.querySelector('main');
-    let sectionElements: Element[] = [];
-    
-    if (mainElement) {
-      sectionElements = Array.from(mainElement.querySelectorAll('[data-section-id]'));
-      console.log('Found sections in main:', sectionElements.length);
-      
-      // If we found sections in main, return them
-      if (sectionElements.length > 0) {
-        return sectionElements;
-      }
+  // Check if user is in admin edit mode
+  useEffect(() => {
+    if (isOpen && isEditMode) {
+      loadSectionsAndElements();
     }
-    
-    // Fallback: search the entire document
-    sectionElements = Array.from(document.querySelectorAll('[data-section-id]'));
-    console.log('Found sections in document:', sectionElements.length);
-    return sectionElements;
-  }, []);
-
-  const findAllEditableElements = useCallback(() => {
-    return Array.from(document.querySelectorAll('[data-editable-id]'));
-  }, []);
+  }, [isOpen, isEditMode, settingsLoaded]);
 
   const loadSectionsAndElements = useCallback(() => {
     setIsLoading(true);
     console.log('Loading sections and elements...');
     
-    // Use a timeout to ensure the DOM is fully loaded
+    // Use a timeout to ensure the DOM is ready
     setTimeout(() => {
       try {
         // Get sections
-        const sectionElements = findAllSectionElements();
+        const sectionElements = Array.from(document.querySelectorAll('[data-section-id]'));
         const sectionsArray: Section[] = [];
         
         sectionElements.forEach((section, index) => {
@@ -90,17 +76,17 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode, settingsLoade
         // Sort sections by order
         sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
         setSections(sectionsArray);
-        console.log('Loaded sections:', sectionsArray.length, sectionsArray.map(s => s.id).join(', '));
+        console.log('Loaded sections:', sectionsArray.length, sectionsArray.map(s => s.id));
 
         // Get editable elements
-        const editableElementNodes = findAllEditableElements();
+        const editableElementNodes = Array.from(document.querySelectorAll('[data-editable-id]'));
         const elementsArray: EditableElement[] = [];
         
         editableElementNodes.forEach(element => {
           const elementId = element.getAttribute('data-editable-id') || '';
           const isVisible = !element.classList.contains('hidden');
           
-          // Try to find the nearest section for grouping
+          // Find the nearest section parent
           let parentSection = '';
           let parent = element.parentElement;
           while (parent) {
@@ -115,7 +101,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode, settingsLoade
           // Format name from ID
           let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
           
-          // Special formatting for specific patterns
           if (name.includes('Link ')) {
             name = name.replace('Link ', '');
           }
@@ -141,7 +126,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode, settingsLoade
         });
         
         setEditableElements(elementsArray);
-        console.log('Loaded elements:', elementsArray.length);
+        console.log('Loaded elements:', elementsArray.length, elementsArray.map(e => e.id));
         
         if (sectionsArray.length === 0 && elementsArray.length === 0) {
           toast({
@@ -166,14 +151,8 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode, settingsLoade
       } finally {
         setIsLoading(false);
       }
-    }, 800); // Increased delay to ensure DOM is ready
-  }, [findAllSectionElements, findAllEditableElements, toast]);
-
-  useEffect(() => {
-    if (isEditMode && isOpen) {
-      loadSectionsAndElements();
-    }
-  }, [isEditMode, isOpen, loadSectionsAndElements, settingsLoaded]);
+    }, 1000);
+  }, [toast]);
 
   // Toggle section visibility
   const toggleSectionVisibility = (sectionId: string) => {
