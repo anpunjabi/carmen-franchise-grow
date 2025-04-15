@@ -1,11 +1,10 @@
-
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EditableText from './EditableText';
 
 const HeroQuaternary = () => {
   return (
-    <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero-quaternary">
+    <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero-quaternary" data-section-id="hero-quaternary" data-section-name="Advanced Workflow Hero">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-carmen-soft-teal/20 blur-3xl"></div>
         <div className="absolute top-1/2 -left-40 w-96 h-96 rounded-full bg-carmen-sky/20 blur-3xl"></div>
@@ -17,7 +16,7 @@ const HeroQuaternary = () => {
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{
             animationDelay: '0.1s'
           }}>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl" data-editable-id="hero-quaternary-heading">
               <EditableText id="hero-quaternary-heading-1" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
                 Advanced workflow
               </EditableText>
@@ -25,11 +24,11 @@ const HeroQuaternary = () => {
                 {' customization tools'}
               </EditableText>
             </h1>
-            <EditableText id="hero-quaternary-paragraph" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
+            <EditableText id="hero-quaternary-paragraph" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance" data-editable-id="hero-quaternary-description">
               Transform your business processes with our powerful, intuitive customization tools. Design, automate, and optimize workflows in minutes.
             </EditableText>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4" data-editable-id="hero-quaternary-buttons">
               <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>
                 <EditableText id="hero-quaternary-button-primary">
                   Explore Customization
@@ -46,7 +45,7 @@ const HeroQuaternary = () => {
           
           <div className="md:w-1/2 md:pl-12 fade-in-up" style={{
             animationDelay: '0.3s'
-          }}>
+          }} data-editable-id="hero-quaternary-image-section">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-carmen-teal/20 to-carmen-sky/20 rounded-3xl blur-xl animate-floating"></div>
               <div className="relative bg-white p-2 rounded-3xl shadow-soft overflow-hidden border border-white">
