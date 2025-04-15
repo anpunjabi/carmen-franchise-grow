@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Clock, Check, Wrench, Star, Mail } from 'lucide-react';
+import { CalendarIcon, Clock, Check, Wrench, Star, Mail, Loader2 } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,6 +15,12 @@ type TimeSlot = {
   hour: number;
   minute: number;
   formatted: string;
+  available: boolean;
+};
+
+type BusySlot = {
+  start: string;
+  end: string;
 };
 
 const BookingSection = () => {
@@ -28,22 +34,91 @@ const BookingSection = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [meetingLink, setMeetingLink] = useState<string | null>(null);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [busySlots, setBusySlots] = useState<BusySlot[]>([]);
 
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = [];
-    for (let hour = 9; hour < 17; hour++) {
+    for (let hour = 10; hour < 19; hour++) {
       for (let minute of [0, 30]) {
         slots.push({
           hour,
           minute,
-          formatted: `${hour % 12 || 12}:${minute === 0 ? '00' : minute} ${hour >= 12 ? 'PM' : 'AM'}`
+          formatted: `${hour % 12 || 12}:${minute === 0 ? '00' : minute} ${hour >= 12 ? 'PM' : 'AM'}`,
+          available: true
         });
       }
     }
     return slots;
   };
 
-  const timeSlots = generateTimeSlots();
+  useEffect(() => {
+    const fetchAvailability = async () => {
+      if (!date) return;
+      
+      setIsLoadingSlots(true);
+      try {
+        const baseSlots = generateTimeSlots();
+        setTimeSlots(baseSlots);
+        
+        const { data, error } = await supabase.functions.invoke('schedule-demo-meeting/get-availability', {
+          body: { date: date.toISOString() }
+        });
+        
+        if (error) {
+          console.error('Error fetching availability:', error);
+          toast({
+            title: "Error",
+            description: "Could not fetch availability. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (data.busySlots && Array.isArray(data.busySlots)) {
+          const updatedSlots = markUnavailableSlots(baseSlots, data.busySlots);
+          setTimeSlots(updatedSlots);
+        }
+      } catch (error) {
+        console.error('Error in fetchAvailability:', error);
+      } finally {
+        setIsLoadingSlots(false);
+      }
+    };
+
+    if (date) {
+      fetchAvailability();
+    }
+  }, [date]);
+
+  const markUnavailableSlots = (slots: TimeSlot[], busySlots: any[]): TimeSlot[] => {
+    return slots.map(slot => {
+      if (!date) return { ...slot, available: false };
+      
+      const slotStart = new Date(date);
+      slotStart.setHours(slot.hour, slot.minute, 0, 0);
+      
+      const slotEnd = new Date(slotStart);
+      slotEnd.setMinutes(slotStart.getMinutes() + 30);
+      
+      const isOverlapping = busySlots.some(busySlot => {
+        const busyStart = new Date(busySlot.start);
+        const busyEnd = new Date(busySlot.end);
+        
+        return (
+          (slotStart >= busyStart && slotStart < busyEnd) || 
+          (slotEnd > busyStart && slotEnd <= busyEnd) || 
+          (slotStart <= busyStart && slotEnd >= busyEnd)
+        );
+      });
+      
+      return {
+        ...slot,
+        available: !isOverlapping
+      };
+    });
+  };
 
   const handleSelectDate = (newDate: Date | undefined) => {
     setDate(newDate);
@@ -54,6 +129,7 @@ const BookingSection = () => {
   };
 
   const handleSelectTime = (slot: TimeSlot) => {
+    if (!slot.available) return;
     setSelectedTimeSlot(slot);
     setStep(3);
   };
@@ -232,23 +308,34 @@ const BookingSection = () => {
                     </Button>
                   </div>
                   <p className="text-carmen-teal font-medium mb-4">Please select a time slot to continue</p>
-                  <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2">
-                    {timeSlots.map((slot, idx) => (
-                      <Button
-                        key={idx}
-                        variant={selectedTimeSlot?.formatted === slot.formatted ? "default" : "outline"}
-                        className={cn(
-                          selectedTimeSlot?.formatted === slot.formatted 
-                            ? "bg-carmen-teal hover:bg-carmen-teal/90" 
-                            : "hover:bg-carmen-teal/10 hover:text-carmen-teal"
-                        )}
-                        onClick={() => handleSelectTime(slot)}
-                      >
-                        <Clock className="mr-2 h-4 w-4" />
-                        {slot.formatted}
-                      </Button>
-                    ))}
-                  </div>
+                  
+                  {isLoadingSlots ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Loader2 className="h-8 w-8 animate-spin text-carmen-teal" />
+                      <span className="ml-2 text-carmen-teal">Loading available times...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2">
+                      {timeSlots.map((slot, idx) => (
+                        <Button
+                          key={idx}
+                          variant={selectedTimeSlot?.formatted === slot.formatted ? "default" : "outline"}
+                          className={cn(
+                            selectedTimeSlot?.formatted === slot.formatted 
+                              ? "bg-carmen-teal hover:bg-carmen-teal/90" 
+                              : slot.available 
+                                ? "hover:bg-carmen-teal/10 hover:text-carmen-teal" 
+                                : "opacity-50 cursor-not-allowed bg-gray-100 hover:bg-gray-100"
+                          )}
+                          onClick={() => slot.available && handleSelectTime(slot)}
+                          disabled={!slot.available}
+                        >
+                          <Clock className="mr-2 h-4 w-4" />
+                          {slot.formatted}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               

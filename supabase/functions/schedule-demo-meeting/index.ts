@@ -15,6 +15,10 @@ interface BookingRequest {
   appointmentDate: string; // ISO string
 }
 
+interface AvailabilitySlotsRequest {
+  date: string; // ISO string for the day to check
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,106 +26,206 @@ serve(async (req) => {
   }
 
   try {
-    const requestData = await req.json();
-    console.log('Received request data:', requestData);
+    const url = new URL(req.url);
+    const path = url.pathname.split('/').pop();
+
+    // Route for getting available time slots
+    if (path === 'get-availability') {
+      return await handleGetAvailability(req);
+    }
+
+    // Default route for scheduling a meeting
+    return await handleScheduleMeeting(req);
+  } catch (error) {
+    console.error('Error in edge function:', error);
     
-    const { name, email, company, message, appointmentDate }: BookingRequest = requestData;
-
-    if (!name || !email || !appointmentDate) {
-      console.error('Missing required fields:', { name, email, appointmentDate });
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
     }
 
-    console.log('Processing demo booking request:', { name, email, company, appointmentDate });
-
-    // Create JWT client using service account credentials
-    const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
-    if (!privateKey) {
-      console.error('GMAIL_PRIVATE_KEY environment variable is not set');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error' }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const auth = new google.auth.JWT(
-      Deno.env.get('GMAIL_CLIENT_EMAIL'),
-      undefined,
-      privateKey.replace(/\\n/g, '\n'),
-      [
-        'https://www.googleapis.com/auth/calendar',
-        'https://www.googleapis.com/auth/calendar.events',
-      ],
-      'hello@carmenbpm.com'
+    return new Response(
+      JSON.stringify({ 
+        error: 'An error occurred. Please try again later.',
+        details: error instanceof Error ? error.message : String(error)
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
+  }
+});
 
-    // Initialize Google Calendar API
-    const calendar = google.calendar({ version: 'v3', auth });
-    
-    // Parse appointment date
-    const appointmentDateTime = new Date(appointmentDate);
-    
-    // Calculate end time (30 minutes after start time)
-    const endDateTime = new Date(appointmentDateTime);
-    endDateTime.setMinutes(endDateTime.getMinutes() + 30);
-    
-    // Format for Google Calendar API
-    const startTime = appointmentDateTime.toISOString();
-    const endTime = endDateTime.toISOString();
+async function handleGetAvailability(req: Request) {
+  const requestData = await req.json() as AvailabilitySlotsRequest;
+  const { date } = requestData;
+  
+  if (!date) {
+    return new Response(
+      JSON.stringify({ error: 'Date is required' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
 
-    // Create meeting description with user details
-    const meetingDescription = `
+  // Initialize Google Calendar client
+  const calendar = await initializeGoogleCalendar();
+  if (!calendar) {
+    return new Response(
+      JSON.stringify({ error: 'Failed to initialize calendar' }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // Convert date string to Date object
+  const requestDate = new Date(date);
+  
+  // Set time to start of day in UTC (will convert to EST below)
+  requestDate.setUTCHours(0, 0, 0, 0);
+  
+  // Create start and end time for the day (10am to 7pm EST)
+  const startTime = new Date(requestDate);
+  startTime.setUTCHours(15, 0, 0, 0);  // 10am EST = 15:00 UTC (during standard time)
+  
+  const endTime = new Date(requestDate);
+  endTime.setUTCHours(24, 0, 0, 0);  // 7pm EST = 24:00 UTC (during standard time)
+  
+  try {
+    // Get existing events for the specified date
+    const events = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: startTime.toISOString(),
+      timeMax: endTime.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    // Extract busy time slots from events
+    const busySlots = events.data.items?.map(event => ({
+      start: new Date(event.start?.dateTime || ''),
+      end: new Date(event.end?.dateTime || ''),
+    })) || [];
+
+    console.log('Found existing events:', busySlots.length);
+
+    // Return the busy slots
+    return new Response(
+      JSON.stringify({ busySlots }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  } catch (error) {
+    console.error('Error fetching calendar events:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to fetch calendar events',
+        details: error instanceof Error ? error.message : String(error)
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+}
+
+async function handleScheduleMeeting(req: Request) {
+  const requestData = await req.json();
+  console.log('Received request data:', requestData);
+  
+  const { name, email, company, message, appointmentDate }: BookingRequest = requestData;
+
+  if (!name || !email || !appointmentDate) {
+    console.error('Missing required fields:', { name, email, appointmentDate });
+    return new Response(
+      JSON.stringify({ error: 'Missing required fields' }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  console.log('Processing demo booking request:', { name, email, company, appointmentDate });
+
+  // Initialize Google Calendar client
+  const calendar = await initializeGoogleCalendar();
+  if (!calendar) {
+    return new Response(
+      JSON.stringify({ error: 'Failed to initialize calendar' }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
+  // Parse appointment date
+  const appointmentDateTime = new Date(appointmentDate);
+  
+  // Calculate end time (30 minutes after start time)
+  const endDateTime = new Date(appointmentDateTime);
+  endDateTime.setMinutes(endDateTime.getMinutes() + 30);
+  
+  // Format for Google Calendar API
+  const startTime = appointmentDateTime.toISOString();
+  const endTime = endDateTime.toISOString();
+
+  // Create meeting description with user details
+  const meetingDescription = `
 Demo call with ${name}
 Company: ${company}
 Email: ${email}
 ${message ? `Message: ${message}` : ''}
-    `.trim();
+  `.trim();
 
-    // Create the calendar event with Google Meet
-    console.log('Creating calendar event...');
-    const event = {
-      summary: `Carmen BPM Demo Call with ${name} (${company})`,
-      location: 'Google Meet',
-      description: meetingDescription,
-      start: {
-        dateTime: startTime,
-        timeZone: 'UTC',
-      },
-      end: {
-        dateTime: endTime,
-        timeZone: 'UTC',
-      },
-      attendees: [
-        { email: email },
-        { email: 'hello@carmenbpm.com' }
-      ],
-      // Add Google Meet conferencing
-      conferenceData: {
-        createRequest: {
-          requestId: `demo-${Date.now()}`,
-          conferenceSolutionKey: {
-            type: 'hangoutsMeet'
-          }
+  // Create the calendar event with Google Meet
+  console.log('Creating calendar event...');
+  const event = {
+    summary: `Carmen BPM Demo Call with ${name} (${company})`,
+    location: 'Google Meet',
+    description: meetingDescription,
+    start: {
+      dateTime: startTime,
+      timeZone: 'UTC',
+    },
+    end: {
+      dateTime: endTime,
+      timeZone: 'UTC',
+    },
+    attendees: [
+      { email: email },
+      { email: 'hello@carmenbpm.com' }
+    ],
+    // Add Google Meet conferencing
+    conferenceData: {
+      createRequest: {
+        requestId: `demo-${Date.now()}`,
+        conferenceSolutionKey: {
+          type: 'hangoutsMeet'
         }
-      },
-      reminders: {
-        useDefault: false,
-        overrides: [
-          { method: 'email', minutes: 60 * 24 }, // 1 day before
-          { method: 'popup', minutes: 10 }, // 10 minutes before
-        ],
-      },
-    };
+      }
+    },
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: 'email', minutes: 60 * 24 }, // 1 day before
+        { method: 'popup', minutes: 10 }, // 10 minutes before
+      ],
+    },
+  };
 
+  try {
     // Insert the event to the calendar with conferenceDataVersion=1 to enable Google Meet
     const calendarResponse = await calendar.events.insert({
       calendarId: 'primary',
@@ -147,20 +251,11 @@ ${message ? `Message: ${message}` : ''}
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
-
   } catch (error) {
-    console.error('Error scheduling demo meeting:', error);
-    
-    // Log detailed error information
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-
+    console.error('Error creating calendar event:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to schedule demo meeting. Please try again later.',
+        error: 'Failed to schedule meeting',
         details: error instanceof Error ? error.message : String(error)
       }),
       {
@@ -169,4 +264,31 @@ ${message ? `Message: ${message}` : ''}
       }
     );
   }
-});
+}
+
+async function initializeGoogleCalendar() {
+  const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
+  if (!privateKey) {
+    console.error('GMAIL_PRIVATE_KEY environment variable is not set');
+    return null;
+  }
+
+  try {
+    const auth = new google.auth.JWT(
+      Deno.env.get('GMAIL_CLIENT_EMAIL'),
+      undefined,
+      privateKey.replace(/\\n/g, '\n'),
+      [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events',
+      ],
+      'hello@carmenbpm.com'
+    );
+
+    // Initialize Google Calendar API
+    return google.calendar({ version: 'v3', auth });
+  } catch (error) {
+    console.error('Error initializing Google Calendar:', error);
+    return null;
+  }
+}
