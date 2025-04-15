@@ -33,7 +33,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
 
-  // Get all sections and editable elements from the document when the sidebar opens or edit mode changes
   useEffect(() => {
     if (isEditMode) {
       // Get sections
@@ -70,8 +69,9 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         let parentSection = '';
         let parent = element.parentElement;
         while (parent) {
-          if (parent.hasAttribute('data-section-id')) {
-            parentSection = parent.getAttribute('data-section-id') || '';
+          const sectionId = parent.getAttribute('data-section-id');
+          if (sectionId) {
+            parentSection = sectionId;
             break;
           }
           parent = parent.parentElement;
@@ -128,8 +128,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
       )
     );
-    
-    console.log(`Toggled section "${sectionId}" visibility to:`, !isCurrentlyVisible);
   };
 
   // Toggle element visibility
@@ -151,13 +149,11 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
       )
     );
-    
-    console.log(`Toggled element "${elementId}" visibility to:`, !isCurrentlyVisible);
   };
 
   // Move section up in the DOM order
   const moveSectionUp = (sectionId: string, currentIndex: number) => {
-    if (currentIndex <= 0) return; // Already at the top
+    if (currentIndex <= 0) return;
     
     const prevSection = sections[currentIndex - 1];
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -178,12 +174,11 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
     
     setSections(updatedSections);
-    console.log(`Moved section "${sectionId}" up in order`);
   };
   
   // Move section down in the DOM order
   const moveSectionDown = (sectionId: string, currentIndex: number) => {
-    if (currentIndex >= sections.length - 1) return; // Already at the bottom
+    if (currentIndex >= sections.length - 1) return;
     
     const nextSection = sections[currentIndex + 1];
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -208,7 +203,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
     
     setSections(updatedSections);
-    console.log(`Moved section "${sectionId}" down in order`);
   };
 
   if (!isEditMode) return null;
@@ -319,9 +313,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           
           <h3 className="text-sm font-medium mb-2">Elements</h3>
           
-          {/* Grouped elements */}
           {Object.entries(groupedElements).map(([sectionId, elements]) => {
-            // Find the section name
             const sectionName = sections.find(s => s.id === sectionId)?.name || sectionId;
             
             return (
@@ -361,7 +353,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
             );
           })}
           
-          {/* Ungrouped elements */}
           {ungroupedElements.length > 0 && (
             <div className="mb-4">
               <h4 className="text-xs font-medium text-gray-500 mb-1 pl-2">Other Elements</h4>
