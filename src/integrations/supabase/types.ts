@@ -381,6 +381,7 @@ export type Database = {
         Row: {
           bpm_id: string
           created_at: string | null
+          embedded_modules: string[] | null
           instance_name: string
           masks: Json | null
           metadata_custom_fields: Json | null
@@ -392,6 +393,7 @@ export type Database = {
         Insert: {
           bpm_id: string
           created_at?: string | null
+          embedded_modules?: string[] | null
           instance_name: string
           masks?: Json | null
           metadata_custom_fields?: Json | null
@@ -403,6 +405,7 @@ export type Database = {
         Update: {
           bpm_id?: string
           created_at?: string | null
+          embedded_modules?: string[] | null
           instance_name?: string
           masks?: Json | null
           metadata_custom_fields?: Json | null
@@ -432,7 +435,9 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          embed_usage_context_ids: string[] | null
           icon: string | null
+          is_embeddable_only: boolean | null
           "Metadata Structure": Json | null
           module_id: string
           module_name: string
@@ -440,7 +445,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description?: string | null
+          embed_usage_context_ids?: string[] | null
           icon?: string | null
+          is_embeddable_only?: boolean | null
           "Metadata Structure"?: Json | null
           module_id?: string
           module_name: string
@@ -448,7 +455,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string | null
+          embed_usage_context_ids?: string[] | null
           icon?: string | null
+          is_embeddable_only?: boolean | null
           "Metadata Structure"?: Json | null
           module_id?: string
           module_name?: string
@@ -847,6 +856,204 @@ export type Database = {
           },
         ]
       }
+      checklist_item_audit_log: {
+        Row: {
+          action: string
+          checklist_item_id: string | null
+          field_changes: Json | null
+          id: string
+          triggered_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          checklist_item_id?: string | null
+          field_changes?: Json | null
+          id?: string
+          triggered_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          checklist_item_id?: string | null
+          field_changes?: Json | null
+          id?: string
+          triggered_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_item_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      checklist_item_completions: {
+        Row: {
+          checklist_item_id: string | null
+          completed: boolean | null
+          completed_at: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          checklist_item_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          checklist_item_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_item_completions_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_item_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      checklist_item_snapshot_updates: {
+        Row: {
+          checklist_item_id: string | null
+          id: string
+          new_snapshot: Json | null
+          old_snapshot: Json | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          checklist_item_id?: string | null
+          id?: string
+          new_snapshot?: Json | null
+          old_snapshot?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          checklist_item_id?: string | null
+          id?: string
+          new_snapshot?: Json | null
+          old_snapshot?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_item_snapshot_updates_checklist_item_id_fkey"
+            columns: ["checklist_item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_item_snapshot_updates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          checklist_id: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          item_type: string
+          linked_id: string | null
+          linked_table: string | null
+          position: number | null
+          snapshot: Json
+        }
+        Insert: {
+          checklist_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          item_type: string
+          linked_id?: string | null
+          linked_table?: string | null
+          position?: number | null
+          snapshot: Json
+        }
+        Update: {
+          checklist_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          item_type?: string
+          linked_id?: string | null
+          linked_table?: string | null
+          position?: number | null
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_checklist_id_fkey"
+            columns: ["checklist_id"]
+            isOneToOne: false
+            referencedRelation: "checklists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklists: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          created_from: string | null
+          id: string
+          linked_to_id: string
+          linked_to_table: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          created_from?: string | null
+          id?: string
+          linked_to_id: string
+          linked_to_table: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          created_from?: string | null
+          id?: string
+          linked_to_id?: string
+          linked_to_table?: string
+          name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       client_history: {
         Row: {
           action: string
@@ -1058,6 +1265,45 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_bookings: {
+        Row: {
+          booking_date: string
+          booking_time: string
+          created_at: string
+          email: string
+          google_event_id: string | null
+          id: string
+          message: string | null
+          name: string
+          phone: string | null
+          status: string
+        }
+        Insert: {
+          booking_date: string
+          booking_time: string
+          created_at?: string
+          email: string
+          google_event_id?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          status?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_time?: string
+          created_at?: string
+          email?: string
+          google_event_id?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           elements: Json
@@ -1090,6 +1336,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bpm_module_instances"
             referencedColumns: ["module_instance_id"]
+          },
+        ]
+      }
+      entity_links: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          relationship_type: string | null
+          row_id_1: string
+          row_id_2: string
+          table_1: string
+          table_2: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          relationship_type?: string | null
+          row_id_1: string
+          row_id_2: string
+          table_1: string
+          table_2: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          relationship_type?: string | null
+          row_id_1?: string
+          row_id_2?: string
+          table_1?: string
+          table_2?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
           },
         ]
       }

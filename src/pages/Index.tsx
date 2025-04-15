@@ -1,9 +1,9 @@
-
 import { useEffect } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import HeroSecondary from '@/components/HeroSecondary';
 import HeroTertiary from '@/components/HeroTertiary';
+import HeroQuaternary from '@/components/HeroQuaternary';
 import Features from '@/components/Features';
 import Modules from '@/components/Modules';
 import Partnerships from '@/components/Partnerships';
@@ -52,16 +52,19 @@ const Index = () => {
         <div data-section-id="features" data-section-order="3">
           <Features />
         </div>
-        <div data-section-id="modules" data-section-order="4">
+        <div data-section-id="hero-quaternary" data-section-order="4">
+          <HeroQuaternary />
+        </div>
+        <div data-section-id="modules" data-section-order="5">
           <Modules />
         </div>
-        <div data-section-id="booking" data-section-order="5">
+        <div data-section-id="booking" data-section-order="6">
           <BookingSection />
         </div>
-        <div data-section-id="partnerships" data-section-order="6">
+        <div data-section-id="partnerships" data-section-order="7">
           <Partnerships />
         </div>
-        <div data-section-id="partner" data-section-order="7">
+        <div data-section-id="partner" data-section-order="8">
           <Partner />
         </div>
       </main>
