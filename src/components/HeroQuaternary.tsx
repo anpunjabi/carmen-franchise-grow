@@ -13,26 +13,26 @@ const HeroQuaternary = () => {
       </div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col md:flex-row-reverse items-center">
+        <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{
-          animationDelay: '0.1s'
-        }}>
+            animationDelay: '0.1s'
+          }}>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
               <EditableText id="hero-quaternary-heading-1" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
-                Customize your
+                Advanced workflow
               </EditableText>
               <EditableText id="hero-quaternary-heading-2" as="span">
-                {' workflow with ease'}
+                {' customization tools'}
               </EditableText>
             </h1>
             <EditableText id="hero-quaternary-paragraph" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
-              Tailor every aspect of your business process management with Carmen's intuitive, drag-and-drop interface. No coding required, just pure customization.
+              Transform your business processes with our powerful, intuitive customization tools. Design, automate, and optimize workflows in minutes.
             </EditableText>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>
                 <EditableText id="hero-quaternary-button-primary">
-                  Start Customizing
+                  Explore Customization
                 </EditableText>
                 <ArrowRight size={16} className="ml-2" />
               </Button>
@@ -45,19 +45,23 @@ const HeroQuaternary = () => {
           </div>
           
           <div className="md:w-1/2 md:pl-12 fade-in-up" style={{
-          animationDelay: '0.3s'
-        }}>
+            animationDelay: '0.3s'
+          }}>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-carmen-teal/20 to-carmen-sky/20 rounded-3xl blur-xl animate-floating"></div>
               <div className="relative bg-white p-2 rounded-3xl shadow-soft overflow-hidden border border-white">
-                <img src="https://images.unsplash.com/photo-1531590878845-12627191ad40?auto=format&fit=crop&q=80&w=800&h=600" alt="BPM Customization" className="w-full h-auto rounded-2xl shadow-sm" />
+                <img 
+                  src="https://images.unsplash.com/photo-1531297484001-80022131f5a1" 
+                  alt="Workflow Customization" 
+                  className="w-full h-auto rounded-2xl shadow-sm" 
+                />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-white/0 p-4">
                   <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white">
                     <EditableText id="hero-quaternary-card-title" as="h3" className="text-carmen-navy font-semibold mb-1">
-                      Drag-and-Drop Workflow Builder
+                      Workflow Designer
                     </EditableText>
                     <EditableText id="hero-quaternary-card-description" as="p" className="text-sm text-gray-600">
-                      Create custom workflows without technical complexity
+                      Intuitive drag-and-drop interface for process optimization
                     </EditableText>
                   </div>
                 </div>
