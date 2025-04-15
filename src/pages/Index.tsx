@@ -4,6 +4,7 @@ import Hero from '@/components/Hero';
 import HeroSecondary from '@/components/HeroSecondary';
 import HeroTertiary from '@/components/HeroTertiary';
 import HeroQuaternary from '@/components/HeroQuaternary';
+import HeroQuinary from '@/components/HeroQuinary';
 import Features from '@/components/Features';
 import Modules from '@/components/Modules';
 import Partnerships from '@/components/Partnerships';
@@ -61,10 +62,13 @@ const Index = () => {
         <div data-section-id="booking" data-section-order="6">
           <BookingSection />
         </div>
-        <div data-section-id="partnerships" data-section-order="7">
+        <div data-section-id="hero-quinary" data-section-order="9">
+          <HeroQuinary />
+        </div>
+        <div data-section-id="partnerships" data-section-order="10">
           <Partnerships />
         </div>
-        <div data-section-id="partner" data-section-order="8">
+        <div data-section-id="partner" data-section-order="11">
           <Partner />
         </div>
       </main>
