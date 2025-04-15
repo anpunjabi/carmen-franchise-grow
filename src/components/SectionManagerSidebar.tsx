@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -8,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Section {
   id: string;
@@ -41,86 +41,108 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 
   useEffect(() => {
     if (isEditMode) {
-      const sectionElements = document.querySelectorAll('[data-section-id]');
-      const sectionsMap = new Map<string, Section>();
-      
-      sectionElements.forEach((section, index) => {
-        const sectionId = section.getAttribute('data-section-id') || '';
-        const isVisible = !section.classList.contains('hidden');
-        const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
-        
-        if (!sectionsMap.has(sectionId)) {
-          sectionsMap.set(sectionId, {
-            id: sectionId,
-            name: sectionName,
-            isVisible,
-            order
-          });
-        }
-      });
-      
-      const sectionsArray = Array.from(sectionsMap.values());
-      sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
-      setSections(sectionsArray);
-
-      const editableElementNodes = document.querySelectorAll('[data-editable-id]');
-      const elementsMap = new Map<string, EditableElement>();
-      
-      editableElementNodes.forEach(element => {
-        const elementId = element.getAttribute('data-editable-id') || '';
-        const isVisible = !element.classList.contains('hidden');
-        
-        let parentSection = '';
-        let parent = element.parentElement;
-        while (parent) {
-          const sectionId = parent.getAttribute('data-section-id');
-          if (sectionId) {
-            parentSection = sectionId;
-            break;
-          }
-          parent = parent.parentElement;
-        }
-        
-        let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        
-        if (name.includes('Link ')) {
-          name = name.replace('Link ', '');
-        }
-        
-        if (name.includes('Nav ')) {
-          name = name.replace('Nav ', '');
-        }
-        
-        if (name.includes('Mobile')) {
-          name = name.replace('Mobile', ' (Mobile)');
-        }
-        
-        if (name.includes('Social ')) {
-          name = name.replace('Social ', '') + ' Icon';
-        }
-        
-        if (!elementsMap.has(elementId)) {
-          elementsMap.set(elementId, {
-            id: elementId,
-            name,
-            isVisible,
-            parentSection
-          });
-        }
-      });
-      
-      setEditableElements(Array.from(elementsMap.values()));
+      loadSectionsAndElements();
     }
   }, [isOpen, isEditMode]);
 
+  const loadSectionsAndElements = () => {
+    const sectionElements = document.querySelectorAll('[data-section-id]');
+    const sectionsMap = new Map<string, Section>();
+    
+    sectionElements.forEach((section, index) => {
+      const sectionId = section.getAttribute('data-section-id') || '';
+      const isVisible = !section.classList.contains('hidden');
+      const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
+      
+      if (!sectionsMap.has(sectionId)) {
+        sectionsMap.set(sectionId, {
+          id: sectionId,
+          name: sectionName,
+          isVisible,
+          order
+        });
+      }
+    });
+    
+    const sectionsArray = Array.from(sectionsMap.values());
+    sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
+    setSections(sectionsArray);
+
+    const editableElementNodes = document.querySelectorAll('[data-editable-id]');
+    const elementsMap = new Map<string, EditableElement>();
+    
+    editableElementNodes.forEach(element => {
+      const elementId = element.getAttribute('data-editable-id') || '';
+      const isVisible = !element.classList.contains('hidden');
+      
+      let parentSection = '';
+      let parent = element.parentElement;
+      while (parent) {
+        const sectionId = parent.getAttribute('data-section-id');
+        if (sectionId) {
+          parentSection = sectionId;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+      
+      let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      
+      if (name.includes('Link ')) {
+        name = name.replace('Link ', '');
+      }
+      
+      if (name.includes('Nav ')) {
+        name = name.replace('Nav ', '');
+      }
+      
+      if (name.includes('Mobile')) {
+        name = name.replace('Mobile', ' (Mobile)');
+      }
+      
+      if (name.includes('Social ')) {
+        name = name.replace('Social ', '') + ' Icon';
+      }
+      
+      if (!elementsMap.has(elementId)) {
+        elementsMap.set(elementId, {
+          id: elementId,
+          name,
+          isVisible,
+          parentSection
+        });
+      }
+    });
+    
+    setEditableElements(Array.from(elementsMap.values()));
+  };
+
   const toggleSectionVisibility = async (sectionId: string) => {
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-    if (!section) return;
+    if (!section) {
+      toast.error(`Section with ID ${sectionId} not found`);
+      return;
+    }
     
     const isCurrentlyVisible = !section.classList.contains('hidden');
     
     try {
+      // First update the DOM immediately for a responsive feel
+      if (isCurrentlyVisible) {
+        section.classList.add('hidden');
+      } else {
+        section.classList.remove('hidden');
+      }
+      
+      // Update local state
+      setSections(prev => 
+        prev.map(s => 
+          s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
+        )
+      );
+      
+      // Then update the database
       const { data, error } = await supabase
         .from('landing_page_settings')
         .select('section_visibility')
@@ -129,44 +151,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       
       if (error) {
         console.error('Error fetching current visibility settings:', error);
-        return;
-      }
-
-      if (isCurrentlyVisible) {
-        section.classList.add('hidden');
-      } else {
-        section.classList.remove('hidden');
-      }
-      
-      setSections(prev => 
-        prev.map(s => 
-          s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
-        )
-      );
-      
-      // Create a properly typed section_visibility object
-      const currentVisibility: Record<string, boolean> = {};
-      
-      // Safely handle the data.section_visibility value
-      if (data && data.section_visibility && typeof data.section_visibility === 'object') {
-        // Convert to Record<string, boolean>
-        Object.entries(data.section_visibility as Record<string, any>).forEach(([key, value]) => {
-          currentVisibility[key] = !!value; // Convert any type to boolean
-        });
-      }
-      
-      const updatedVisibility: Record<string, boolean> = {
-        ...currentVisibility,
-        [sectionId]: !isCurrentlyVisible
-      };
-      
-      const { error: updateError } = await supabase
-        .from('landing_page_settings')
-        .update({ section_visibility: updatedVisibility })
-        .eq('id', 1);
-      
-      if (updateError) {
-        console.error('Error updating section visibility:', updateError);
+        // Revert UI state on error
         if (isCurrentlyVisible) {
           section.classList.remove('hidden');
         } else {
@@ -177,19 +162,96 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
             s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
           )
         );
+        toast.error('Failed to fetch visibility settings');
+        return;
+      }
+
+      // Create a properly typed section_visibility object
+      const currentVisibility: Record<string, boolean> = {};
+      
+      // Safely handle the data.section_visibility value
+      if (data && data.section_visibility && typeof data.section_visibility === 'object') {
+        try {
+          // Convert to Record<string, boolean>
+          Object.entries(data.section_visibility).forEach(([key, value]) => {
+            currentVisibility[key] = value === true;
+          });
+        } catch (err) {
+          console.error('Error parsing section_visibility data:', err);
+        }
+      }
+      
+      const updatedVisibility: Record<string, boolean> = {
+        ...currentVisibility,
+        [sectionId]: !isCurrentlyVisible
+      };
+      
+      console.log('Updating section visibility with:', updatedVisibility);
+      
+      const { error: updateError } = await supabase
+        .from('landing_page_settings')
+        .update({ section_visibility: updatedVisibility })
+        .eq('id', 1);
+      
+      if (updateError) {
+        console.error('Error updating section visibility:', updateError);
+        // Revert UI state on error
+        if (isCurrentlyVisible) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+        setSections(prev => 
+          prev.map(s => 
+            s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
+          )
+        );
+        toast.error('Failed to save visibility settings');
+      } else {
+        toast.success(`Section ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
       }
     } catch (error) {
       console.error('Error saving section visibility:', error);
+      toast.error('Failed to save visibility settings');
+      // Revert UI on any error
+      if (isCurrentlyVisible) {
+        section.classList.remove('hidden');
+      } else {
+        section.classList.add('hidden');
+      }
+      setSections(prev => 
+        prev.map(s => 
+          s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
+        )
+      );
     }
   };
 
   const toggleElementVisibility = async (elementId: string) => {
     const element = document.querySelector(`[data-editable-id="${elementId}"]`);
-    if (!element) return;
+    if (!element) {
+      toast.error(`Element with ID ${elementId} not found`);
+      return;
+    }
     
     const isCurrentlyVisible = !element.classList.contains('hidden');
     
     try {
+      // First update the DOM immediately for a responsive feel
+      if (isCurrentlyVisible) {
+        element.classList.add('hidden');
+      } else {
+        element.classList.remove('hidden');
+      }
+      
+      // Update local state
+      setEditableElements(prev => 
+        prev.map(e => 
+          e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
+        )
+      );
+      
+      // Then update the database
       const { data, error } = await supabase
         .from('landing_page_settings')
         .select('element_visibility')
@@ -198,44 +260,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       
       if (error) {
         console.error('Error fetching current element visibility settings:', error);
-        return;
-      }
-
-      if (isCurrentlyVisible) {
-        element.classList.add('hidden');
-      } else {
-        element.classList.remove('hidden');
-      }
-      
-      setEditableElements(prev => 
-        prev.map(e => 
-          e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
-        )
-      );
-      
-      // Create a properly typed element_visibility object
-      const currentVisibility: Record<string, boolean> = {};
-      
-      // Safely handle the data.element_visibility value
-      if (data && data.element_visibility && typeof data.element_visibility === 'object') {
-        // Convert to Record<string, boolean>
-        Object.entries(data.element_visibility as Record<string, any>).forEach(([key, value]) => {
-          currentVisibility[key] = !!value; // Convert any type to boolean
-        });
-      }
-      
-      const updatedVisibility: Record<string, boolean> = {
-        ...currentVisibility,
-        [elementId]: !isCurrentlyVisible
-      };
-      
-      const { error: updateError } = await supabase
-        .from('landing_page_settings')
-        .update({ element_visibility: updatedVisibility })
-        .eq('id', 1);
-      
-      if (updateError) {
-        console.error('Error updating element visibility:', updateError);
+        // Revert UI state on error
         if (isCurrentlyVisible) {
           element.classList.remove('hidden');
         } else {
@@ -246,9 +271,68 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
             e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
           )
         );
+        toast.error('Failed to fetch visibility settings');
+        return;
+      }
+
+      // Create a properly typed element_visibility object
+      const currentVisibility: Record<string, boolean> = {};
+      
+      // Safely handle the data.element_visibility value
+      if (data && data.element_visibility && typeof data.element_visibility === 'object') {
+        try {
+          // Convert to Record<string, boolean>
+          Object.entries(data.element_visibility).forEach(([key, value]) => {
+            currentVisibility[key] = value === true;
+          });
+        } catch (err) {
+          console.error('Error parsing element_visibility data:', err);
+        }
+      }
+      
+      const updatedVisibility: Record<string, boolean> = {
+        ...currentVisibility,
+        [elementId]: !isCurrentlyVisible
+      };
+      
+      console.log('Updating element visibility with:', updatedVisibility);
+      
+      const { error: updateError } = await supabase
+        .from('landing_page_settings')
+        .update({ element_visibility: updatedVisibility })
+        .eq('id', 1);
+      
+      if (updateError) {
+        console.error('Error updating element visibility:', updateError);
+        // Revert UI state on error
+        if (isCurrentlyVisible) {
+          element.classList.remove('hidden');
+        } else {
+          element.classList.add('hidden');
+        }
+        setEditableElements(prev => 
+          prev.map(e => 
+            e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
+          )
+        );
+        toast.error('Failed to save element visibility settings');
+      } else {
+        toast.success(`Element ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
       }
     } catch (error) {
       console.error('Error saving element visibility:', error);
+      toast.error('Failed to save visibility settings');
+      // Revert UI on any error
+      if (isCurrentlyVisible) {
+        element.classList.remove('hidden');
+      } else {
+        element.classList.add('hidden');
+      }
+      setEditableElements(prev => 
+        prev.map(e => 
+          e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
+        )
+      );
     }
   };
 

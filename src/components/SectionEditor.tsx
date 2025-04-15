@@ -52,38 +52,54 @@ const SectionEditor = () => {
           
           // Apply section visibility with verification
           if (settings.section_visibility && typeof settings.section_visibility === 'object') {
+            // Use a counter to verify application
+            let appliedCount = 0;
+            let notFoundCount = 0;
+            
             Object.entries(settings.section_visibility).forEach(([sectionId, isVisible]) => {
               const section = document.querySelector(`[data-section-id="${sectionId}"]`);
               if (section) {
-                if (!isVisible) {
+                if (isVisible === false) {
                   section.classList.add('hidden');
                 } else {
                   section.classList.remove('hidden');
                 }
                 console.log(`Applied visibility ${isVisible} to section ${sectionId}`);
+                appliedCount++;
               } else {
                 console.log(`Section with ID ${sectionId} not found in the DOM`);
+                notFoundCount++;
               }
             });
+            
+            console.log(`Applied visibility to ${appliedCount} sections, ${notFoundCount} sections not found`);
           } else {
             console.log('No section visibility settings found or invalid format');
           }
           
           // Apply element visibility with verification
           if (settings.element_visibility && typeof settings.element_visibility === 'object') {
+            // Use a counter to verify application
+            let appliedCount = 0;
+            let notFoundCount = 0;
+            
             Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {
               const element = document.querySelector(`[data-editable-id="${elementId}"]`);
               if (element) {
-                if (!isVisible) {
+                if (isVisible === false) {
                   element.classList.add('hidden');
                 } else {
                   element.classList.remove('hidden');
                 }
                 console.log(`Applied visibility ${isVisible} to element ${elementId}`);
+                appliedCount++;
               } else {
                 console.log(`Element with ID ${elementId} not found in the DOM`);
+                notFoundCount++;
               }
             });
+            
+            console.log(`Applied visibility to ${appliedCount} elements, ${notFoundCount} elements not found`);
           } else {
             console.log('No element visibility settings found or invalid format');
           }
@@ -99,7 +115,10 @@ const SectionEditor = () => {
       }
     };
     
-    loadVisibilitySettings();
+    // Give a small delay to ensure DOM is fully loaded
+    const timer = setTimeout(() => {
+      loadVisibilitySettings();
+    }, 300);
     
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
@@ -123,6 +142,7 @@ const SectionEditor = () => {
     
     return () => {
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
+      clearTimeout(timer);
     };
   }, []);
   
