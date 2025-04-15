@@ -31,22 +31,35 @@ serve(async (req) => {
       undefined,
       Deno.env.get('GMAIL_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
       ['https://www.googleapis.com/auth/gmail.send'],
-      'hello@carmenbpm.com' // The email address you're sending on behalf of
+      'hello@carmenbpm.com'
     );
 
-    // Construct email content
+    console.log('Creating email content...');
+
+    // Construct email content with a professional template
     const emailContent = `
 From: Carmen BPM <hello@carmenbpm.com>
 To: hello@carmenbpm.com
 Subject: New Contact Form Submission from ${name}
+Content-Type: text/html; charset=utf-8
 
-Name: ${name}
-Email: ${email}
-Company: ${company}
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h2 style="color: #333;">New Contact Form Submission</h2>
+  
+  <div style="background: #f7f7f7; padding: 20px; border-radius: 5px; margin: 20px 0;">
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Company:</strong> ${company}</p>
+  </div>
 
-Message:
-${message}
+  <div style="margin-top: 20px;">
+    <h3 style="color: #555;">Message:</h3>
+    <p style="line-height: 1.6;">${message}</p>
+  </div>
+</div>
     `.trim();
+
+    console.log('Encoding email...');
 
     // Encode the email content
     const encodedEmail = Buffer.from(emailContent).toString('base64')
