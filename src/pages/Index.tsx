@@ -62,13 +62,13 @@ const Index = () => {
         <div data-section-id="booking" data-section-order="6">
           <BookingSection />
         </div>
-        <div data-section-id="hero-quinary" data-section-order="9">
+        <div data-section-id="hero-quinary" data-section-order="7">
           <HeroQuinary />
         </div>
-        <div data-section-id="partnerships" data-section-order="10">
+        <div data-section-id="partnerships" data-section-order="8">
           <Partnerships />
         </div>
-        <div data-section-id="partner" data-section-order="11">
+        <div data-section-id="partner" data-section-order="9">
           <Partner />
         </div>
       </main>
