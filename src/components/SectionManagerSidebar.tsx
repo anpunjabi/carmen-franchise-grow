@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -29,6 +28,11 @@ interface SectionManagerSidebarProps {
   isEditMode: boolean;
 }
 
+interface VisibilitySettings {
+  section_visibility: Record<string, boolean>;
+  element_visibility: Record<string, boolean>;
+}
+
 const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
@@ -36,7 +40,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 
   useEffect(() => {
     if (isEditMode) {
-      // Get sections
       const sectionElements = document.querySelectorAll('[data-section-id]');
       const sectionsMap = new Map<string, Section>();
       
@@ -46,7 +49,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
         
-        // Only add if not already in the map (avoid duplicates)
         if (!sectionsMap.has(sectionId)) {
           sectionsMap.set(sectionId, {
             id: sectionId,
@@ -57,12 +59,10 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         }
       });
       
-      // Convert map to array and sort by order
       const sectionsArray = Array.from(sectionsMap.values());
       sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
       setSections(sectionsArray);
 
-      // Get editable elements
       const editableElementNodes = document.querySelectorAll('[data-editable-id]');
       const elementsMap = new Map<string, EditableElement>();
       
@@ -70,7 +70,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         const elementId = element.getAttribute('data-editable-id') || '';
         const isVisible = !element.classList.contains('hidden');
         
-        // Try to find the nearest section for grouping
         let parentSection = '';
         let parent = element.parentElement;
         while (parent) {
@@ -82,10 +81,8 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           parent = parent.parentElement;
         }
         
-        // Format name from ID
         let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         
-        // Special formatting for specific patterns
         if (name.includes('Link ')) {
           name = name.replace('Link ', '');
         }
@@ -102,7 +99,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           name = name.replace('Social ', '') + ' Icon';
         }
         
-        // Only add if not already in the map (avoid duplicates)
         if (!elementsMap.has(elementId)) {
           elementsMap.set(elementId, {
             id: elementId,
@@ -117,29 +113,13 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     }
   }, [isOpen, isEditMode]);
 
-  // Toggle section visibility
   const toggleSectionVisibility = async (sectionId: string) => {
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (!section) return;
     
     const isCurrentlyVisible = !section.classList.contains('hidden');
     
-    if (isCurrentlyVisible) {
-      section.classList.add('hidden');
-    } else {
-      section.classList.remove('hidden');
-    }
-    
-    // Update our local state
-    setSections(prev => 
-      prev.map(s => 
-        s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
-      )
-    );
-
-    // Save visibility change to database
     try {
-      // First get current settings
       const { data, error } = await supabase
         .from('landing_page_settings')
         .select('section_visibility')
@@ -150,15 +130,25 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         console.error('Error fetching current visibility settings:', error);
         return;
       }
+
+      if (isCurrentlyVisible) {
+        section.classList.add('hidden');
+      } else {
+        section.classList.remove('hidden');
+      }
       
-      // Update the section visibility
-      const currentVisibility = data?.section_visibility || {};
-      const updatedVisibility = { 
+      setSections(prev => 
+        prev.map(s => 
+          s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
+        )
+      );
+      
+      const currentVisibility: Record<string, boolean> = data?.section_visibility || {};
+      const updatedVisibility: Record<string, boolean> = {
         ...currentVisibility,
         [sectionId]: !isCurrentlyVisible
       };
       
-      // Save back to database
       const { error: updateError } = await supabase
         .from('landing_page_settings')
         .update({ section_visibility: updatedVisibility })
@@ -166,35 +156,29 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       
       if (updateError) {
         console.error('Error updating section visibility:', updateError);
+        if (isCurrentlyVisible) {
+          section.classList.remove('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+        setSections(prev => 
+          prev.map(s => 
+            s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
+          )
+        );
       }
     } catch (error) {
       console.error('Error saving section visibility:', error);
     }
   };
 
-  // Toggle element visibility
   const toggleElementVisibility = async (elementId: string) => {
     const element = document.querySelector(`[data-editable-id="${elementId}"]`);
     if (!element) return;
     
     const isCurrentlyVisible = !element.classList.contains('hidden');
     
-    if (isCurrentlyVisible) {
-      element.classList.add('hidden');
-    } else {
-      element.classList.remove('hidden');
-    }
-    
-    // Update our local state
-    setEditableElements(prev => 
-      prev.map(e => 
-        e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
-      )
-    );
-
-    // Save element visibility to database
     try {
-      // First get current settings
       const { data, error } = await supabase
         .from('landing_page_settings')
         .select('element_visibility')
@@ -205,15 +189,25 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         console.error('Error fetching current element visibility settings:', error);
         return;
       }
+
+      if (isCurrentlyVisible) {
+        element.classList.add('hidden');
+      } else {
+        element.classList.remove('hidden');
+      }
       
-      // Update the element visibility
-      const currentVisibility = data?.element_visibility || {};
-      const updatedVisibility = { 
+      setEditableElements(prev => 
+        prev.map(e => 
+          e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
+        )
+      );
+      
+      const currentVisibility: Record<string, boolean> = data?.element_visibility || {};
+      const updatedVisibility: Record<string, boolean> = {
         ...currentVisibility,
         [elementId]: !isCurrentlyVisible
       };
       
-      // Save back to database
       const { error: updateError } = await supabase
         .from('landing_page_settings')
         .update({ element_visibility: updatedVisibility })
@@ -221,13 +215,22 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       
       if (updateError) {
         console.error('Error updating element visibility:', updateError);
+        if (isCurrentlyVisible) {
+          element.classList.remove('hidden');
+        } else {
+          element.classList.add('hidden');
+        }
+        setEditableElements(prev => 
+          prev.map(e => 
+            e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
+          )
+        );
       }
     } catch (error) {
       console.error('Error saving element visibility:', error);
     }
   };
 
-  // Move section up in the DOM order
   const moveSectionUp = (sectionId: string, currentIndex: number) => {
     if (currentIndex <= 0) return;
     
@@ -237,14 +240,11 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     
     if (!section || !prevSectionEl || !section.parentNode) return;
     
-    // Move in the DOM
     section.parentNode.insertBefore(section, prevSectionEl);
     
-    // Update order attributes
     section.setAttribute('data-section-order', `${currentIndex - 1}`);
     prevSectionEl.setAttribute('data-section-order', `${currentIndex}`);
     
-    // Update our state to reflect the new order
     const updatedSections = [...sections];
     [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
       [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
@@ -252,7 +252,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     setSections(updatedSections);
   };
   
-  // Move section down in the DOM order
   const moveSectionDown = (sectionId: string, currentIndex: number) => {
     if (currentIndex >= sections.length - 1) return;
     
@@ -262,18 +261,15 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     
     if (!section || !nextSectionEl || !section.parentNode) return;
     
-    // Move in the DOM
     if (nextSectionEl.nextSibling) {
       section.parentNode.insertBefore(section, nextSectionEl.nextSibling);
     } else {
       section.parentNode.appendChild(section);
     }
     
-    // Update order attributes
     section.setAttribute('data-section-order', `${currentIndex + 1}`);
     nextSectionEl.setAttribute('data-section-order', `${currentIndex}`);
     
-    // Update our state to reflect the new order
     const updatedSections = [...sections];
     [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
       [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
@@ -283,7 +279,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 
   if (!isEditMode) return null;
 
-  // Group elements by section
   const groupedElements: Record<string, EditableElement[]> = {};
   const ungroupedElements: EditableElement[] = [];
   

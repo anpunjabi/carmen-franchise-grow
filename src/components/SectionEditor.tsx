@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -40,23 +39,42 @@ const SectionEditor = () => {
           .eq('id', 1)
           .single();
         
-        console.log('Visibility settings data:', data, 'Error:', error);
-        
-        if (data && !error) {
-          const settings = data as unknown as LandingPageSettings;
+        if (error) {
+          console.error('Error loading visibility settings:', error);
+          return;
+        }
+
+        if (data) {
+          const settings = data as LandingPageSettings;
+          
+          // Apply section visibility with verification
           if (settings.section_visibility) {
-            console.log('Applying section visibility:', settings.section_visibility);
-            applySectionVisibility(settings.section_visibility);
+            Object.entries(settings.section_visibility).forEach(([sectionId, isVisible]) => {
+              const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+              if (section) {
+                if (!isVisible) {
+                  section.classList.add('hidden');
+                } else {
+                  section.classList.remove('hidden');
+                }
+                console.log(`Applied visibility ${isVisible} to section ${sectionId}`);
+              }
+            });
           }
           
+          // Apply element visibility with verification
           if (settings.element_visibility) {
-            console.log('Applying element visibility:', settings.element_visibility);
-            applyElementVisibility(settings.element_visibility);
-          }
-
-          if (settings.section_order) {
-            console.log('Applying section order:', settings.section_order);
-            applySectionOrder(settings.section_order);
+            Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {
+              const element = document.querySelector(`[data-editable-id="${elementId}"]`);
+              if (element) {
+                if (!isVisible) {
+                  element.classList.add('hidden');
+                } else {
+                  element.classList.remove('hidden');
+                }
+                console.log(`Applied visibility ${isVisible} to element ${elementId}`);
+              }
+            });
           }
         }
       } catch (error) {
@@ -80,7 +98,6 @@ const SectionEditor = () => {
         document.querySelectorAll('.editable-element').forEach((element) => {
           element.classList.remove('editable-element');
         });
-        // Save the current visibility state when exiting edit mode
         saveVisibilitySettings();
       }
     };
@@ -152,10 +169,8 @@ const SectionEditor = () => {
     console.log('Section reordering applied successfully');
   };
 
-  // Function to save current visibility settings to Supabase
   const saveVisibilitySettings = async () => {
     try {
-      // Collect current section visibility
       const sectionVisibility: SectionVisibility = {};
       document.querySelectorAll('[data-section-id]').forEach((section) => {
         const sectionId = section.getAttribute('data-section-id');
@@ -164,7 +179,6 @@ const SectionEditor = () => {
         }
       });
 
-      // Collect current element visibility
       const elementVisibility: ElementVisibility = {};
       document.querySelectorAll('[data-editable-id]').forEach((element) => {
         const elementId = element.getAttribute('data-editable-id');
@@ -173,7 +187,6 @@ const SectionEditor = () => {
         }
       });
 
-      // Collect current section order
       const sectionOrder: SectionOrder = {};
       document.querySelectorAll('[data-section-id]').forEach((section) => {
         const sectionId = section.getAttribute('data-section-id');
@@ -185,7 +198,6 @@ const SectionEditor = () => {
 
       console.log('Saving section order:', sectionOrder);
 
-      // Save to Supabase
       const { error } = await supabase
         .from('landing_page_settings')
         .upsert({
