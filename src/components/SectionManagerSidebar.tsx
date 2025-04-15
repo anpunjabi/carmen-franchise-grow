@@ -37,29 +37,33 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     if (isEditMode) {
       // Get sections
       const sectionElements = document.querySelectorAll('[data-section-id]');
-      const sectionsArray: Section[] = [];
+      const sectionsMap = new Map<string, Section>();
       
       sectionElements.forEach((section, index) => {
         const sectionId = section.getAttribute('data-section-id') || '';
         const isVisible = !section.classList.contains('hidden');
-        const name = sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
         
-        sectionsArray.push({
-          id: sectionId,
-          name,
-          isVisible,
-          order
-        });
+        // Only add if not already in the map (avoid duplicates)
+        if (!sectionsMap.has(sectionId)) {
+          sectionsMap.set(sectionId, {
+            id: sectionId,
+            name: sectionName,
+            isVisible,
+            order
+          });
+        }
       });
       
-      // Sort sections by order
+      // Convert map to array and sort by order
+      const sectionsArray = Array.from(sectionsMap.values());
       sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
       setSections(sectionsArray);
 
       // Get editable elements
       const editableElementNodes = document.querySelectorAll('[data-editable-id]');
-      const elementsArray: EditableElement[] = [];
+      const elementsMap = new Map<string, EditableElement>();
       
       editableElementNodes.forEach(element => {
         const elementId = element.getAttribute('data-editable-id') || '';
@@ -97,15 +101,18 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           name = name.replace('Social ', '') + ' Icon';
         }
         
-        elementsArray.push({
-          id: elementId,
-          name,
-          isVisible,
-          parentSection
-        });
+        // Only add if not already in the map (avoid duplicates)
+        if (!elementsMap.has(elementId)) {
+          elementsMap.set(elementId, {
+            id: elementId,
+            name,
+            isVisible,
+            parentSection
+          });
+        }
       });
       
-      setEditableElements(elementsArray);
+      setEditableElements(Array.from(elementsMap.values()));
     }
   }, [isOpen, isEditMode]);
 
