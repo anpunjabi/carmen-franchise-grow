@@ -2234,6 +2234,30 @@ export type Database = {
           },
         ]
       }
+      terms_of_service: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       user_permission_overrides: {
         Row: {
           action: string
@@ -2413,9 +2437,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_terms_of_service: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_segment_access: {
         Args: { segment_id: string }
         Returns: boolean
+      }
+      update_terms_of_service: {
+        Args: { new_content: string; terms_id: string }
+        Returns: undefined
       }
       user_has_segment_access: {
         Args: { _user_id: string; _segment_id: string }
