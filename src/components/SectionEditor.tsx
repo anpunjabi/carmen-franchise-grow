@@ -48,6 +48,7 @@ const SectionEditor = () => {
         }
 
         if (data) {
+          console.log('Loaded visibility settings:', data);
           const settings = data as LandingPageSettings;
           
           // Apply section visibility with verification
@@ -240,18 +241,51 @@ const SectionEditor = () => {
       console.log('Saving section visibility:', sectionVisibility);
       console.log('Saving element visibility:', elementVisibility);
 
-      const { error } = await supabase
+      // Check if record exists first
+      const { data: existingData, error: checkError } = await supabase
         .from('landing_page_settings')
-        .upsert({
-          id: 1,
-          section_visibility: sectionVisibility,
-          element_visibility: elementVisibility,
-          section_order: sectionOrder,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        .select('id')
+        .eq('id', 1)
+        .single();
 
-      if (error) {
-        console.error('Error saving visibility settings:', error);
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "Row not found"
+        console.error('Error checking landing_page_settings:', checkError);
+        toast.error('Failed to check existing settings');
+        return;
+      }
+
+      let saveError;
+      
+      if (existingData) {
+        // Update existing record
+        const { error } = await supabase
+          .from('landing_page_settings')
+          .update({
+            section_visibility: sectionVisibility,
+            element_visibility: elementVisibility,
+            section_order: sectionOrder,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', 1);
+          
+        saveError = error;
+      } else {
+        // Insert new record with id=1
+        const { error } = await supabase
+          .from('landing_page_settings')
+          .insert({
+            id: 1,
+            section_visibility: sectionVisibility,
+            element_visibility: elementVisibility,
+            section_order: sectionOrder,
+            updated_at: new Date().toISOString()
+          });
+          
+        saveError = error;
+      }
+
+      if (saveError) {
+        console.error('Error saving visibility settings:', saveError);
         toast.error('Failed to save visibility settings');
       } else {
         toast.success('Section and element visibility settings saved');

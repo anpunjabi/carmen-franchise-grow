@@ -29,10 +29,8 @@ interface SectionManagerSidebarProps {
   isEditMode: boolean;
 }
 
-interface VisibilitySettings {
-  section_visibility?: Record<string, boolean>;
-  element_visibility?: Record<string, boolean>;
-}
+type SectionVisibility = Record<string, boolean>;
+type ElementVisibility = Record<string, boolean>;
 
 const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
@@ -166,22 +164,19 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         return;
       }
 
-      // Create a properly typed section_visibility object
-      const currentVisibility: Record<string, boolean> = {};
+      // Parse and ensure we have a valid section_visibility object
+      let currentVisibility: SectionVisibility = {};
       
-      // Safely handle the data.section_visibility value
-      if (data && data.section_visibility && typeof data.section_visibility === 'object') {
-        try {
-          // Convert to Record<string, boolean>
-          Object.entries(data.section_visibility).forEach(([key, value]) => {
-            currentVisibility[key] = value === true;
-          });
-        } catch (err) {
-          console.error('Error parsing section_visibility data:', err);
-        }
+      if (data?.section_visibility && typeof data.section_visibility === 'object') {
+        // Convert JSON data to proper SectionVisibility type
+        Object.entries(data.section_visibility).forEach(([key, value]) => {
+          if (typeof value === 'boolean') {
+            currentVisibility[key] = value;
+          }
+        });
       }
       
-      const updatedVisibility: Record<string, boolean> = {
+      const updatedVisibility: SectionVisibility = {
         ...currentVisibility,
         [sectionId]: !isCurrentlyVisible
       };
@@ -275,22 +270,19 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         return;
       }
 
-      // Create a properly typed element_visibility object
-      const currentVisibility: Record<string, boolean> = {};
+      // Parse and ensure we have a valid element_visibility object
+      let currentVisibility: ElementVisibility = {};
       
-      // Safely handle the data.element_visibility value
-      if (data && data.element_visibility && typeof data.element_visibility === 'object') {
-        try {
-          // Convert to Record<string, boolean>
-          Object.entries(data.element_visibility).forEach(([key, value]) => {
-            currentVisibility[key] = value === true;
-          });
-        } catch (err) {
-          console.error('Error parsing element_visibility data:', err);
-        }
+      if (data?.element_visibility && typeof data.element_visibility === 'object') {
+        // Convert JSON data to proper ElementVisibility type
+        Object.entries(data.element_visibility).forEach(([key, value]) => {
+          if (typeof value === 'boolean') {
+            currentVisibility[key] = value;
+          }
+        });
       }
       
-      const updatedVisibility: Record<string, boolean> = {
+      const updatedVisibility: ElementVisibility = {
         ...currentVisibility,
         [elementId]: !isCurrentlyVisible
       };
