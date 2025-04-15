@@ -39,16 +39,20 @@ const TermsOfService = () => {
   useEffect(() => {
     const fetchTermsOfService = async () => {
       try {
-        // Use the RPC function to get the terms of service
+        // Fetch terms from content_edits table instead of using RPC
         const { data, error } = await supabase
-          .rpc('get_terms_of_service');
+          .from('content_edits')
+          .select('content')
+          .eq('id', 'terms-of-service')
+          .single();
         
         if (error) {
-          throw error;
+          // If the record doesn't exist yet, we'll show a default message
+          console.error('Error fetching Terms of Service:', error);
+          setTermsContent('# Terms of Service\n\nTerms of service content is being updated.');
+        } else {
+          setTermsContent(data?.content || '# Terms of Service\n\nTerms of service content is being updated.');
         }
-        
-        // The RPC function returns the content directly as a string
-        setTermsContent(data || '# Terms of Service\n\nTerms of service content is being updated.');
       } catch (error) {
         console.error('Error fetching Terms of Service:', error);
         toast({
@@ -75,11 +79,14 @@ const TermsOfService = () => {
 
   const handleSave = async (newContent: string) => {
     try {
-      // Use the RPC function to update the terms of service
+      // Update the terms in content_edits table instead of using RPC
       const { error } = await supabase
-        .rpc('update_terms_of_service', {
-          new_content: newContent,
-          terms_id: '00000000-0000-0000-0000-000000000001'
+        .from('content_edits')
+        .upsert({ 
+          id: 'terms-of-service',
+          content: newContent,
+        }, {
+          onConflict: 'id'
         });
 
       if (error) {
