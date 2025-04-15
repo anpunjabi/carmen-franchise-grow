@@ -1,17 +1,37 @@
+
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import EditableText from './EditableText';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Footer = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const currentYear = new Date().getFullYear();
   const [visibleLinks, setVisibleLinks] = useState<Record<string, boolean>>({
     'footer-product': true,
     'footer-resources': true,
     'footer-company': true
+  });
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    company: '',
+    message: ''
   });
   
   const footerLinks = [
@@ -41,12 +61,58 @@ const Footer = () => {
       links: [
         { label: "About Us", href: "#", id: "link-about-us" },
         { label: "Careers", href: "#", id: "link-careers" },
-        { label: "Contact Us", href: "#contact", id: "link-contact-us" },
+        { label: "Contact Us", href: "#", id: "link-contact-us", isContact: true },
         { label: "Privacy Policy", href: "/privacy-policy", id: "link-privacy-policy", isPage: true },
         { label: "Terms of Service", href: "/terms-of-service", id: "link-terms-of-service", isPage: true }
       ]
     }
   ];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await supabase.functions.invoke('send-contact-email', {
+        body: formData
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for your interest. We'll be in touch soon!",
+      });
+
+      setFormData({
+        name: '',
+        email: '',
+        company: '',
+        message: ''
+      });
+      
+      setIsContactDialogOpen(false);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const checkVisibility = () => {
@@ -124,6 +190,12 @@ const Footer = () => {
                           {link.label}
                         </EditableText>
                       </Link>
+                    ) : link.isContact ? (
+                      <div onClick={() => setIsContactDialogOpen(true)} className="cursor-pointer text-gray-600 hover:text-carmen-blue transition-colors duration-200">
+                        <EditableText id={`footer-link-${column.id}-${linkIndex}`} as="span">
+                          {link.label}
+                        </EditableText>
+                      </div>
                     ) : (
                       <a 
                         href={link.href} 
@@ -165,6 +237,98 @@ const Footer = () => {
           </div>
         </div>
       </div>
+
+      {/* Contact Dialog */}
+      <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Contact Us</DialogTitle>
+            <DialogDescription>
+              Fill out the form below and we'll get back to you as soon as possible.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-600 mb-1">
+                  Full Name
+                </label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-carmen-teal/30" 
+                  placeholder="John Doe" 
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-600 mb-1">
+                  Email Address
+                </label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-carmen-teal/30" 
+                  placeholder="john@example.com" 
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="company" className="block text-sm font-medium text-gray-600 mb-1">
+                Company Name
+              </label>
+              <input 
+                type="text" 
+                id="company" 
+                value={formData.company}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-carmen-teal/30" 
+                placeholder="Acme Inc." 
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-600 mb-1">
+                Your Message
+              </label>
+              <textarea 
+                id="message" 
+                rows={4} 
+                value={formData.message}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-carmen-teal/30" 
+                placeholder="How can we help you?" 
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsContactDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-carmen-gradient text-white"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Sending..." : "Send Message"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </footer>
   );
 };
