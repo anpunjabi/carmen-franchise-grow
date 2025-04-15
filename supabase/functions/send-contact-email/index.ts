@@ -42,6 +42,7 @@ From: Carmen BPM <hello@carmenbpm.com>
 To: hello@carmenbpm.com
 Subject: New Contact Form Submission from ${name}
 Content-Type: text/html; charset=utf-8
+MIME-Version: 1.0
 
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #333;">New Contact Form Submission</h2>
@@ -57,12 +58,14 @@ Content-Type: text/html; charset=utf-8
     <p style="line-height: 1.6;">${message}</p>
   </div>
 </div>
-    `.trim();
+`.trim();
 
     console.log('Encoding email...');
 
-    // Encode the email content
-    const encodedEmail = Buffer.from(emailContent).toString('base64')
+    // Use TextEncoder for encoding in Deno
+    const encoder = new TextEncoder();
+    const emailBytes = encoder.encode(emailContent);
+    const encodedEmail = btoa(String.fromCharCode(...emailBytes))
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
@@ -86,10 +89,18 @@ Content-Type: text/html; charset=utf-8
 
   } catch (error) {
     console.error('Error sending email:', error);
+    
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
     return new Response(
       JSON.stringify({ 
         error: 'Failed to send email. Please try again later.',
-        details: error.message 
+        details: error instanceof Error ? error.message : String(error)
       }),
       {
         status: 500,
