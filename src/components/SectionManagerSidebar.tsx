@@ -35,77 +35,88 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
 
   useEffect(() => {
     if (isEditMode) {
-      // Get sections
-      const sectionElements = document.querySelectorAll('[data-section-id]');
-      const sectionsArray: Section[] = [];
-      
-      sectionElements.forEach((section, index) => {
-        const sectionId = section.getAttribute('data-section-id') || '';
-        const isVisible = !section.classList.contains('hidden');
-        const name = sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
+      const loadSectionsAndElements = () => {
+        // Get sections with a delay to ensure DOM is ready
+        const sectionElements = document.querySelectorAll('[data-section-id]');
+        const sectionsArray: Section[] = [];
         
-        sectionsArray.push({
-          id: sectionId,
-          name,
-          isVisible,
-          order
+        sectionElements.forEach((section, index) => {
+          const sectionId = section.getAttribute('data-section-id') || '';
+          const isVisible = !section.classList.contains('hidden');
+          const name = sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
+          
+          sectionsArray.push({
+            id: sectionId,
+            name,
+            isVisible,
+            order
+          });
         });
-      });
-      
-      // Sort sections by order
-      sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
-      setSections(sectionsArray);
+        
+        // Sort sections by order
+        sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
+        setSections(sectionsArray);
 
-      // Get editable elements
-      const editableElementNodes = document.querySelectorAll('[data-editable-id]');
-      const elementsArray: EditableElement[] = [];
-      
-      editableElementNodes.forEach(element => {
-        const elementId = element.getAttribute('data-editable-id') || '';
-        const isVisible = !element.classList.contains('hidden');
+        // Get editable elements
+        const editableElementNodes = document.querySelectorAll('[data-editable-id]');
+        const elementsArray: EditableElement[] = [];
         
-        // Try to find the nearest section for grouping
-        let parentSection = '';
-        let parent = element.parentElement;
-        while (parent) {
-          const sectionId = parent.getAttribute('data-section-id');
-          if (sectionId) {
-            parentSection = sectionId;
-            break;
+        editableElementNodes.forEach(element => {
+          const elementId = element.getAttribute('data-editable-id') || '';
+          const isVisible = !element.classList.contains('hidden');
+          
+          // Try to find the nearest section for grouping
+          let parentSection = '';
+          let parent = element.parentElement;
+          while (parent) {
+            const sectionId = parent.getAttribute('data-section-id');
+            if (sectionId) {
+              parentSection = sectionId;
+              break;
+            }
+            parent = parent.parentElement;
           }
-          parent = parent.parentElement;
-        }
-        
-        // Format name from ID
-        let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        
-        // Special formatting for specific patterns
-        if (name.includes('Link ')) {
-          name = name.replace('Link ', '');
-        }
-        
-        if (name.includes('Nav ')) {
-          name = name.replace('Nav ', '');
-        }
-        
-        if (name.includes('Mobile')) {
-          name = name.replace('Mobile', ' (Mobile)');
-        }
-        
-        if (name.includes('Social ')) {
-          name = name.replace('Social ', '') + ' Icon';
-        }
-        
-        elementsArray.push({
-          id: elementId,
-          name,
-          isVisible,
-          parentSection
+          
+          // Format name from ID
+          let name = elementId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          
+          // Special formatting for specific patterns
+          if (name.includes('Link ')) {
+            name = name.replace('Link ', '');
+          }
+          
+          if (name.includes('Nav ')) {
+            name = name.replace('Nav ', '');
+          }
+          
+          if (name.includes('Mobile')) {
+            name = name.replace('Mobile', ' (Mobile)');
+          }
+          
+          if (name.includes('Social ')) {
+            name = name.replace('Social ', '') + ' Icon';
+          }
+          
+          elementsArray.push({
+            id: elementId,
+            name,
+            isVisible,
+            parentSection
+          });
         });
-      });
-      
-      setEditableElements(elementsArray);
+        
+        setEditableElements(elementsArray);
+        console.log('Loaded sections:', sectionsArray.length);
+        console.log('Loaded elements:', elementsArray.length);
+      };
+
+      // Add a small delay to ensure all components are mounted
+      const loadTimer = setTimeout(() => {
+        loadSectionsAndElements();
+      }, 500);
+
+      return () => clearTimeout(loadTimer);
     }
   }, [isOpen, isEditMode]);
 

@@ -31,6 +31,7 @@ const SectionEditor = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   useEffect(() => {
+    // We use requestAnimationFrame to ensure DOM is fully rendered
     const loadVisibilitySettings = async () => {
       try {
         console.log('Loading visibility settings from landing_page_settings');
@@ -44,110 +45,130 @@ const SectionEditor = () => {
         
         if (data && !error) {
           const settings = data as unknown as LandingPageSettings;
-          if (settings.section_visibility) {
-            console.log('Applying section visibility:', settings.section_visibility);
-            applySectionVisibility(settings.section_visibility);
-          }
           
-          if (settings.element_visibility) {
-            console.log('Applying element visibility:', settings.element_visibility);
-            applyElementVisibility(settings.element_visibility);
-          }
+          // Use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            if (settings.section_visibility) {
+              console.log('Applying section visibility:', settings.section_visibility);
+              applySectionVisibility(settings.section_visibility);
+            }
+            
+            if (settings.element_visibility) {
+              console.log('Applying element visibility:', settings.element_visibility);
+              applyElementVisibility(settings.element_visibility);
+            }
 
-          if (settings.section_order) {
-            console.log('Applying section order:', settings.section_order);
-            applySectionOrder(settings.section_order);
-          }
+            if (settings.section_order) {
+              console.log('Applying section order:', settings.section_order);
+              applySectionOrder(settings.section_order);
+            }
+          });
         }
       } catch (error) {
         console.error('Error loading visibility settings:', error);
       }
     };
     
-    loadVisibilitySettings();
+    // We delay the initial load to ensure all components are mounted
+    const initialLoadTimer = setTimeout(() => {
+      loadVisibilitySettings();
+    }, 500);
     
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
       
-      if (event.detail.isEditMode) {
-        setIsSidebarOpen(true);
-        document.querySelectorAll('[data-section-id], [data-editable-id]').forEach((element) => {
-          element.classList.add('editable-element');
-        });
-      } else {
-        setIsSidebarOpen(false);
-        document.querySelectorAll('.editable-element').forEach((element) => {
-          element.classList.remove('editable-element');
-        });
-      }
+      // Use requestAnimationFrame to ensure DOM stability
+      requestAnimationFrame(() => {
+        if (event.detail.isEditMode) {
+          setIsSidebarOpen(true);
+          document.querySelectorAll('[data-section-id], [data-editable-id]').forEach((element) => {
+            element.classList.add('editable-element');
+          });
+        } else {
+          setIsSidebarOpen(false);
+          document.querySelectorAll('.editable-element').forEach((element) => {
+            element.classList.remove('editable-element');
+          });
+        }
+      });
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
     
     return () => {
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
+      clearTimeout(initialLoadTimer);
     };
   }, []);
   
   const applySectionVisibility = (visibilitySettings: SectionVisibility) => {
-    Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
-      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (section) {
-        if (isVisible) {
-          section.classList.remove('hidden');
-        } else {
-          section.classList.add('hidden');
+    requestAnimationFrame(() => {
+      Object.entries(visibilitySettings).forEach(([sectionId, isVisible]) => {
+        const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (section) {
+          if (isVisible) {
+            section.classList.remove('hidden');
+          } else {
+            section.classList.add('hidden');
+          }
         }
-      }
+      });
     });
   };
   
   const applyElementVisibility = (visibilitySettings: ElementVisibility) => {
-    Object.entries(visibilitySettings).forEach(([elementId, isVisible]) => {
-      const element = document.querySelector(`[data-editable-id="${elementId}"]`);
-      if (element) {
-        if (isVisible) {
-          element.classList.remove('hidden');
-        } else {
-          element.classList.add('hidden');
+    requestAnimationFrame(() => {
+      Object.entries(visibilitySettings).forEach(([elementId, isVisible]) => {
+        const element = document.querySelector(`[data-editable-id="${elementId}"]`);
+        if (element) {
+          if (isVisible) {
+            element.classList.remove('hidden');
+          } else {
+            element.classList.add('hidden');
+          }
         }
-      }
+      });
     });
   };
 
   const applySectionOrder = (orderSettings: SectionOrder) => {
-    const mainElement = document.querySelector('main');
-    if (!mainElement) return;
+    requestAnimationFrame(() => {
+      const mainElement = document.querySelector('main');
+      if (!mainElement) {
+        console.log('Main element not found');
+        return;
+      }
 
-    const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
-    if (sections.length === 0) {
-      console.log('No sections found to reorder');
-      return;
-    }
-    
-    console.log('Found sections to reorder:', sections.length);
-    
-    // Sort sections based on the saved order
-    sections.sort((a, b) => {
-      const aId = a.getAttribute('data-section-id') || '';
-      const bId = b.getAttribute('data-section-id') || '';
-      const aOrder = orderSettings[aId] !== undefined ? orderSettings[aId] : 999;
-      const bOrder = orderSettings[bId] !== undefined ? orderSettings[bId] : 999;
-      return aOrder - bOrder;
-    });
-    
-    // Apply reordering to DOM
-    sections.forEach(section => {
-      mainElement.appendChild(section);
-    });
+      const sections = Array.from(mainElement.querySelectorAll('[data-section-id]'));
+      if (sections.length === 0) {
+        console.log('No sections found to reorder');
+        return;
+      }
+      
+      console.log('Found sections to reorder:', sections.length);
+      
+      // Sort sections based on the saved order
+      sections.sort((a, b) => {
+        const aId = a.getAttribute('data-section-id') || '';
+        const bId = b.getAttribute('data-section-id') || '';
+        const aOrder = orderSettings[aId] !== undefined ? orderSettings[aId] : 999;
+        const bOrder = orderSettings[bId] !== undefined ? orderSettings[bId] : 999;
+        return aOrder - bOrder;
+      });
+      
+      // Apply reordering to DOM
+      sections.forEach(section => {
+        mainElement.appendChild(section);
+      });
 
-    // Update data-section-order attributes
-    sections.forEach((section, index) => {
-      section.setAttribute('data-section-order', `${index}`);
+      // Update data-section-order attributes
+      sections.forEach((section, index) => {
+        section.setAttribute('data-section-order', `${index}`);
+      });
+      
+      console.log('Section reordering applied successfully');
     });
-    
-    console.log('Section reordering applied successfully');
   };
   
   return (
@@ -172,4 +193,3 @@ const SectionEditor = () => {
 };
 
 export default SectionEditor;
-
