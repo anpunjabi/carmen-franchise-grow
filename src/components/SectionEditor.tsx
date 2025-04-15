@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -51,67 +50,52 @@ const SectionEditor = () => {
           console.log('Loaded visibility settings:', data);
           const settings = data as LandingPageSettings;
           
-          // Apply section visibility with verification
-          if (settings.section_visibility && typeof settings.section_visibility === 'object') {
-            // Use a counter to verify application
-            let appliedCount = 0;
-            let notFoundCount = 0;
-            
-            Object.entries(settings.section_visibility).forEach(([sectionId, isVisible]) => {
-              const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-              if (section) {
-                if (isVisible === false) {
-                  section.classList.add('hidden');
-                } else {
-                  section.classList.remove('hidden');
-                }
-                console.log(`Applied visibility ${isVisible} to section ${sectionId}`);
-                appliedCount++;
-              } else {
-                console.log(`Section with ID ${sectionId} not found in the DOM`);
-                notFoundCount++;
-              }
-            });
-            
-            console.log(`Applied visibility to ${appliedCount} sections, ${notFoundCount} sections not found`);
-          } else {
-            console.log('No section visibility settings found or invalid format');
-          }
+          // Get all sections from the DOM
+          const allSections = document.querySelectorAll('[data-section-id]');
+          const currentSectionIds = Array.from(allSections).map(section => 
+            section.getAttribute('data-section-id')
+          ).filter((id): id is string => id !== null);
           
-          // Apply element visibility with verification
-          if (settings.element_visibility && typeof settings.element_visibility === 'object') {
-            // Use a counter to verify application
-            let appliedCount = 0;
-            let notFoundCount = 0;
-            
-            Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {
-              const element = document.querySelector(`[data-editable-id="${elementId}"]`);
-              if (element) {
-                if (isVisible === false) {
-                  element.classList.add('hidden');
-                } else {
-                  element.classList.remove('hidden');
-                }
-                console.log(`Applied visibility ${isVisible} to element ${elementId}`);
-                appliedCount++;
-              } else {
-                console.log(`Element with ID ${elementId} not found in the DOM`);
-                notFoundCount++;
-              }
-            });
-            
-            console.log(`Applied visibility to ${appliedCount} elements, ${notFoundCount} elements not found`);
-          } else {
-            console.log('No element visibility settings found or invalid format');
-          }
+          // Ensure all sections have an entry in section_visibility
+          const updatedSectionVisibility: SectionVisibility = {};
+          currentSectionIds.forEach(sectionId => {
+            // If section exists in settings, use that value, otherwise default to true
+            updatedSectionVisibility[sectionId] = settings.section_visibility[sectionId] ?? true;
+          });
           
-          // Apply section ordering if available
-          if (settings.section_order && typeof settings.section_order === 'object') {
-            applySectionOrder(settings.section_order);
+          // Apply visibility settings
+          Object.entries(updatedSectionVisibility).forEach(([sectionId, isVisible]) => {
+            const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+            if (section) {
+              if (!isVisible) {
+                section.classList.add('hidden');
+                console.log(`Hiding section ${sectionId}`);
+              } else {
+                section.classList.remove('hidden');
+                console.log(`Showing section ${sectionId}`);
+              }
+            }
+          });
+
+          // Update the database with complete section visibility if needed
+          if (JSON.stringify(settings.section_visibility) !== JSON.stringify(updatedSectionVisibility)) {
+            console.log('Updating section visibility in database to include all sections:', updatedSectionVisibility);
+            const { error: updateError } = await supabase
+              .from('landing_page_settings')
+              .update({ 
+                section_visibility: updatedSectionVisibility,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', 1);
+
+            if (updateError) {
+              console.error('Error updating complete section visibility:', updateError);
+              toast.error('Failed to update section visibility');
+            }
           }
         }
       } catch (error) {
-        console.error('Error loading visibility settings:', error);
+        console.error('Error in loadVisibilitySettings:', error);
         toast.error('Failed to load visibility settings');
       }
     };
@@ -209,14 +193,17 @@ const SectionEditor = () => {
 
   const saveVisibilitySettings = async () => {
     try {
-      // Get current section visibility from DOM
+      // Get all sections from the DOM and their current visibility state
       const sectionVisibility: SectionVisibility = {};
       document.querySelectorAll('[data-section-id]').forEach((section) => {
         const sectionId = section.getAttribute('data-section-id');
         if (sectionId) {
+          // Explicitly set true or false for each section
           sectionVisibility[sectionId] = !section.classList.contains('hidden');
         }
       });
+
+      console.log('Saving section visibility state:', sectionVisibility);
 
       // Get current element visibility from DOM
       const elementVisibility: ElementVisibility = {};
@@ -227,19 +214,7 @@ const SectionEditor = () => {
         }
       });
 
-      // Get current section order from DOM
-      const sectionOrder: SectionOrder = {};
-      document.querySelectorAll('[data-section-id]').forEach((section) => {
-        const sectionId = section.getAttribute('data-section-id');
-        const orderAttr = section.getAttribute('data-section-order');
-        if (sectionId && orderAttr) {
-          sectionOrder[sectionId] = parseInt(orderAttr);
-        }
-      });
-
-      console.log('Saving section order:', sectionOrder);
-      console.log('Saving section visibility:', sectionVisibility);
-      console.log('Saving element visibility:', elementVisibility);
+      console.log('Saving element visibility state:', elementVisibility);
 
       // Check if record exists first
       const { data: existingData, error: checkError } = await supabase
@@ -248,37 +223,32 @@ const SectionEditor = () => {
         .eq('id', 1)
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "Row not found"
+      if (checkError && checkError.code !== 'PGRST116') {
         console.error('Error checking landing_page_settings:', checkError);
         toast.error('Failed to check existing settings');
         return;
       }
 
       let saveError;
-      
+      const updateData = {
+        section_visibility: sectionVisibility,
+        element_visibility: elementVisibility,
+        updated_at: new Date().toISOString()
+      };
+
       if (existingData) {
-        // Update existing record
         const { error } = await supabase
           .from('landing_page_settings')
-          .update({
-            section_visibility: sectionVisibility,
-            element_visibility: elementVisibility,
-            section_order: sectionOrder,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', 1);
           
         saveError = error;
       } else {
-        // Insert new record with id=1
         const { error } = await supabase
           .from('landing_page_settings')
           .insert({
             id: 1,
-            section_visibility: sectionVisibility,
-            element_visibility: elementVisibility,
-            section_order: sectionOrder,
-            updated_at: new Date().toISOString()
+            ...updateData
           });
           
         saveError = error;
