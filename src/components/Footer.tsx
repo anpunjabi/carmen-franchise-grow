@@ -1,4 +1,3 @@
-
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,18 +42,17 @@ const Footer = () => {
         { label: "About Us", href: "#", id: "link-about-us" },
         { label: "Careers", href: "#", id: "link-careers" },
         { label: "Contact Us", href: "#contact", id: "link-contact-us" },
-        { label: "Privacy Policy", href: "/privacy-policy", id: "link-privacy-policy", isPage: true }
+        { label: "Privacy Policy", href: "/privacy-policy", id: "link-privacy-policy", isPage: true },
+        { label: "Terms of Service", href: "/terms-of-service", id: "link-terms-of-service", isPage: true }
       ]
     }
   ];
 
-  // Check which section headers should be visible based on their links' visibility
   useEffect(() => {
     const checkVisibility = () => {
       const newVisibleLinks: Record<string, boolean> = {};
       
       footerLinks.forEach(column => {
-        // A section is visible if at least one of its links is visible
         const hasVisibleLink = column.links.some(link => {
           const element = document.querySelector(`[data-editable-id="${link.id}"]`);
           return element && !element.classList.contains('hidden');
@@ -66,10 +64,8 @@ const Footer = () => {
       setVisibleLinks(newVisibleLinks);
     };
     
-    // Initial check
     setTimeout(checkVisibility, 300);
     
-    // Listen for edit mode changes to update visibility
     const handleEditModeChange = () => {
       setTimeout(checkVisibility, 300);
     };
