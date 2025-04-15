@@ -1,8 +1,10 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
+import { toast } from 'sonner';
 
 interface SectionVisibility {
   [key: string]: boolean;
@@ -41,6 +43,7 @@ const SectionEditor = () => {
         
         if (error) {
           console.error('Error loading visibility settings:', error);
+          toast.error('Failed to load visibility settings');
           return;
         }
 
@@ -48,7 +51,7 @@ const SectionEditor = () => {
           const settings = data as LandingPageSettings;
           
           // Apply section visibility with verification
-          if (settings.section_visibility) {
+          if (settings.section_visibility && typeof settings.section_visibility === 'object') {
             Object.entries(settings.section_visibility).forEach(([sectionId, isVisible]) => {
               const section = document.querySelector(`[data-section-id="${sectionId}"]`);
               if (section) {
@@ -58,12 +61,16 @@ const SectionEditor = () => {
                   section.classList.remove('hidden');
                 }
                 console.log(`Applied visibility ${isVisible} to section ${sectionId}`);
+              } else {
+                console.log(`Section with ID ${sectionId} not found in the DOM`);
               }
             });
+          } else {
+            console.log('No section visibility settings found or invalid format');
           }
           
           // Apply element visibility with verification
-          if (settings.element_visibility) {
+          if (settings.element_visibility && typeof settings.element_visibility === 'object') {
             Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {
               const element = document.querySelector(`[data-editable-id="${elementId}"]`);
               if (element) {
@@ -73,12 +80,22 @@ const SectionEditor = () => {
                   element.classList.remove('hidden');
                 }
                 console.log(`Applied visibility ${isVisible} to element ${elementId}`);
+              } else {
+                console.log(`Element with ID ${elementId} not found in the DOM`);
               }
             });
+          } else {
+            console.log('No element visibility settings found or invalid format');
+          }
+          
+          // Apply section ordering if available
+          if (settings.section_order && typeof settings.section_order === 'object') {
+            applySectionOrder(settings.section_order);
           }
         }
       } catch (error) {
         console.error('Error loading visibility settings:', error);
+        toast.error('Failed to load visibility settings');
       }
     };
     
@@ -171,6 +188,7 @@ const SectionEditor = () => {
 
   const saveVisibilitySettings = async () => {
     try {
+      // Get current section visibility from DOM
       const sectionVisibility: SectionVisibility = {};
       document.querySelectorAll('[data-section-id]').forEach((section) => {
         const sectionId = section.getAttribute('data-section-id');
@@ -179,6 +197,7 @@ const SectionEditor = () => {
         }
       });
 
+      // Get current element visibility from DOM
       const elementVisibility: ElementVisibility = {};
       document.querySelectorAll('[data-editable-id]').forEach((element) => {
         const elementId = element.getAttribute('data-editable-id');
@@ -187,6 +206,7 @@ const SectionEditor = () => {
         }
       });
 
+      // Get current section order from DOM
       const sectionOrder: SectionOrder = {};
       document.querySelectorAll('[data-section-id]').forEach((section) => {
         const sectionId = section.getAttribute('data-section-id');
@@ -197,6 +217,8 @@ const SectionEditor = () => {
       });
 
       console.log('Saving section order:', sectionOrder);
+      console.log('Saving section visibility:', sectionVisibility);
+      console.log('Saving element visibility:', elementVisibility);
 
       const { error } = await supabase
         .from('landing_page_settings')
@@ -210,9 +232,13 @@ const SectionEditor = () => {
 
       if (error) {
         console.error('Error saving visibility settings:', error);
+        toast.error('Failed to save visibility settings');
+      } else {
+        toast.success('Section and element visibility settings saved');
       }
     } catch (error) {
       console.error('Error saving visibility settings:', error);
+      toast.error('Failed to save visibility settings');
     }
   };
   

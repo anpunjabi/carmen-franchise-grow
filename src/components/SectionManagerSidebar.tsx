@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -29,8 +30,8 @@ interface SectionManagerSidebarProps {
 }
 
 interface VisibilitySettings {
-  section_visibility: Record<string, boolean>;
-  element_visibility: Record<string, boolean>;
+  section_visibility?: Record<string, boolean>;
+  element_visibility?: Record<string, boolean>;
 }
 
 const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionManagerSidebarProps) => {
@@ -143,7 +144,17 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         )
       );
       
-      const currentVisibility: Record<string, boolean> = data?.section_visibility || {};
+      // Create a properly typed section_visibility object
+      const currentVisibility: Record<string, boolean> = {};
+      
+      // Safely handle the data.section_visibility value
+      if (data && data.section_visibility && typeof data.section_visibility === 'object') {
+        // Convert to Record<string, boolean>
+        Object.entries(data.section_visibility as Record<string, any>).forEach(([key, value]) => {
+          currentVisibility[key] = !!value; // Convert any type to boolean
+        });
+      }
+      
       const updatedVisibility: Record<string, boolean> = {
         ...currentVisibility,
         [sectionId]: !isCurrentlyVisible
@@ -202,7 +213,17 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         )
       );
       
-      const currentVisibility: Record<string, boolean> = data?.element_visibility || {};
+      // Create a properly typed element_visibility object
+      const currentVisibility: Record<string, boolean> = {};
+      
+      // Safely handle the data.element_visibility value
+      if (data && data.element_visibility && typeof data.element_visibility === 'object') {
+        // Convert to Record<string, boolean>
+        Object.entries(data.element_visibility as Record<string, any>).forEach(([key, value]) => {
+          currentVisibility[key] = !!value; // Convert any type to boolean
+        });
+      }
+      
       const updatedVisibility: Record<string, boolean> = {
         ...currentVisibility,
         [elementId]: !isCurrentlyVisible
