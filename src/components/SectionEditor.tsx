@@ -80,6 +80,8 @@ const SectionEditor = () => {
         document.querySelectorAll('.editable-element').forEach((element) => {
           element.classList.remove('editable-element');
         });
+        // Save the current visibility state when exiting edit mode
+        saveVisibilitySettings();
       }
     };
     
@@ -149,6 +151,58 @@ const SectionEditor = () => {
     
     console.log('Section reordering applied successfully');
   };
+
+  // Function to save current visibility settings to Supabase
+  const saveVisibilitySettings = async () => {
+    try {
+      // Collect current section visibility
+      const sectionVisibility: SectionVisibility = {};
+      document.querySelectorAll('[data-section-id]').forEach((section) => {
+        const sectionId = section.getAttribute('data-section-id');
+        if (sectionId) {
+          sectionVisibility[sectionId] = !section.classList.contains('hidden');
+        }
+      });
+
+      // Collect current element visibility
+      const elementVisibility: ElementVisibility = {};
+      document.querySelectorAll('[data-editable-id]').forEach((element) => {
+        const elementId = element.getAttribute('data-editable-id');
+        if (elementId) {
+          elementVisibility[elementId] = !element.classList.contains('hidden');
+        }
+      });
+
+      // Collect current section order
+      const sectionOrder: SectionOrder = {};
+      document.querySelectorAll('[data-section-id]').forEach((section) => {
+        const sectionId = section.getAttribute('data-section-id');
+        const orderAttr = section.getAttribute('data-section-order');
+        if (sectionId && orderAttr) {
+          sectionOrder[sectionId] = parseInt(orderAttr);
+        }
+      });
+
+      console.log('Saving section order:', sectionOrder);
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from('landing_page_settings')
+        .upsert({
+          id: 1,
+          section_visibility: sectionVisibility,
+          element_visibility: elementVisibility,
+          section_order: sectionOrder,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+      if (error) {
+        console.error('Error saving visibility settings:', error);
+      }
+    } catch (error) {
+      console.error('Error saving visibility settings:', error);
+    }
+  };
   
   return (
     <>
@@ -172,4 +226,3 @@ const SectionEditor = () => {
 };
 
 export default SectionEditor;
-

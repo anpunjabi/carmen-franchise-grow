@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -7,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Section {
   id: string;
@@ -117,7 +117,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
   }, [isOpen, isEditMode]);
 
   // Toggle section visibility
-  const toggleSectionVisibility = (sectionId: string) => {
+  const toggleSectionVisibility = async (sectionId: string) => {
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (!section) return;
     
@@ -135,10 +135,43 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
       )
     );
+
+    // Save visibility change to database
+    try {
+      // First get current settings
+      const { data, error } = await supabase
+        .from('landing_page_settings')
+        .select('section_visibility')
+        .eq('id', 1)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching current visibility settings:', error);
+        return;
+      }
+      
+      // Update the section visibility
+      const updatedVisibility = { 
+        ...(data?.section_visibility || {}),
+        [sectionId]: !isCurrentlyVisible
+      };
+      
+      // Save back to database
+      const { error: updateError } = await supabase
+        .from('landing_page_settings')
+        .update({ section_visibility: updatedVisibility })
+        .eq('id', 1);
+      
+      if (updateError) {
+        console.error('Error updating section visibility:', updateError);
+      }
+    } catch (error) {
+      console.error('Error saving section visibility:', error);
+    }
   };
 
   // Toggle element visibility
-  const toggleElementVisibility = (elementId: string) => {
+  const toggleElementVisibility = async (elementId: string) => {
     const element = document.querySelector(`[data-editable-id="${elementId}"]`);
     if (!element) return;
     
@@ -156,6 +189,39 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
       )
     );
+
+    // Save element visibility to database
+    try {
+      // First get current settings
+      const { data, error } = await supabase
+        .from('landing_page_settings')
+        .select('element_visibility')
+        .eq('id', 1)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching current element visibility settings:', error);
+        return;
+      }
+      
+      // Update the element visibility
+      const updatedVisibility = { 
+        ...(data?.element_visibility || {}),
+        [elementId]: !isCurrentlyVisible
+      };
+      
+      // Save back to database
+      const { error: updateError } = await supabase
+        .from('landing_page_settings')
+        .update({ element_visibility: updatedVisibility })
+        .eq('id', 1);
+      
+      if (updateError) {
+        console.error('Error updating element visibility:', updateError);
+      }
+    } catch (error) {
+      console.error('Error saving element visibility:', error);
+    }
   };
 
   // Move section up in the DOM order
