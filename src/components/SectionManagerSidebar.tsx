@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -151,8 +152,9 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       }
       
       // Update the section visibility
+      const currentVisibility = data?.section_visibility || {};
       const updatedVisibility = { 
-        ...(data?.section_visibility || {}),
+        ...currentVisibility,
         [sectionId]: !isCurrentlyVisible
       };
       
@@ -205,8 +207,9 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       }
       
       // Update the element visibility
+      const currentVisibility = data?.element_visibility || {};
       const updatedVisibility = { 
-        ...(data?.element_visibility || {}),
+        ...currentVisibility,
         [elementId]: !isCurrentlyVisible
       };
       
