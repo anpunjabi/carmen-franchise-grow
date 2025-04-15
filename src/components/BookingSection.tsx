@@ -22,7 +22,7 @@ const BookingSection = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [step, setStep] = useState(1);
@@ -61,7 +61,7 @@ const BookingSection = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!date || !selectedTimeSlot || !name || !email) {
+    if (!date || !selectedTimeSlot || !name || !email || !company) {
       toast({
         title: "Missing information",
         description: "Please fill out all required fields.",
@@ -83,7 +83,7 @@ const BookingSection = () => {
         body: {
           name,
           email,
-          phone,
+          company,
           message,
           appointmentDate: appointmentDateTime.toISOString(),
         },
@@ -107,7 +107,7 @@ const BookingSection = () => {
       
       setName('');
       setEmail('');
-      setPhone('');
+      setCompany('');
       setMessage('');
       setStep(4);
     } catch (error) {
@@ -324,13 +324,14 @@ const BookingSection = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="company">Company Name *</Label>
                     <Input 
-                      id="phone" 
-                      type="tel" 
-                      value={phone} 
-                      onChange={(e) => setPhone(e.target.value)} 
-                      placeholder="(123) 456-7890"
+                      id="company" 
+                      type="text" 
+                      value={company} 
+                      onChange={(e) => setCompany(e.target.value)} 
+                      placeholder="Your company"
+                      required
                     />
                   </div>
                   <div>

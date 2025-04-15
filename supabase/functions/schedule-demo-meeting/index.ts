@@ -10,7 +10,7 @@ const corsHeaders = {
 interface BookingRequest {
   name: string;
   email: string;
-  phone: string;
+  company: string;
   message: string;
   appointmentDate: string; // ISO string
 }
@@ -25,7 +25,7 @@ serve(async (req) => {
     const requestData = await req.json();
     console.log('Received request data:', requestData);
     
-    const { name, email, phone, message, appointmentDate }: BookingRequest = requestData;
+    const { name, email, company, message, appointmentDate }: BookingRequest = requestData;
 
     if (!name || !email || !appointmentDate) {
       console.error('Missing required fields:', { name, email, appointmentDate });
@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing demo booking request:', { name, email, appointmentDate });
+    console.log('Processing demo booking request:', { name, email, company, appointmentDate });
 
     // Create JWT client using service account credentials
     const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
@@ -78,25 +78,18 @@ serve(async (req) => {
     const startTime = appointmentDateTime.toISOString();
     const endTime = endDateTime.toISOString();
 
-    console.log('Appointment time details:', {
-      appointmentDate,
-      parsedDate: appointmentDateTime,
-      startTime,
-      endTime
-    });
-
     // Create meeting description with user details
     const meetingDescription = `
 Demo call with ${name}
+Company: ${company}
 Email: ${email}
-${phone ? `Phone: ${phone}` : ''}
 ${message ? `Message: ${message}` : ''}
     `.trim();
 
     // Create the calendar event with Google Meet
     console.log('Creating calendar event...');
     const event = {
-      summary: `Carmen BPM Demo Call with ${name}`,
+      summary: `Carmen BPM Demo Call with ${name} (${company})`,
       location: 'Google Meet',
       description: meetingDescription,
       start: {
