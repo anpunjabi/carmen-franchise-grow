@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -39,7 +38,6 @@ const Index = () => {
   const [sectionOrder, setSectionOrder] = useState<SectionOrder>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Define all sections with their default order
   const allSections: SectionData[] = [
     { id: 'hero', component: <Hero />, defaultOrder: 0 },
     { id: 'hero-secondary', component: <HeroSecondary />, defaultOrder: 1 },
@@ -50,10 +48,10 @@ const Index = () => {
     { id: 'booking', component: <BookingSection />, defaultOrder: 6 },
     { id: 'hero-quinary', component: <HeroQuinary />, defaultOrder: 7 },
     { id: 'partnerships', component: <Partnerships />, defaultOrder: 8 },
-    { id: 'partner', component: <Partner />, defaultOrder: 9 }
+    { id: 'partner', component: <Partner />, defaultOrder: 9 },
+    { id: 'footer', component: <Footer />, defaultOrder: 10 }
   ];
 
-  // Load settings from the database on component mount
   useEffect(() => {
     const loadVisibilitySettings = async () => {
       try {
@@ -72,19 +70,16 @@ const Index = () => {
         if (data) {
           console.log('Loaded settings:', data);
           
-          // TypeScript fix: Explicitly convert to the correct types
           const sectionVisData: SectionVisibility = data.section_visibility as SectionVisibility;
           setSectionVisibility(sectionVisData);
           
           const elementVisData: ElementVisibility = data.element_visibility as ElementVisibility;
           setElementVisibility(elementVisData);
           
-          // If section_order exists and has values, use them; otherwise use default order
           if (data.section_order && Object.keys(data.section_order).length > 0) {
             const orderData: SectionOrder = data.section_order as SectionOrder;
             setSectionOrder(orderData);
           } else {
-            // Create default order object
             const defaultOrder = allSections.reduce((acc, section) => {
               acc[section.id] = section.defaultOrder;
               return acc;
@@ -101,7 +96,6 @@ const Index = () => {
 
     loadVisibilitySettings();
     
-    // Listen for database changes to update settings in real-time
     const channel = supabase
       .channel('landing_page_settings_changes')
       .on(
@@ -136,7 +130,6 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    // Intersection Observer for animation triggers
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -149,7 +142,6 @@ const Index = () => {
       { threshold: 0.1 }
     );
 
-    // Observe all fade-in elements
     document.querySelectorAll('.fade-in, .fade-in-up, .slide-in-right').forEach((el) => {
       observer.observe(el);
     });
@@ -157,7 +149,6 @@ const Index = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Sort sections based on the section_order values
   const sortedSections = [...allSections].sort((a, b) => {
     const orderA = sectionOrder[a.id] !== undefined ? sectionOrder[a.id] : a.defaultOrder;
     const orderB = sectionOrder[b.id] !== undefined ? sectionOrder[b.id] : b.defaultOrder;
@@ -185,9 +176,9 @@ const Index = () => {
         {sortedSections.map((section) => {
           const isVisible = sectionVisibility[section.id] !== undefined 
             ? sectionVisibility[section.id] 
-            : true; // Default to visible if not specified
+            : true;
             
-          if (!isVisible) return null;
+          if (!isVisible && section.id !== 'footer') return null;
           
           return (
             <div 
