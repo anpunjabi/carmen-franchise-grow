@@ -62,78 +62,11 @@ const SectionEditor = () => {
         };
         
         setSettings(typedSettings);
-        
-        // Apply settings to DOM
-        applyVisibilitySettings(
-          typedSettings.section_visibility, 
-          typedSettings.element_visibility,
-          typedSettings.section_order
-        );
       }
     } catch (error) {
       console.error('Error in loadVisibilitySettings:', error);
       toast.error('Failed to load visibility settings');
     }
-  };
-
-  const applyVisibilitySettings = (
-    sectionVisibility: SectionVisibility,
-    elementVisibility: ElementVisibility,
-    sectionOrder: SectionOrder
-  ) => {
-    // Apply section visibility
-    Object.entries(sectionVisibility).forEach(([sectionId, isVisible]) => {
-      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (section) {
-        if (!isVisible) {
-          section.classList.add('hidden');
-          console.log(`Hiding section ${sectionId} based on saved settings`);
-        } else {
-          section.classList.remove('hidden');
-          console.log(`Showing section ${sectionId} based on saved settings`);
-        }
-      }
-    });
-
-    // Apply element visibility
-    Object.entries(elementVisibility).forEach(([elementId, isVisible]) => {
-      const element = document.querySelector(`[data-editable-id="${elementId}"]`);
-      if (element) {
-        if (!isVisible) {
-          element.classList.add('hidden');
-          console.log(`Hiding element ${elementId}`);
-        } else {
-          element.classList.remove('hidden');
-          console.log(`Showing element ${elementId}`);
-        }
-      }
-    });
-
-    // Apply section order if available
-    if (Object.keys(sectionOrder).length > 0) {
-      applyOrderToSections(sectionOrder);
-    }
-  };
-
-  const applyOrderToSections = (sectionOrder: SectionOrder) => {
-    const orderedIds = Object.entries(sectionOrder)
-      .sort(([, orderA], [, orderB]) => orderA - orderB)
-      .map(([id]) => id);
-    
-    const mainElement = document.querySelector('main');
-    if (!mainElement) return;
-    
-    // Reorder DOM elements based on the saved order
-    orderedIds.forEach(sectionId => {
-      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-      if (section && mainElement.contains(section)) {
-        // Move the section to the end to reorder it
-        mainElement.appendChild(section);
-        
-        // Update the data-section-order attribute to match the saved order
-        section.setAttribute('data-section-order', sectionOrder[sectionId].toString());
-      }
-    });
   };
   
   // Save settings to database whenever they change in the sidebar
@@ -172,17 +105,12 @@ const SectionEditor = () => {
       // Update local state with the new settings
       setSettings(newSettings);
       
-      // Apply the updated settings
-      applyVisibilitySettings(
-        newSettings.section_visibility,
-        newSettings.element_visibility,
-        newSettings.section_order
-      );
-      
       console.log('Settings saved successfully:', newSettings);
+      return true;
     } catch (error) {
       console.error('Error in saveSettings:', error);
       toast.error('Failed to save settings');
+      return false;
     }
   };
   

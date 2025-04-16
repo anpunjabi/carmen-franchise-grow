@@ -11,10 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Edit, LogOut, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
+  const { toast: uiToast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -69,29 +70,35 @@ const UserMenu = () => {
     }));
   };
 
-  const saveEdits = () => {
+  const saveEdits = async () => {
     setIsSaving(true);
     
     try {
-      // The actual saving is handled by SectionEditor via its callbacks
-      // Just exit edit mode here
+      // Dispatch event to notify all components that we're saving changes
+      window.dispatchEvent(new CustomEvent('savechanges'));
+      
+      // Just exit edit mode here - actual saving is triggered by the event
       setIsEditMode(false);
       
       window.dispatchEvent(new CustomEvent('editmodechange', { 
         detail: { isEditMode: false }
       }));
       
-      toast({
+      uiToast({
         title: "Changes saved",
         description: "Your edits have been applied to the landing page.",
       });
+      
+      toast.success("Changes saved successfully");
     } catch (error) {
       console.error('Error in saveEdits:', error);
-      toast({
+      uiToast({
         title: "Error saving changes",
         description: "There was a problem saving your settings.",
         variant: "destructive",
       });
+      
+      toast.error("Error saving changes");
     } finally {
       setIsSaving(false);
       setIsOpen(false);
