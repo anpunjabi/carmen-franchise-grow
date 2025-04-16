@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Eye, EyeOff, MoveUp, MoveDown } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -6,14 +7,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface Section {
   id: string;
   name: string;
   isVisible: boolean;
-  order?: number;
+  order: number;
 }
 
 interface EditableElement {
@@ -23,10 +23,25 @@ interface EditableElement {
   parentSection?: string;
 }
 
+interface SectionVisibility {
+  [key: string]: boolean;
+}
+
+interface ElementVisibility {
+  [key: string]: boolean;
+}
+
+interface SectionOrder {
+  [key: string]: number;
+}
+
 interface LandingPageSettings {
-  section_visibility: Record<string, boolean>;
-  element_visibility: Record<string, boolean>;
-  section_order: Record<string, number>;
+  id: number;
+  section_visibility: SectionVisibility;
+  element_visibility: ElementVisibility;
+  section_order: SectionOrder;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface SectionManagerSidebarProps {
@@ -34,38 +49,51 @@ interface SectionManagerSidebarProps {
   onOpenChange: (open: boolean) => void;
   isEditMode: boolean;
   settings: LandingPageSettings | null;
-  onSettingsChange: () => void;
+  onToggleSectionVisibility: (sectionId: string, isVisible: boolean) => void;
+  onToggleElementVisibility: (elementId: string, isVisible: boolean) => void;
+  onUpdateSectionOrder: (sectionOrder: SectionOrder) => void;
 }
-
-type SectionVisibility = Record<string, boolean>;
-type ElementVisibility = Record<string, boolean>;
 
 const SectionManagerSidebar = ({ 
   isOpen, 
   onOpenChange, 
   isEditMode,
   settings,
-  onSettingsChange 
+  onToggleSectionVisibility,
+  onToggleElementVisibility,
+  onUpdateSectionOrder
 }: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
 
+  // Load sections and elements from the DOM, but use the database settings for visibility
   useEffect(() => {
-    if (isEditMode && isOpen) {
+    if (isEditMode && isOpen && settings) {
       loadSectionsAndElements();
     }
   }, [isOpen, isEditMode, settings]);
 
   const loadSectionsAndElements = () => {
+    if (!settings) return;
+    
     const sectionElements = document.querySelectorAll('[data-section-id]');
     const sectionsMap = new Map<string, Section>();
     
-    sectionElements.forEach((section, index) => {
+    sectionElements.forEach((section) => {
       const sectionId = section.getAttribute('data-section-id') || '';
-      const isVisible = settings?.section_visibility[sectionId] ?? !section.classList.contains('hidden');
+      // Use the database value for visibility, falling back to checking DOM if not in database
+      const isVisible = typeof settings.section_visibility[sectionId] !== 'undefined' 
+        ? settings.section_visibility[sectionId] 
+        : !section.classList.contains('hidden');
+      
       const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
+      
+      // Use section_order from database if available, otherwise use DOM order
+      let order = parseInt(section.getAttribute('data-section-order') || '0');
+      if (settings.section_order && typeof settings.section_order[sectionId] !== 'undefined') {
+        order = settings.section_order[sectionId];
+      }
       
       if (!sectionsMap.has(sectionId)) {
         sectionsMap.set(sectionId, {
@@ -78,7 +106,7 @@ const SectionManagerSidebar = ({
     });
     
     const sectionsArray = Array.from(sectionsMap.values());
-    sectionsArray.sort((a, b) => (a.order || 0) - (b.order || 0));
+    sectionsArray.sort((a, b) => a.order - b.order);
     setSections(sectionsArray);
 
     const editableElementNodes = document.querySelectorAll('[data-editable-id]');
@@ -86,7 +114,10 @@ const SectionManagerSidebar = ({
     
     editableElementNodes.forEach(element => {
       const elementId = element.getAttribute('data-editable-id') || '';
-      const isVisible = settings?.element_visibility[elementId] ?? !element.classList.contains('hidden');
+      // Use the database value for visibility, falling back to checking DOM if not in database
+      const isVisible = typeof settings.element_visibility[elementId] !== 'undefined' 
+        ? settings.element_visibility[elementId] 
+        : !element.classList.contains('hidden');
       
       let parentSection = '';
       let parent = element.parentElement;
@@ -130,82 +161,40 @@ const SectionManagerSidebar = ({
     setEditableElements(Array.from(elementsMap.values()));
   };
 
-  const toggleSectionVisibility = async (sectionId: string) => {
+  const toggleSectionVisibility = (sectionId: string) => {
+    if (!settings) return;
+    
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
     if (!section) {
       toast.error(`Section with ID ${sectionId} not found`);
       return;
     }
     
-    const isCurrentlyVisible = settings?.section_visibility[sectionId] ?? !section.classList.contains('hidden');
+    const isCurrentlyVisible = sections.find(s => s.id === sectionId)?.isVisible ?? true;
+    const newIsVisible = !isCurrentlyVisible;
     
-    try {
-      // First update the DOM immediately for a responsive feel
-      if (isCurrentlyVisible) {
-        section.classList.add('hidden');
-      } else {
-        section.classList.remove('hidden');
-      }
-      
-      // Update local state
-      setSections(prev => 
-        prev.map(s => 
-          s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
-        )
-      );
-
-      // Get current settings
-      let updatedVisibility = { ...settings?.section_visibility } || {};
-      updatedVisibility[sectionId] = !isCurrentlyVisible;
-      
-      console.log('Updating section visibility with:', updatedVisibility);
-      
-      const { error: updateError } = await supabase
-        .from('landing_page_settings')
-        .update({ 
-          section_visibility: updatedVisibility,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', 1);
-      
-      if (updateError) {
-        console.error('Error updating section visibility:', updateError);
-        // Revert UI state on error
-        if (isCurrentlyVisible) {
-          section.classList.remove('hidden');
-        } else {
-          section.classList.add('hidden');
-        }
-        setSections(prev => 
-          prev.map(s => 
-            s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
-          )
-        );
-        toast.error('Failed to save visibility settings');
-      } else {
-        toast.success(`Section ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
-        // Notify parent to reload settings
-        onSettingsChange();
-      }
-    } catch (error) {
-      console.error('Error saving section visibility:', error);
-      toast.error('Failed to save visibility settings');
-      // Revert UI on any error
-      if (isCurrentlyVisible) {
-        section.classList.remove('hidden');
-      } else {
-        section.classList.add('hidden');
-      }
-      setSections(prev => 
-        prev.map(s => 
-          s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
-        )
-      );
+    // Update DOM immediately for responsive feel
+    if (newIsVisible) {
+      section.classList.remove('hidden');
+    } else {
+      section.classList.add('hidden');
     }
+      
+    // Update local state
+    setSections(prev => 
+      prev.map(s => 
+        s.id === sectionId ? { ...s, isVisible: newIsVisible } : s
+      )
+    );
+
+    // Call parent handler to update database
+    onToggleSectionVisibility(sectionId, newIsVisible);
+    
+    toast.success(`Section ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
   };
 
   const moveSectionUp = (sectionId: string, currentIndex: number) => {
-    if (currentIndex <= 0) return;
+    if (currentIndex <= 0 || !settings) return;
     
     const prevSection = sections[currentIndex - 1];
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -213,22 +202,31 @@ const SectionManagerSidebar = ({
     
     if (!section || !prevSectionEl || !section.parentNode) return;
     
+    // Update DOM
     section.parentNode.insertBefore(section, prevSectionEl);
     
     section.setAttribute('data-section-order', `${currentIndex - 1}`);
     prevSectionEl.setAttribute('data-section-order', `${currentIndex}`);
     
+    // Update local state
     const updatedSections = [...sections];
     [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
       [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
     
     setSections(updatedSections);
 
-    saveSectionOrder(updatedSections);
+    // Update section order
+    const updatedOrder: SectionOrder = {};
+    updatedSections.forEach((section, index) => {
+      updatedOrder[section.id] = index;
+    });
+    
+    // Call parent handler to update database
+    onUpdateSectionOrder(updatedOrder);
   };
   
   const moveSectionDown = (sectionId: string, currentIndex: number) => {
-    if (currentIndex >= sections.length - 1) return;
+    if (currentIndex >= sections.length - 1 || !settings) return;
     
     const nextSection = sections[currentIndex + 1];
     const section = document.querySelector(`[data-section-id="${sectionId}"]`);
@@ -236,6 +234,7 @@ const SectionManagerSidebar = ({
     
     if (!section || !nextSectionEl || !section.parentNode) return;
     
+    // Update DOM
     if (nextSectionEl.nextSibling) {
       section.parentNode.insertBefore(section, nextSectionEl.nextSibling);
     } else {
@@ -245,109 +244,53 @@ const SectionManagerSidebar = ({
     section.setAttribute('data-section-order', `${currentIndex + 1}`);
     nextSectionEl.setAttribute('data-section-order', `${currentIndex}`);
     
+    // Update local state
     const updatedSections = [...sections];
     [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
       [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
     
     setSections(updatedSections);
 
-    saveSectionOrder(updatedSections);
+    // Update section order
+    const updatedOrder: SectionOrder = {};
+    updatedSections.forEach((section, index) => {
+      updatedOrder[section.id] = index;
+    });
+    
+    // Call parent handler to update database
+    onUpdateSectionOrder(updatedOrder);
   };
 
-  const saveSectionOrder = async (orderedSections: Section[]) => {
-    try {
-      // Create section order object
-      const sectionOrder: Record<string, number> = {};
-      orderedSections.forEach((section, index) => {
-        sectionOrder[section.id] = index;
-      });
-
-      // Save to database
-      const { error } = await supabase
-        .from('landing_page_settings')
-        .update({ section_order: sectionOrder })
-        .eq('id', 1);
-
-      if (error) {
-        console.error('Error saving section order:', error);
-        toast.error('Failed to save section order');
-      }
-    } catch (error) {
-      console.error('Error in saveSectionOrder:', error);
-      toast.error('Failed to save section order');
-    }
-  };
-
-  const toggleElementVisibility = async (elementId: string) => {
+  const toggleElementVisibility = (elementId: string) => {
+    if (!settings) return;
+    
     const element = document.querySelector(`[data-editable-id="${elementId}"]`);
     if (!element) {
       toast.error(`Element with ID ${elementId} not found`);
       return;
     }
     
-    const isCurrentlyVisible = settings?.element_visibility[elementId] ?? !element.classList.contains('hidden');
+    const isCurrentlyVisible = editableElements.find(e => e.id === elementId)?.isVisible ?? true;
+    const newIsVisible = !isCurrentlyVisible;
     
-    try {
-      // First update the DOM immediately for a responsive feel
-      if (isCurrentlyVisible) {
-        element.classList.add('hidden');
-      } else {
-        element.classList.remove('hidden');
-      }
-      
-      // Update local state
-      setEditableElements(prev => 
-        prev.map(e => 
-          e.id === elementId ? { ...e, isVisible: !isCurrentlyVisible } : e
-        )
-      );
-      
-      // Get current settings
-      let updatedVisibility = { ...settings?.element_visibility } || {};
-      updatedVisibility[elementId] = !isCurrentlyVisible;
-      
-      console.log('Updating element visibility with:', updatedVisibility);
-      
-      const { error: updateError } = await supabase
-        .from('landing_page_settings')
-        .update({ 
-          element_visibility: updatedVisibility,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', 1);
-      
-      if (updateError) {
-        console.error('Error updating element visibility:', updateError);
-        // Revert UI state on error
-        if (isCurrentlyVisible) {
-          element.classList.remove('hidden');
-        } else {
-          element.classList.add('hidden');
-        }
-        setEditableElements(prev => 
-          prev.map(e => 
-            e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
-          )
-        );
-        toast.error('Failed to save element visibility settings');
-      } else {
-        toast.success(`Element ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
-      }
-    } catch (error) {
-      console.error('Error saving element visibility:', error);
-      toast.error('Failed to save visibility settings');
-      // Revert UI on any error
-      if (isCurrentlyVisible) {
-        element.classList.remove('hidden');
-      } else {
-        element.classList.add('hidden');
-      }
-      setEditableElements(prev => 
-        prev.map(e => 
-          e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
-        )
-      );
+    // Update DOM immediately for responsive feel
+    if (newIsVisible) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
     }
+    
+    // Update local state
+    setEditableElements(prev => 
+      prev.map(e => 
+        e.id === elementId ? { ...e, isVisible: newIsVisible } : e
+      )
+    );
+    
+    // Call parent handler to update database
+    onToggleElementVisibility(elementId, newIsVisible);
+    
+    toast.success(`Element ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
   };
 
   if (!isEditMode) return null;

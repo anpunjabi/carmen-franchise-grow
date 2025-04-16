@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
 import { toast } from 'sonner';
 
+// Define proper types for the visibility states
 interface SectionVisibility {
   [key: string]: boolean;
 }
@@ -49,10 +50,25 @@ const SectionEditor = () => {
 
       if (data) {
         console.log('Loaded visibility settings:', data);
-        setSettings(data);
+        
+        // Ensure we properly type the data from the database
+        const typedSettings: LandingPageSettings = {
+          id: data.id,
+          section_visibility: data.section_visibility as SectionVisibility,
+          element_visibility: data.element_visibility as ElementVisibility,
+          section_order: data.section_order as SectionOrder,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
+        setSettings(typedSettings);
         
         // Apply settings to DOM
-        applyVisibilitySettings(data.section_visibility, data.element_visibility);
+        applyVisibilitySettings(
+          typedSettings.section_visibility, 
+          typedSettings.element_visibility,
+          typedSettings.section_order
+        );
       }
     } catch (error) {
       console.error('Error in loadVisibilitySettings:', error);
@@ -62,7 +78,8 @@ const SectionEditor = () => {
 
   const applyVisibilitySettings = (
     sectionVisibility: SectionVisibility,
-    elementVisibility: ElementVisibility
+    elementVisibility: ElementVisibility,
+    sectionOrder: SectionOrder
   ) => {
     // Apply section visibility
     Object.entries(sectionVisibility).forEach(([sectionId, isVisible]) => {
@@ -91,6 +108,82 @@ const SectionEditor = () => {
         }
       }
     });
+
+    // Apply section order if available
+    if (Object.keys(sectionOrder).length > 0) {
+      applyOrderToSections(sectionOrder);
+    }
+  };
+
+  const applyOrderToSections = (sectionOrder: SectionOrder) => {
+    const orderedIds = Object.entries(sectionOrder)
+      .sort(([, orderA], [, orderB]) => orderA - orderB)
+      .map(([id]) => id);
+    
+    const mainElement = document.querySelector('main');
+    if (!mainElement) return;
+    
+    // Reorder DOM elements based on the saved order
+    orderedIds.forEach(sectionId => {
+      const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+      if (section && mainElement.contains(section)) {
+        // Move the section to the end to reorder it
+        mainElement.appendChild(section);
+        
+        // Update the data-section-order attribute to match the saved order
+        section.setAttribute('data-section-order', sectionOrder[sectionId].toString());
+      }
+    });
+  };
+  
+  // Save settings to database whenever they change in the sidebar
+  const saveSettings = async (
+    updatedSettings: {
+      section_visibility?: SectionVisibility,
+      element_visibility?: ElementVisibility,
+      section_order?: SectionOrder
+    }
+  ) => {
+    try {
+      if (!settings) return;
+      
+      const newSettings = {
+        ...settings,
+        ...updatedSettings,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('landing_page_settings')
+        .update({
+          section_visibility: newSettings.section_visibility,
+          element_visibility: newSettings.element_visibility,
+          section_order: newSettings.section_order,
+          updated_at: newSettings.updated_at
+        })
+        .eq('id', 1);
+        
+      if (error) {
+        console.error('Error saving settings:', error);
+        toast.error('Failed to save settings');
+        return;
+      }
+      
+      // Update local state with the new settings
+      setSettings(newSettings);
+      
+      // Apply the updated settings
+      applyVisibilitySettings(
+        newSettings.section_visibility,
+        newSettings.element_visibility,
+        newSettings.section_order
+      );
+      
+      console.log('Settings saved successfully:', newSettings);
+    } catch (error) {
+      console.error('Error in saveSettings:', error);
+      toast.error('Failed to save settings');
+    }
   };
   
   useEffect(() => {
@@ -130,7 +223,31 @@ const SectionEditor = () => {
         onOpenChange={setIsSidebarOpen} 
         isEditMode={isEditMode}
         settings={settings}
-        onSettingsChange={loadVisibilitySettings}
+        onToggleSectionVisibility={(sectionId, isVisible) => {
+          if (!settings) return;
+          
+          const updatedSectionVisibility = {
+            ...settings.section_visibility,
+            [sectionId]: isVisible
+          };
+          
+          saveSettings({ section_visibility: updatedSectionVisibility });
+        }}
+        onToggleElementVisibility={(elementId, isVisible) => {
+          if (!settings) return;
+          
+          const updatedElementVisibility = {
+            ...settings.element_visibility,
+            [elementId]: isVisible
+          };
+          
+          saveSettings({ element_visibility: updatedElementVisibility });
+        }}
+        onUpdateSectionOrder={(updatedOrder) => {
+          if (!settings) return;
+          
+          saveSettings({ section_order: updatedOrder });
+        }}
       />
       {isEditMode && (
         <Button

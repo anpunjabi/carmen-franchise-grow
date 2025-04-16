@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -68,67 +69,24 @@ const UserMenu = () => {
     }));
   };
 
-  const saveEdits = async () => {
+  const saveEdits = () => {
     setIsSaving(true);
     
     try {
-      const sectionVisibility = {};
-      const sections = document.querySelectorAll('[data-section-id]');
-      
-      sections.forEach(section => {
-        const sectionId = section.getAttribute('data-section-id');
-        const isVisible = !section.classList.contains('hidden');
-        sectionVisibility[sectionId] = isVisible;
-      });
-      
-      const elementVisibility = {};
-      const elements = document.querySelectorAll('[data-editable-id]');
-      
-      elements.forEach(element => {
-        const elementId = element.getAttribute('data-editable-id');
-        const isVisible = !element.classList.contains('hidden');
-        elementVisibility[elementId] = isVisible;
-      });
-
-      const sectionOrder = {};
-      const orderedSections = document.querySelectorAll('[data-section-id]');
-      
-      orderedSections.forEach((section) => {
-        const sectionId = section.getAttribute('data-section-id');
-        const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
-        if (sectionId) {
-          sectionOrder[sectionId] = orderIndex;
-        }
-      });
-
-      console.log('Saving section visibility:', sectionVisibility);
-      console.log('Saving section order:', sectionOrder);
-
-      const { error: updateError } = await supabase
-        .from('landing_page_settings')
-        .update({ 
-          section_visibility: sectionVisibility,
-          element_visibility: elementVisibility,
-          section_order: sectionOrder,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', 1);
-      
-      if (updateError) throw updateError;
-      
-      toast({
-        title: "Changes saved",
-        description: "Section and element visibility settings have been updated.",
-      });
-      
+      // The actual saving is handled by SectionEditor via its callbacks
+      // Just exit edit mode here
       setIsEditMode(false);
       
       window.dispatchEvent(new CustomEvent('editmodechange', { 
         detail: { isEditMode: false }
       }));
       
+      toast({
+        title: "Changes saved",
+        description: "Your edits have been applied to the landing page.",
+      });
     } catch (error) {
-      console.error('Error saving visibility settings:', error);
+      console.error('Error in saveEdits:', error);
       toast({
         title: "Error saving changes",
         description: "There was a problem saving your settings.",
