@@ -99,7 +99,7 @@ const UserMenu = () => {
     const sectionOrder = {};
     const orderedSections = document.querySelectorAll('[data-section-id]');
     
-    orderedSections.forEach((section, index) => {
+    orderedSections.forEach((section) => {
       const sectionId = section.getAttribute('data-section-id');
       const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
       if (sectionId) {
@@ -111,18 +111,50 @@ const UserMenu = () => {
 
     // Save to Supabase using the dedicated landing_page_settings table
     try {
-      // Use 'any' type assertion to bypass TypeScript table name checking
-      const { error } = await supabase
+      // Check if the record already exists
+      const { data, error: checkError } = await supabase
         .from('landing_page_settings')
-        .update({ 
-          section_visibility: sectionVisibility,
-          element_visibility: elementVisibility,
-          section_order: sectionOrder,
-          updated_at: new Date().toISOString() // Convert Date to ISO string format
-        })
-        .eq('id', 1); // Use the first record (we only have one)
+        .select('id')
+        .eq('id', 1)
+        .single();
       
-      if (error) throw error;
+      let updateError = null;
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        // Some other error occurred
+        console.error('Error checking if settings record exists:', checkError);
+        throw checkError;
+      }
+      
+      if (data) {
+        // Update existing record
+        const { error } = await supabase
+          .from('landing_page_settings')
+          .update({ 
+            section_visibility: sectionVisibility,
+            element_visibility: elementVisibility,
+            section_order: sectionOrder,
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', 1);
+        
+        updateError = error;
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('landing_page_settings')
+          .insert({ 
+            id: 1,
+            section_visibility: sectionVisibility,
+            element_visibility: elementVisibility,
+            section_order: sectionOrder,
+            updated_at: new Date().toISOString() 
+          });
+        
+        updateError = error;
+      }
+      
+      if (updateError) throw updateError;
       
       // Show success toast
       toast({

@@ -55,3 +55,45 @@ WITH CHECK (
     )
 );
 
+-- Make sure landing_page_settings has proper RLS policies
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'landing_page_settings') THEN
+        ALTER TABLE public.landing_page_settings ENABLE ROW LEVEL SECURITY;
+        
+        -- Drop existing policies if they exist
+        DROP POLICY IF EXISTS "Allow all users to view landing page settings" ON public.landing_page_settings;
+        DROP POLICY IF EXISTS "Allow Carmen admins to update landing page settings" ON public.landing_page_settings;
+        DROP POLICY IF EXISTS "Allow Carmen admins to insert landing page settings" ON public.landing_page_settings;
+        
+        -- Create new policies
+        CREATE POLICY "Allow all users to view landing page settings" 
+        ON public.landing_page_settings 
+        FOR SELECT 
+        USING (true);
+        
+        CREATE POLICY "Allow Carmen admins to update landing page settings" 
+        ON public.landing_page_settings 
+        FOR UPDATE 
+        USING (
+            EXISTS (
+                SELECT 1 FROM public.users 
+                WHERE user_id = auth.uid() 
+                AND "Carmen Admin" = true
+            )
+        );
+        
+        CREATE POLICY "Allow Carmen admins to insert landing page settings" 
+        ON public.landing_page_settings 
+        FOR INSERT 
+        WITH CHECK (
+            EXISTS (
+                SELECT 1 FROM public.users 
+                WHERE user_id = auth.uid() 
+                AND "Carmen Admin" = true
+            )
+        );
+    END IF;
+END
+$$;
+

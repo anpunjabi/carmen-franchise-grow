@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, PanelLeft } from 'lucide-react';
@@ -76,6 +77,27 @@ const SectionEditor = () => {
               }
             }
           });
+
+          // Apply element visibility settings
+          if (settings.element_visibility) {
+            Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {
+              const element = document.querySelector(`[data-editable-id="${elementId}"]`);
+              if (element) {
+                if (!isVisible) {
+                  element.classList.add('hidden');
+                  console.log(`Hiding element ${elementId}`);
+                } else {
+                  element.classList.remove('hidden');
+                  console.log(`Showing element ${elementId}`);
+                }
+              }
+            });
+          }
+
+          // Apply section order if available
+          if (settings.section_order && Object.keys(settings.section_order).length > 0) {
+            applySectionOrder(settings.section_order);
+          }
 
           // Update the database with complete section visibility if needed
           if (JSON.stringify(settings.section_visibility) !== JSON.stringify(updatedSectionVisibility)) {
@@ -216,6 +238,18 @@ const SectionEditor = () => {
 
       console.log('Saving element visibility state:', elementVisibility);
 
+      // Get section order from attributes
+      const sectionOrder: SectionOrder = {};
+      document.querySelectorAll('[data-section-id]').forEach((section) => {
+        const sectionId = section.getAttribute('data-section-id');
+        const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
+        if (sectionId) {
+          sectionOrder[sectionId] = orderIndex;
+        }
+      });
+
+      console.log('Saving section order:', sectionOrder);
+
       // Check if record exists first
       const { data: existingData, error: checkError } = await supabase
         .from('landing_page_settings')
@@ -233,6 +267,7 @@ const SectionEditor = () => {
       const updateData = {
         section_visibility: sectionVisibility,
         element_visibility: elementVisibility,
+        section_order: sectionOrder,
         updated_at: new Date().toISOString()
       };
 
