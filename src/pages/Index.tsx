@@ -25,12 +25,17 @@ interface SectionVisibility {
   [key: string]: boolean;
 }
 
+interface ElementVisibility {
+  [key: string]: boolean;
+}
+
 interface SectionOrder {
   [key: string]: number;
 }
 
 const Index = () => {
   const [sectionVisibility, setSectionVisibility] = useState<SectionVisibility>({});
+  const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
   const [sectionOrder, setSectionOrder] = useState<SectionOrder>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -55,7 +60,7 @@ const Index = () => {
         setIsLoading(true);
         const { data, error } = await supabase
           .from('landing_page_settings')
-          .select('section_visibility, section_order')
+          .select('section_visibility, element_visibility, section_order')
           .eq('id', 1)
           .single();
         
@@ -66,11 +71,18 @@ const Index = () => {
 
         if (data) {
           console.log('Loaded settings:', data);
-          setSectionVisibility(data.section_visibility);
+          
+          // TypeScript fix: Explicitly convert to the correct types
+          const sectionVisData: SectionVisibility = data.section_visibility as SectionVisibility;
+          setSectionVisibility(sectionVisData);
+          
+          const elementVisData: ElementVisibility = data.element_visibility as ElementVisibility;
+          setElementVisibility(elementVisData);
           
           // If section_order exists and has values, use them; otherwise use default order
           if (data.section_order && Object.keys(data.section_order).length > 0) {
-            setSectionOrder(data.section_order);
+            const orderData: SectionOrder = data.section_order as SectionOrder;
+            setSectionOrder(orderData);
           } else {
             // Create default order object
             const defaultOrder = allSections.reduce((acc, section) => {
@@ -103,9 +115,15 @@ const Index = () => {
         (payload) => {
           console.log('Settings updated in database:', payload);
           if (payload.new) {
-            setSectionVisibility(payload.new.section_visibility);
+            const sectionVisData = payload.new.section_visibility as SectionVisibility;
+            setSectionVisibility(sectionVisData);
+            
+            const elementVisData = payload.new.element_visibility as ElementVisibility;
+            setElementVisibility(elementVisData);
+            
             if (payload.new.section_order && Object.keys(payload.new.section_order).length > 0) {
-              setSectionOrder(payload.new.section_order);
+              const orderData = payload.new.section_order as SectionOrder;
+              setSectionOrder(orderData);
             }
           }
         }
@@ -157,7 +175,12 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <SectionEditor />
+      <SectionEditor 
+        allSections={allSections} 
+        sectionVisibility={sectionVisibility}
+        elementVisibility={elementVisibility}
+        sectionOrder={sectionOrder}
+      />
       <main className="flex-grow">
         {sortedSections.map((section) => {
           const isVisible = sectionVisibility[section.id] !== undefined 

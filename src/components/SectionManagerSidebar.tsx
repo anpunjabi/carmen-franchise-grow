@@ -23,6 +23,12 @@ interface EditableElement {
   parentSection?: string;
 }
 
+interface SectionData {
+  id: string;
+  component: React.ReactNode;
+  defaultOrder: number;
+}
+
 interface SectionVisibility {
   [key: string]: boolean;
 }
@@ -35,20 +41,14 @@ interface SectionOrder {
   [key: string]: number;
 }
 
-interface LandingPageSettings {
-  id: number;
-  section_visibility: SectionVisibility;
-  element_visibility: ElementVisibility;
-  section_order: SectionOrder;
-  created_at?: string;
-  updated_at?: string;
-}
-
 interface SectionManagerSidebarProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditMode: boolean;
-  settings: LandingPageSettings | null;
+  allSections: SectionData[];
+  sectionVisibility: SectionVisibility;
+  elementVisibility: ElementVisibility;
+  sectionOrder: SectionOrder;
   onToggleSectionVisibility: (sectionId: string, isVisible: boolean) => void;
   onToggleElementVisibility: (elementId: string, isVisible: boolean) => void;
   onUpdateSectionOrder: (sectionOrder: SectionOrder) => void;
@@ -58,7 +58,10 @@ const SectionManagerSidebar = ({
   isOpen, 
   onOpenChange, 
   isEditMode,
-  settings,
+  allSections,
+  sectionVisibility,
+  elementVisibility,
+  sectionOrder,
   onToggleSectionVisibility,
   onToggleElementVisibility,
   onUpdateSectionOrder
@@ -67,57 +70,51 @@ const SectionManagerSidebar = ({
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
 
-  // Load sections and elements from the DOM, but use the database settings for visibility
+  // Load sections and elements from the DOM and props
   useEffect(() => {
-    if (isEditMode && isOpen && settings) {
+    if (isEditMode && isOpen) {
       loadSectionsAndElements();
     }
-  }, [isOpen, isEditMode, settings]);
+  }, [isOpen, isEditMode, allSections, sectionVisibility, elementVisibility, sectionOrder]);
 
   const loadSectionsAndElements = () => {
-    if (!settings) return;
-    
-    const sectionElements = document.querySelectorAll('[data-section-id]');
-    const sectionsMap = new Map<string, Section>();
-    
-    sectionElements.forEach((section) => {
-      const sectionId = section.getAttribute('data-section-id') || '';
-      // Use the database value for visibility, falling back to checking DOM if not in database
-      const isVisible = typeof settings.section_visibility[sectionId] !== 'undefined' 
-        ? settings.section_visibility[sectionId] 
-        : !section.classList.contains('hidden');
+    // Create section objects from allSections prop
+    const sectionsArray: Section[] = allSections.map(section => {
+      // Use the database value for visibility, falling back to true if not in database
+      const isVisible = typeof sectionVisibility[section.id] !== 'undefined' 
+        ? sectionVisibility[section.id] 
+        : true;
       
-      const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      // Format section name from ID if needed
+      const sectionName = section.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       
-      // Use section_order from database if available, otherwise use DOM order
-      let order = parseInt(section.getAttribute('data-section-order') || '0');
-      if (settings.section_order && typeof settings.section_order[sectionId] !== 'undefined') {
-        order = settings.section_order[sectionId];
-      }
+      // Use section_order from database if available, otherwise use default order
+      const order = typeof sectionOrder[section.id] !== 'undefined'
+        ? sectionOrder[section.id]
+        : section.defaultOrder;
       
-      if (!sectionsMap.has(sectionId)) {
-        sectionsMap.set(sectionId, {
-          id: sectionId,
-          name: sectionName,
-          isVisible,
-          order
-        });
-      }
+      return {
+        id: section.id,
+        name: sectionName,
+        isVisible,
+        order
+      };
     });
     
-    const sectionsArray = Array.from(sectionsMap.values());
+    // Sort sections by order
     sectionsArray.sort((a, b) => a.order - b.order);
     setSections(sectionsArray);
 
+    // Load editable elements from DOM
     const editableElementNodes = document.querySelectorAll('[data-editable-id]');
     const elementsMap = new Map<string, EditableElement>();
     
     editableElementNodes.forEach(element => {
       const elementId = element.getAttribute('data-editable-id') || '';
-      // Use the database value for visibility, falling back to checking DOM if not in database
-      const isVisible = typeof settings.element_visibility[elementId] !== 'undefined' 
-        ? settings.element_visibility[elementId] 
-        : !element.classList.contains('hidden');
+      // Use the database value for visibility, falling back to true if not in database
+      const isVisible = typeof elementVisibility[elementId] !== 'undefined' 
+        ? elementVisibility[elementId] 
+        : true;
       
       let parentSection = '';
       let parent = element.parentElement;
@@ -162,8 +159,6 @@ const SectionManagerSidebar = ({
   };
 
   const toggleSectionVisibility = (sectionId: string) => {
-    if (!settings) return;
-    
     const section = sections.find(s => s.id === sectionId);
     if (!section) {
       toast.error(`Section with ID ${sectionId} not found`);
@@ -187,7 +182,7 @@ const SectionManagerSidebar = ({
   };
 
   const moveSectionUp = (sectionId: string, currentIndex: number) => {
-    if (currentIndex <= 0 || !settings) return;
+    if (currentIndex <= 0) return;
     
     const updatedSections = [...sections];
     
@@ -206,7 +201,7 @@ const SectionManagerSidebar = ({
     setSections(updatedSections);
 
     // Update section order for database
-    const updatedOrder: SectionOrder = {};
+    const updatedOrder: SectionOrder = { ...sectionOrder };
     updatedSections.forEach(section => {
       updatedOrder[section.id] = section.order;
     });
@@ -216,7 +211,7 @@ const SectionManagerSidebar = ({
   };
   
   const moveSectionDown = (sectionId: string, currentIndex: number) => {
-    if (currentIndex >= sections.length - 1 || !settings) return;
+    if (currentIndex >= sections.length - 1) return;
     
     const updatedSections = [...sections];
     
@@ -235,7 +230,7 @@ const SectionManagerSidebar = ({
     setSections(updatedSections);
 
     // Update section order for database
-    const updatedOrder: SectionOrder = {};
+    const updatedOrder: SectionOrder = { ...sectionOrder };
     updatedSections.forEach(section => {
       updatedOrder[section.id] = section.order;
     });
@@ -245,8 +240,6 @@ const SectionManagerSidebar = ({
   };
 
   const toggleElementVisibility = (elementId: string) => {
-    if (!settings) return;
-    
     const element = editableElements.find(e => e.id === elementId);
     if (!element) {
       toast.error(`Element with ID ${elementId} not found`);

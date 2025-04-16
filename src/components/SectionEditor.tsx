@@ -19,55 +19,37 @@ interface SectionOrder {
   [key: string]: number;
 }
 
-interface LandingPageSettings {
-  id: number;
-  section_visibility: SectionVisibility;
-  element_visibility: ElementVisibility;
-  section_order: SectionOrder;
-  created_at?: string;
-  updated_at?: string;
+interface SectionData {
+  id: string;
+  component: React.ReactNode;
+  defaultOrder: number;
 }
 
-const SectionEditor = () => {
+interface SectionEditorProps {
+  allSections: SectionData[];
+  sectionVisibility: SectionVisibility;
+  elementVisibility: ElementVisibility;
+  sectionOrder: SectionOrder;
+}
+
+const SectionEditor = ({ 
+  allSections, 
+  sectionVisibility, 
+  elementVisibility, 
+  sectionOrder 
+}: SectionEditorProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [settings, setSettings] = useState<LandingPageSettings | null>(null);
+  const [localSectionVisibility, setLocalSectionVisibility] = useState<SectionVisibility>(sectionVisibility);
+  const [localElementVisibility, setLocalElementVisibility] = useState<ElementVisibility>(elementVisibility);
+  const [localSectionOrder, setLocalSectionOrder] = useState<SectionOrder>(sectionOrder);
   
-  const loadVisibilitySettings = async () => {
-    try {
-      console.log('Loading visibility settings from landing_page_settings');
-      const { data, error } = await supabase
-        .from('landing_page_settings')
-        .select('*')
-        .eq('id', 1)
-        .single();
-      
-      if (error) {
-        console.error('Error loading visibility settings:', error);
-        toast.error('Failed to load visibility settings');
-        return;
-      }
-
-      if (data) {
-        console.log('Loaded visibility settings:', data);
-        
-        // Ensure we properly type the data from the database
-        const typedSettings: LandingPageSettings = {
-          id: data.id,
-          section_visibility: data.section_visibility as SectionVisibility,
-          element_visibility: data.element_visibility as ElementVisibility,
-          section_order: data.section_order as SectionOrder,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-        
-        setSettings(typedSettings);
-      }
-    } catch (error) {
-      console.error('Error in loadVisibilitySettings:', error);
-      toast.error('Failed to load visibility settings');
-    }
-  };
+  // Update local state when props change
+  useEffect(() => {
+    setLocalSectionVisibility(sectionVisibility);
+    setLocalElementVisibility(elementVisibility);
+    setLocalSectionOrder(sectionOrder);
+  }, [sectionVisibility, elementVisibility, sectionOrder]);
   
   // Save settings to database whenever they change in the sidebar
   const saveSettings = async (
@@ -78,34 +60,38 @@ const SectionEditor = () => {
     }
   ) => {
     try {
-      if (!settings) return;
-      
-      const newSettings = {
-        ...settings,
-        ...updatedSettings,
-        updated_at: new Date().toISOString()
-      };
+      console.log('Saving settings:', updatedSettings);
       
       const { error } = await supabase
         .from('landing_page_settings')
         .update({
-          section_visibility: newSettings.section_visibility,
-          element_visibility: newSettings.element_visibility,
-          section_order: newSettings.section_order,
-          updated_at: newSettings.updated_at
+          section_visibility: updatedSettings.section_visibility || localSectionVisibility,
+          element_visibility: updatedSettings.element_visibility || localElementVisibility,
+          section_order: updatedSettings.section_order || localSectionOrder,
+          updated_at: new Date().toISOString()
         })
         .eq('id', 1);
         
       if (error) {
         console.error('Error saving settings:', error);
         toast.error('Failed to save settings');
-        return;
+        return false;
       }
       
-      // Update local state with the new settings
-      setSettings(newSettings);
+      // Update local state to reflect saved changes
+      if (updatedSettings.section_visibility) {
+        setLocalSectionVisibility(updatedSettings.section_visibility);
+      }
       
-      console.log('Settings saved successfully:', newSettings);
+      if (updatedSettings.element_visibility) {
+        setLocalElementVisibility(updatedSettings.element_visibility);
+      }
+      
+      if (updatedSettings.section_order) {
+        setLocalSectionOrder(updatedSettings.section_order);
+      }
+      
+      console.log('Settings saved successfully');
       return true;
     } catch (error) {
       console.error('Error in saveSettings:', error);
@@ -115,9 +101,6 @@ const SectionEditor = () => {
   };
   
   useEffect(() => {
-    // Load settings when component mounts
-    loadVisibilitySettings();
-    
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
@@ -132,17 +115,25 @@ const SectionEditor = () => {
         document.querySelectorAll('.editable-element').forEach((element) => {
           element.classList.remove('editable-element');
         });
-        // Reload settings after edit mode is turned off to ensure correct state
-        loadVisibilitySettings();
       }
     };
     
+    const handleSaveChanges = () => {
+      saveSettings({
+        section_visibility: localSectionVisibility,
+        element_visibility: localElementVisibility,
+        section_order: localSectionOrder
+      });
+    };
+    
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
+    window.addEventListener('savechanges', handleSaveChanges);
     
     return () => {
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
+      window.removeEventListener('savechanges', handleSaveChanges);
     };
-  }, []);
+  }, [localSectionVisibility, localElementVisibility, localSectionOrder]);
   
   return (
     <>
@@ -150,30 +141,30 @@ const SectionEditor = () => {
         isOpen={isSidebarOpen} 
         onOpenChange={setIsSidebarOpen} 
         isEditMode={isEditMode}
-        settings={settings}
+        allSections={allSections}
+        sectionVisibility={localSectionVisibility}
+        elementVisibility={localElementVisibility}
+        sectionOrder={localSectionOrder}
         onToggleSectionVisibility={(sectionId, isVisible) => {
-          if (!settings) return;
-          
           const updatedSectionVisibility = {
-            ...settings.section_visibility,
+            ...localSectionVisibility,
             [sectionId]: isVisible
           };
           
+          setLocalSectionVisibility(updatedSectionVisibility);
           saveSettings({ section_visibility: updatedSectionVisibility });
         }}
         onToggleElementVisibility={(elementId, isVisible) => {
-          if (!settings) return;
-          
           const updatedElementVisibility = {
-            ...settings.element_visibility,
+            ...localElementVisibility,
             [elementId]: isVisible
           };
           
+          setLocalElementVisibility(updatedElementVisibility);
           saveSettings({ element_visibility: updatedElementVisibility });
         }}
         onUpdateSectionOrder={(updatedOrder) => {
-          if (!settings) return;
-          
+          setLocalSectionOrder(updatedOrder);
           saveSettings({ section_order: updatedOrder });
         }}
       />
