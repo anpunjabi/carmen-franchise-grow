@@ -5,12 +5,18 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from '@/components/UserMenu';
 import AuthModal from '@/components/AuthModal';
+import { supabase } from '@/integrations/supabase/client';
+
+interface ElementVisibility {
+  [key: string]: boolean;
+}
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, loading } = useAuth();
+  const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +29,60 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Load element visibility settings
+  useEffect(() => {
+    const loadElementVisibility = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('landing_page_settings')
+          .select('element_visibility')
+          .eq('id', 1)
+          .single();
+        
+        if (error) {
+          console.error('Error loading element visibility settings:', error);
+          return;
+        }
+
+        if (data && data.element_visibility) {
+          setElementVisibility(data.element_visibility as ElementVisibility);
+        }
+      } catch (error) {
+        console.error('Error in loadElementVisibility:', error);
+      }
+    };
+
+    loadElementVisibility();
+    
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('element_visibility_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'landing_page_settings',
+          filter: 'id=eq.1'
+        },
+        (payload) => {
+          if (payload.new && payload.new.element_visibility) {
+            setElementVisibility(payload.new.element_visibility as ElementVisibility);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Check if an element should be visible
+  const isElementVisible = (elementId: string) => {
+    return elementVisibility[elementId] !== undefined ? elementVisibility[elementId] : true;
+  };
 
   const navigation = [{
     name: 'Features',
@@ -57,34 +117,38 @@ const Header = () => {
             {/* Desktop navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               {navigation.map(item => (
-                <a 
-                  key={item.name} 
-                  href={item.href} 
-                  className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
-                  data-editable-id={item.id}
-                >
-                  {item.name}
-                </a>
+                isElementVisible(item.id) && (
+                  <a 
+                    key={item.name} 
+                    href={item.href} 
+                    className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
+                    data-editable-id={item.id}
+                  >
+                    {item.name}
+                  </a>
+                )
               ))}
               
               {!loading && (
                 user ? (
                   <UserMenu />
                 ) : (
-                  <Button 
-                    className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform" 
-                    onClick={openAuthModal}
-                    data-editable-id="login-button"
-                  >
-                    Log In
-                  </Button>
+                  isElementVisible('login-button') && (
+                    <Button 
+                      className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform" 
+                      onClick={openAuthModal}
+                      data-editable-id="login-button"
+                    >
+                      Log In
+                    </Button>
+                  )
                 )
               )}
             </nav>
             
             {/* Mobile menu button */}
             <div className="flex md:hidden">
-              {!loading && !user && (
+              {!loading && !user && isElementVisible('login-button-mobile') && (
                 <Button 
                   className="bg-carmen-gradient text-white mr-2 hover:opacity-90 transition-all duration-300 px-4 py-2" 
                   onClick={openAuthModal}
@@ -100,20 +164,22 @@ const Header = () => {
                 </div>
               )}
               
-              <button 
-                type="button" 
-                className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-blue focus:outline-none" 
-                aria-controls="mobile-menu" 
-                aria-expanded="false" 
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                data-editable-id="mobile-menu-button"
-              >
-                <span className="sr-only">Open main menu</span>
-                {mobileMenuOpen ? 
-                  <X className="block h-6 w-6" aria-hidden="true" /> : 
-                  <Menu className="block h-6 w-6" aria-hidden="true" />
-                }
-              </button>
+              {isElementVisible('mobile-menu-button') && (
+                <button 
+                  type="button" 
+                  className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-blue focus:outline-none" 
+                  aria-controls="mobile-menu" 
+                  aria-expanded="false" 
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  data-editable-id="mobile-menu-button"
+                >
+                  <span className="sr-only">Open main menu</span>
+                  {mobileMenuOpen ? 
+                    <X className="block h-6 w-6" aria-hidden="true" /> : 
+                    <Menu className="block h-6 w-6" aria-hidden="true" />
+                  }
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -127,28 +193,32 @@ const Header = () => {
         >
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md shadow-lg">
             {navigation.map(item => (
-              <a 
-                key={item.name} 
-                href={item.href} 
-                className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10" 
-                onClick={() => setMobileMenuOpen(false)}
-                data-editable-id={`${item.id}-mobile`}
-              >
-                {item.name}
-              </a>
+              isElementVisible(`${item.id}-mobile`) && (
+                <a 
+                  key={item.name} 
+                  href={item.href} 
+                  className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  data-editable-id={`${item.id}-mobile`}
+                >
+                  {item.name}
+                </a>
+              )
             ))}
-            <div className="px-3 py-2">
-              <Button 
-                className="bg-carmen-gradient text-white w-full hover:opacity-90 transition-all duration-300" 
-                onClick={() => {
-                  window.location.href = '#contact';
-                  setMobileMenuOpen(false);
-                }}
-                data-editable-id="contact-button-mobile"
-              >
-                Build with Us
-              </Button>
-            </div>
+            {isElementVisible('contact-button-mobile') && (
+              <div className="px-3 py-2">
+                <Button 
+                  className="bg-carmen-gradient text-white w-full hover:opacity-90 transition-all duration-300" 
+                  onClick={() => {
+                    window.location.href = '#contact';
+                    setMobileMenuOpen(false);
+                  }}
+                  data-editable-id="contact-button-mobile"
+                >
+                  Build with Us
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>

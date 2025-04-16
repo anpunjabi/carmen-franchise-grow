@@ -86,7 +86,12 @@ const SectionManagerSidebar = ({
         : true;
       
       // Format section name from ID if needed
-      const sectionName = section.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      let sectionName = section.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      
+      // Special case for footer to make it more visible in the UI
+      if (section.id === 'footer') {
+        sectionName = '📋 ' + sectionName;
+      }
       
       // Use section_order from database if available, otherwise use default order
       const order = typeof sectionOrder[section.id] !== 'undefined'
@@ -301,7 +306,7 @@ const SectionManagerSidebar = ({
                 {sections.map((section, index) => (
                   <div 
                     key={section.id} 
-                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted"
+                    className={`flex items-center justify-between p-2 rounded-md hover:bg-muted ${section.id === 'footer' ? 'bg-gray-50' : ''}`}
                   >
                     <span className="font-medium">{section.name}</span>
                     <div className="flex items-center space-x-1">
