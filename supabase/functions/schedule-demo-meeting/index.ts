@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { google } from "npm:googleapis@126.0.1";
 
@@ -20,8 +19,13 @@ interface AvailabilitySlotsRequest {
 }
 
 serve(async (req) => {
+  console.log('Request received:', new Date().toISOString());
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -35,10 +39,12 @@ serve(async (req) => {
 
     // Route for getting available time slots
     if (endpoint === 'get-availability') {
+      console.log('Routing to get-availability handler');
       return await handleGetAvailability(req);
     }
 
     // Default route for scheduling a meeting
+    console.log('Routing to schedule meeting handler');
     return await handleScheduleMeeting(req);
   } catch (error) {
     console.error('Error in edge function:', error);
@@ -66,92 +72,118 @@ serve(async (req) => {
 async function handleGetAvailability(req: Request) {
   console.log('Processing availability request');
   
-  const requestData = await req.json() as AvailabilitySlotsRequest;
-  const { date } = requestData;
-  
-  if (!date) {
-    console.error('Missing required date field');
-    return new Response(
-      JSON.stringify({ error: 'Date is required' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
-  // Initialize Google Calendar client with detailed logging
-  const calendar = await initializeGoogleCalendar();
-  if (!calendar) {
-    console.error('Failed to initialize Google Calendar');
-    return new Response(
-      JSON.stringify({ error: 'Failed to initialize calendar' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
-  // Convert date string to Date object
-  const requestDate = new Date(date);
-  
-  // Set time to start of day in UTC
-  requestDate.setUTCHours(0, 0, 0, 0);
-  
-  // Create start and end time for the day (10am to 7pm EST)
-  const startTime = new Date(requestDate);
-  startTime.setUTCHours(15, 0, 0, 0);  // 10am EST = 15:00 UTC (during standard time)
-  
-  const endTime = new Date(requestDate);
-  endTime.setUTCHours(24, 0, 0, 0);  // 7pm EST = 24:00 UTC (during standard time)
-  
   try {
-    console.log('Fetching calendar events from', startTime.toISOString(), 'to', endTime.toISOString());
+    const body = await req.text();
+    console.log('Request body:', body);
     
-    // Get existing events for the specified date
-    const events = await calendar.events.list({
-      calendarId: 'hello@carmenbpm.com', // Explicitly specify the calendar ID
-      timeMin: startTime.toISOString(),
-      timeMax: endTime.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-    });
-
-    // Extract busy time slots from events
-    const busySlots = events.data.items?.map(event => ({
-      start: new Date(event.start?.dateTime || '').toISOString(),
-      end: new Date(event.end?.dateTime || '').toISOString(),
-    })) || [];
-
-    console.log('Found existing events:', busySlots.length);
-    console.log('Busy slots:', JSON.stringify(busySlots));
-
-    // Return the busy slots
-    return new Response(
-      JSON.stringify({ busySlots }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error fetching calendar events:', error);
+    const requestData = JSON.parse(body) as AvailabilitySlotsRequest;
+    console.log('Parsed request data:', requestData);
     
-    // Log more details about the error
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+    const { date } = requestData;
+    
+    if (!date) {
+      console.error('Missing required date field');
+      return new Response(
+        JSON.stringify({ error: 'Date is required' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
+    // Initialize Google Calendar client with detailed logging
+    console.log('Initializing Google Calendar client');
+    const calendar = await initializeGoogleCalendar();
+    
+    if (!calendar) {
+      console.error('Failed to initialize Google Calendar');
+      return new Response(
+        JSON.stringify({ error: 'Failed to initialize calendar' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Successfully initialized calendar client');
+
+    // Convert date string to Date object
+    const requestDate = new Date(date);
+    console.log('Request date:', requestDate.toISOString());
+    
+    // Set time to start of day in UTC
+    requestDate.setUTCHours(0, 0, 0, 0);
+    
+    // Create start and end time for the day (10am to 7pm EST)
+    const startTime = new Date(requestDate);
+    startTime.setUTCHours(15, 0, 0, 0);  // 10am EST = 15:00 UTC (during standard time)
+    
+    const endTime = new Date(requestDate);
+    endTime.setUTCHours(24, 0, 0, 0);  // 7pm EST = 24:00 UTC (during standard time)
+    
+    console.log('Fetching calendar events from', startTime.toISOString(), 'to', endTime.toISOString());
+    console.log('Using calendar ID:', 'hello@carmenbpm.com');
+    
+    try {
+      // Get existing events for the specified date
+      const events = await calendar.events.list({
+        calendarId: 'hello@carmenbpm.com', // Explicitly specify the calendar ID
+        timeMin: startTime.toISOString(),
+        timeMax: endTime.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+      });
+
+      console.log('Calendar API response received');
+      console.log('Response status:', events.status);
+      console.log('Events data:', JSON.stringify(events.data));
+
+      // Extract busy time slots from events
+      const busySlots = events.data.items?.map(event => ({
+        start: new Date(event.start?.dateTime || '').toISOString(),
+        end: new Date(event.end?.dateTime || '').toISOString(),
+      })) || [];
+
+      console.log('Found existing events:', busySlots.length);
+      console.log('Busy slots:', JSON.stringify(busySlots));
+
+      // Return the busy slots
+      return new Response(
+        JSON.stringify({ busySlots }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+      
+      // Log more details about the error
+      if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to fetch calendar events',
+          details: error instanceof Error ? error.message : String(error)
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+  } catch (parseError) {
+    console.error('Error parsing request:', parseError);
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to fetch calendar events',
-        details: error instanceof Error ? error.message : String(error)
-      }),
+      JSON.stringify({ error: 'Invalid request format' }),
       {
-        status: 500,
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
@@ -289,7 +321,13 @@ async function initializeGoogleCalendar() {
   const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
   const clientEmail = Deno.env.get('GMAIL_CLIENT_EMAIL');
   
-  console.log('Initializing Google Calendar with client email:', clientEmail);
+  console.log('Starting Google Calendar initialization');
+  console.log('Client email available:', !!clientEmail);
+  console.log('Private key available:', !!privateKey);
+  
+  if (clientEmail) {
+    console.log('Using client email:', clientEmail);
+  }
   
   if (!privateKey || !clientEmail) {
     console.error('Missing required environment variables:', {
@@ -300,10 +338,14 @@ async function initializeGoogleCalendar() {
   }
 
   try {
+    console.log('Creating JWT auth client');
+    const formattedKey = privateKey.replace(/\\n/g, '\n');
+    console.log('Private key length after formatting:', formattedKey.length);
+    
     const auth = new google.auth.JWT(
       clientEmail,
       undefined,
-      privateKey.replace(/\\n/g, '\n'),
+      formattedKey,
       [
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/calendar.events',
@@ -313,16 +355,36 @@ async function initializeGoogleCalendar() {
 
     // Test the authentication
     try {
+      console.log('Authorizing with Google...');
       await auth.authorize();
       console.log('Successfully authenticated with Google');
     } catch (authError) {
       console.error('Authentication error:', authError);
+      if (authError instanceof Error) {
+        console.error('Auth error details:', authError.message);
+        console.error('Auth error stack:', authError.stack);
+      }
       throw new Error('Failed to authenticate with Google Calendar');
     }
 
     // Initialize Google Calendar API
+    console.log('Initializing calendar API client');
     const calendar = google.calendar({ version: 'v3', auth });
     console.log('Successfully initialized Google Calendar client');
+    
+    // Test the calendar client with a simple API call
+    try {
+      console.log('Testing calendar API with a simple call...');
+      const calendarList = await calendar.calendarList.list({ maxResults: 1 });
+      console.log('Calendar API test successful, found calendars:', calendarList.data.items?.length || 0);
+    } catch (calendarError) {
+      console.error('Calendar API test failed:', calendarError);
+      if (calendarError instanceof Error) {
+        console.error('Calendar error details:', calendarError.message);
+      }
+      // Don't throw here, just log the error
+    }
+    
     return calendar;
   } catch (error) {
     console.error('Error initializing Google Calendar:', error);
