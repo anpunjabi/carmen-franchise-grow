@@ -36,9 +36,9 @@ serve(async (req) => {
 
     console.log('Creating email content...');
 
-    // Construct email content with a professional template
+    // Construct email content with updated sender name
     const emailContent = `
-From: Carmen BPM <hello@carmenbpm.com>
+From: Carmen Team <hello@carmenbpm.com>
 To: hello@carmenbpm.com
 Subject: New Contact Form Submission from ${name}
 Content-Type: text/html; charset=utf-8
