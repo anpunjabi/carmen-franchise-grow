@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { google } from "npm:googleapis@126.0.1";
 
@@ -92,14 +93,39 @@ async function handleGetAvailability(req: Request) {
       );
     }
 
-    // Initialize Google Calendar client with detailed logging
-    console.log('Initializing Google Calendar client');
+    // Verify required environment variables
+    const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
+    const clientEmail = Deno.env.get('GMAIL_CLIENT_EMAIL');
+    
+    console.log('Environment check:');
+    console.log('- Client email available:', !!clientEmail);
+    console.log('- Private key available:', !!privateKey);
+    console.log('- Client email:', clientEmail);
+    
+    if (!privateKey || !clientEmail) {
+      console.error('Missing required environment variables');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          details: 'Missing required credentials'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Initialize Google Calendar client
     const calendar = await initializeGoogleCalendar();
     
     if (!calendar) {
-      console.error('Failed to initialize Google Calendar');
+      console.error('Failed to initialize Google Calendar client');
       return new Response(
-        JSON.stringify({ error: 'Failed to initialize calendar' }),
+        JSON.stringify({ 
+          error: 'Failed to initialize calendar service',
+          details: 'Could not authenticate with Google Calendar API'
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,31 +140,44 @@ async function handleGetAvailability(req: Request) {
     console.log('Request date:', requestDate.toISOString());
     
     // Set time to start of day in UTC
-    requestDate.setUTCHours(0, 0, 0, 0);
-    
-    // Create start and end time for the day (10am to 7pm EST)
     const startTime = new Date(requestDate);
-    startTime.setUTCHours(15, 0, 0, 0);  // 10am EST = 15:00 UTC (during standard time)
+    startTime.setUTCHours(0, 0, 0, 0);
     
+    // Set time to end of day in UTC
     const endTime = new Date(requestDate);
-    endTime.setUTCHours(24, 0, 0, 0);  // 7pm EST = 24:00 UTC (during standard time)
+    endTime.setUTCHours(23, 59, 59, 999);
+    
+    // Define the calendar ID to use
+    const calendarId = 'hello@carmenbpm.com';
     
     console.log('Fetching calendar events from', startTime.toISOString(), 'to', endTime.toISOString());
-    console.log('Using calendar ID:', 'hello@carmenbpm.com');
+    console.log('Using calendar ID:', calendarId);
     
     try {
       // Get existing events for the specified date
+      console.log('Making calendar.events.list API call...');
       const events = await calendar.events.list({
-        calendarId: 'hello@carmenbpm.com', // Explicitly specify the calendar ID
+        calendarId: calendarId,
         timeMin: startTime.toISOString(),
         timeMax: endTime.toISOString(),
         singleEvents: true,
         orderBy: 'startTime',
       });
 
-      console.log('Calendar API response received');
+      console.log('Calendar API response received:');
       console.log('Response status:', events.status);
-      console.log('Events data:', JSON.stringify(events.data));
+      console.log('Events data items count:', events.data.items?.length || 0);
+      
+      if (events.data.items && events.data.items.length > 0) {
+        console.log('Found events:', events.data.items.map(e => ({
+          id: e.id,
+          summary: e.summary,
+          start: e.start?.dateTime,
+          end: e.end?.dateTime
+        })));
+      } else {
+        console.log('No events found for this date');
+      }
 
       // Extract busy time slots from events
       const busySlots = events.data.items?.map(event => ({
@@ -146,12 +185,13 @@ async function handleGetAvailability(req: Request) {
         end: new Date(event.end?.dateTime || '').toISOString(),
       })) || [];
 
-      console.log('Found existing events:', busySlots.length);
-      console.log('Busy slots:', JSON.stringify(busySlots));
+      console.log('Extracted busy slots:', busySlots);
 
-      // Return the busy slots
       return new Response(
-        JSON.stringify({ busySlots }),
+        JSON.stringify({ 
+          busySlots,
+          message: 'Success'
+        }),
         {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -279,7 +319,7 @@ ${message ? `Message: ${message}` : ''}
   try {
     // Insert the event to the calendar with conferenceDataVersion=1 to enable Google Meet
     const calendarResponse = await calendar.events.insert({
-      calendarId: 'primary',
+      calendarId: 'hello@carmenbpm.com',  // Using explicit calendar ID
       conferenceDataVersion: 1,
       requestBody: event,
       sendUpdates: 'all', // Send emails to all attendees
@@ -339,9 +379,11 @@ async function initializeGoogleCalendar() {
 
   try {
     console.log('Creating JWT auth client');
+    // Make sure to properly format the private key
     const formattedKey = privateKey.replace(/\\n/g, '\n');
     console.log('Private key length after formatting:', formattedKey.length);
     
+    // Create a JWT client for authentication
     const auth = new google.auth.JWT(
       clientEmail,
       undefined,
@@ -350,7 +392,7 @@ async function initializeGoogleCalendar() {
         'https://www.googleapis.com/auth/calendar',
         'https://www.googleapis.com/auth/calendar.events',
       ],
-      'hello@carmenbpm.com'
+      'hello@carmenbpm.com'  // User to impersonate
     );
 
     // Test the authentication
@@ -377,6 +419,10 @@ async function initializeGoogleCalendar() {
       console.log('Testing calendar API with a simple call...');
       const calendarList = await calendar.calendarList.list({ maxResults: 1 });
       console.log('Calendar API test successful, found calendars:', calendarList.data.items?.length || 0);
+      
+      if (calendarList.data.items && calendarList.data.items.length > 0) {
+        console.log('First calendar in list:', calendarList.data.items[0].summary);
+      }
     } catch (calendarError) {
       console.error('Calendar API test failed:', calendarError);
       if (calendarError instanceof Error) {

@@ -39,9 +39,11 @@ const BookingSection = () => {
   const [busySlots, setBusySlots] = useState<BusySlot[]>([]);
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
-  const generateTimeSlots = (): TimeSlot[] => {
+  const generateTimeSlots = (selectedDate: Date): TimeSlot[] => {
     const slots: TimeSlot[] = [];
+    
     for (let hour = 10; hour < 19; hour++) {
       for (let minute of [0, 30]) {
         slots.push({
@@ -52,6 +54,7 @@ const BookingSection = () => {
         });
       }
     }
+    
     return slots;
   };
 
@@ -60,12 +63,13 @@ const BookingSection = () => {
     
     setIsLoadingSlots(true);
     setAvailabilityError(null);
+    setDebugInfo(null);
     
     try {
-      const baseSlots = generateTimeSlots();
-      setTimeSlots(baseSlots);
-      
       console.log('Fetching availability for:', selectedDate.toISOString());
+      
+      const baseSlots = generateTimeSlots(selectedDate);
+      setTimeSlots(baseSlots);
       
       const { data, error } = await supabase.functions.invoke('schedule-demo-meeting/get-availability', {
         body: { date: selectedDate.toISOString() }
@@ -81,14 +85,22 @@ const BookingSection = () => {
       }
       
       console.log('Availability response:', data);
+      setDebugInfo(JSON.stringify(data, null, 2));
       
       if (data.busySlots && Array.isArray(data.busySlots)) {
         setBusySlots(data.busySlots);
+        
         const updatedSlots = markUnavailableSlots(baseSlots, data.busySlots, selectedDate);
         setTimeSlots(updatedSlots);
+        
+        console.log('Updated time slots:', updatedSlots);
       } else {
         console.warn('Unexpected response format:', data);
-        throw new Error('Unexpected response format from server');
+        
+        if (data.error || data.details) {
+          setDebugInfo(`Server error: ${data.error || ''} - ${data.details || ''}`);
+          throw new Error(data.error || 'Unexpected response format from server');
+        }
       }
     } catch (error) {
       console.error('Error in fetchAvailability:', error);
@@ -111,8 +123,6 @@ const BookingSection = () => {
 
   const markUnavailableSlots = (slots: TimeSlot[], busySlots: BusySlot[], selectedDate: Date): TimeSlot[] => {
     return slots.map(slot => {
-      if (!selectedDate) return { ...slot, available: false };
-      
       const slotStart = new Date(selectedDate);
       slotStart.setHours(slot.hour, slot.minute, 0, 0);
       
@@ -232,10 +242,7 @@ const BookingSection = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const dayOfWeek = date.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    
-    return isBefore(date, today) || isWeekend;
+    return isBefore(date, today);
   };
 
   const ConfirmationView = () => (
@@ -363,6 +370,12 @@ const BookingSection = () => {
                         </Button>
                       </AlertDescription>
                     </Alert>
+                  )}
+                  
+                  {debugInfo && (
+                    <div className="text-xs bg-gray-100 p-2 mb-4 rounded overflow-auto max-h-32">
+                      <pre>{debugInfo}</pre>
+                    </div>
                   )}
                   
                   {isLoadingSlots ? (
