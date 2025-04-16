@@ -85,7 +85,6 @@ const BookingSection = () => {
       }
       
       console.log('Availability response:', data);
-      setDebugInfo(JSON.stringify(data, null, 2));
       
       if (data.busySlots && Array.isArray(data.busySlots)) {
         setBusySlots(data.busySlots);
@@ -98,7 +97,6 @@ const BookingSection = () => {
         console.warn('Unexpected response format:', data);
         
         if (data.error || data.details) {
-          setDebugInfo(`Server error: ${data.error || ''} - ${data.details || ''}`);
           throw new Error(data.error || 'Unexpected response format from server');
         }
       }
@@ -370,12 +368,6 @@ const BookingSection = () => {
                         </Button>
                       </AlertDescription>
                     </Alert>
-                  )}
-                  
-                  {debugInfo && (
-                    <div className="text-xs bg-gray-100 p-2 mb-4 rounded overflow-auto max-h-32">
-                      <pre>{debugInfo}</pre>
-                    </div>
                   )}
                   
                   {isLoadingSlots ? (
