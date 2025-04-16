@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Clock, Check, Wrench, Star, Mail, Loader2 } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { CalendarIcon, Clock, Check, Wrench, Star, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { format, addDays, setHours, setMinutes, isAfter, isBefore, addWeeks } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import EditableText from './EditableText';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,6 +37,8 @@ const BookingSection = () => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [busySlots, setBusySlots] = useState<BusySlot[]>([]);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = [];
@@ -53,50 +55,65 @@ const BookingSection = () => {
     return slots;
   };
 
-  useEffect(() => {
-    const fetchAvailability = async () => {
-      if (!date) return;
+  const fetchAvailability = useCallback(async (selectedDate: Date) => {
+    if (!selectedDate) return;
+    
+    setIsLoadingSlots(true);
+    setAvailabilityError(null);
+    
+    try {
+      const baseSlots = generateTimeSlots();
+      setTimeSlots(baseSlots);
       
-      setIsLoadingSlots(true);
-      try {
-        const baseSlots = generateTimeSlots();
-        setTimeSlots(baseSlots);
-        
-        const { data, error } = await supabase.functions.invoke('schedule-demo-meeting/get-availability', {
-          body: { date: date.toISOString() }
-        });
-        
-        if (error) {
-          console.error('Error fetching availability:', error);
-          toast({
-            title: "Error",
-            description: "Could not fetch availability. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (data.busySlots && Array.isArray(data.busySlots)) {
-          const updatedSlots = markUnavailableSlots(baseSlots, data.busySlots);
-          setTimeSlots(updatedSlots);
-        }
-      } catch (error) {
-        console.error('Error in fetchAvailability:', error);
-      } finally {
-        setIsLoadingSlots(false);
+      console.log('Fetching availability for:', selectedDate.toISOString());
+      
+      const { data, error } = await supabase.functions.invoke('schedule-demo-meeting/get-availability', {
+        body: { date: selectedDate.toISOString() }
+      });
+      
+      if (error) {
+        console.error('Error fetching availability from edge function:', error);
+        throw new Error(`Error from server: ${error.message}`);
       }
-    };
-
-    if (date) {
-      fetchAvailability();
-    }
-  }, [date]);
-
-  const markUnavailableSlots = (slots: TimeSlot[], busySlots: any[]): TimeSlot[] => {
-    return slots.map(slot => {
-      if (!date) return { ...slot, available: false };
       
-      const slotStart = new Date(date);
+      if (!data) {
+        throw new Error('No data returned from server');
+      }
+      
+      console.log('Availability response:', data);
+      
+      if (data.busySlots && Array.isArray(data.busySlots)) {
+        setBusySlots(data.busySlots);
+        const updatedSlots = markUnavailableSlots(baseSlots, data.busySlots, selectedDate);
+        setTimeSlots(updatedSlots);
+      } else {
+        console.warn('Unexpected response format:', data);
+        throw new Error('Unexpected response format from server');
+      }
+    } catch (error) {
+      console.error('Error in fetchAvailability:', error);
+      setAvailabilityError(error instanceof Error ? error.message : 'Failed to fetch availability');
+      
+      setTimeSlots(prevSlots => 
+        prevSlots.map(slot => ({ ...slot, available: false }))
+      );
+      
+      toast({
+        title: "Error",
+        description: "Could not fetch availability. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingSlots(false);
+      setIsRetrying(false);
+    }
+  }, [toast]);
+
+  const markUnavailableSlots = (slots: TimeSlot[], busySlots: BusySlot[], selectedDate: Date): TimeSlot[] => {
+    return slots.map(slot => {
+      if (!selectedDate) return { ...slot, available: false };
+      
+      const slotStart = new Date(selectedDate);
       slotStart.setHours(slot.hour, slot.minute, 0, 0);
       
       const slotEnd = new Date(slotStart);
@@ -120,9 +137,16 @@ const BookingSection = () => {
     });
   };
 
+  useEffect(() => {
+    if (date) {
+      fetchAvailability(date);
+    }
+  }, [date, fetchAvailability]);
+
   const handleSelectDate = (newDate: Date | undefined) => {
     setDate(newDate);
     setSelectedTimeSlot(null);
+    setAvailabilityError(null);
     if (newDate) {
       setStep(2);
     }
@@ -132,6 +156,12 @@ const BookingSection = () => {
     if (!slot.available) return;
     setSelectedTimeSlot(slot);
     setStep(3);
+  };
+
+  const handleRetryAvailability = () => {
+    if (!date) return;
+    setIsRetrying(true);
+    fetchAvailability(date);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -309,6 +339,32 @@ const BookingSection = () => {
                   </div>
                   <p className="text-carmen-teal font-medium mb-4">Please select a time slot to continue</p>
                   
+                  {availabilityError && (
+                    <Alert variant="destructive" className="mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>
+                        Could not fetch calendar availability.
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRetryAvailability}
+                          disabled={isRetrying || isLoadingSlots}
+                          className="ml-2 mt-2"
+                        >
+                          {isRetrying ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Retrying...
+                            </>
+                          ) : (
+                            'Try Again'
+                          )}
+                        </Button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
                   {isLoadingSlots ? (
                     <div className="flex justify-center items-center h-32">
                       <Loader2 className="h-8 w-8 animate-spin text-carmen-teal" />
@@ -436,7 +492,12 @@ const BookingSection = () => {
                     className="w-full bg-carmen-gradient hover:opacity-90"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Scheduling..." : "Book Appointment"}
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Scheduling...
+                      </>
+                    ) : "Book Appointment"}
                   </Button>
                 </form>
               ) : step === 4 ? (

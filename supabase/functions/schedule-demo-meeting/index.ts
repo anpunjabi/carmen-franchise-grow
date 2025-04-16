@@ -27,10 +27,14 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const path = url.pathname.split('/').pop();
+    const pathParts = url.pathname.split('/');
+    const endpoint = pathParts[pathParts.length - 1];
+
+    console.log('Request path:', url.pathname);
+    console.log('Determined endpoint:', endpoint);
 
     // Route for getting available time slots
-    if (path === 'get-availability') {
+    if (endpoint === 'get-availability') {
       return await handleGetAvailability(req);
     }
 
@@ -60,10 +64,13 @@ serve(async (req) => {
 });
 
 async function handleGetAvailability(req: Request) {
+  console.log('Processing availability request');
+  
   const requestData = await req.json() as AvailabilitySlotsRequest;
   const { date } = requestData;
   
   if (!date) {
+    console.error('Missing required date field');
     return new Response(
       JSON.stringify({ error: 'Date is required' }),
       {
@@ -76,6 +83,7 @@ async function handleGetAvailability(req: Request) {
   // Initialize Google Calendar client
   const calendar = await initializeGoogleCalendar();
   if (!calendar) {
+    console.error('Failed to initialize Google Calendar');
     return new Response(
       JSON.stringify({ error: 'Failed to initialize calendar' }),
       {
@@ -99,6 +107,8 @@ async function handleGetAvailability(req: Request) {
   endTime.setUTCHours(24, 0, 0, 0);  // 7pm EST = 24:00 UTC (during standard time)
   
   try {
+    console.log('Fetching calendar events from', startTime.toISOString(), 'to', endTime.toISOString());
+    
     // Get existing events for the specified date
     const events = await calendar.events.list({
       calendarId: 'primary',
@@ -110,11 +120,12 @@ async function handleGetAvailability(req: Request) {
 
     // Extract busy time slots from events
     const busySlots = events.data.items?.map(event => ({
-      start: new Date(event.start?.dateTime || ''),
-      end: new Date(event.end?.dateTime || ''),
+      start: new Date(event.start?.dateTime || '').toISOString(),
+      end: new Date(event.end?.dateTime || '').toISOString(),
     })) || [];
 
     console.log('Found existing events:', busySlots.length);
+    console.log('Busy slots:', JSON.stringify(busySlots));
 
     // Return the busy slots
     return new Response(
