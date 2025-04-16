@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -50,7 +49,6 @@ const UserMenu = () => {
 
   if (!user) return null;
 
-  // Generate user initials from email
   const getInitials = () => {
     if (!user.email) return '?';
     return user.email.substring(0, 2).toUpperCase();
@@ -65,125 +63,79 @@ const UserMenu = () => {
     setIsEditMode(!isEditMode);
     setIsOpen(false);
     
-    // Dispatch event to notify that edit mode changed
     window.dispatchEvent(new CustomEvent('editmodechange', { 
       detail: { isEditMode: !isEditMode }
     }));
   };
 
   const saveEdits = async () => {
-    // Show saving state
     setIsSaving(true);
     
-    // Get the current visibility states of sections
-    const sectionVisibility = {};
-    const sections = document.querySelectorAll('[data-section-id]');
-    
-    sections.forEach(section => {
-      const sectionId = section.getAttribute('data-section-id');
-      const isVisible = !section.classList.contains('hidden');
-      sectionVisibility[sectionId] = isVisible;
-    });
-    
-    // Get the current visibility states of editable elements
-    const elementVisibility = {};
-    const elements = document.querySelectorAll('[data-editable-id]');
-    
-    elements.forEach(element => {
-      const elementId = element.getAttribute('data-editable-id');
-      const isVisible = !element.classList.contains('hidden');
-      elementVisibility[elementId] = isVisible;
-    });
-
-    // Get the current order of sections
-    const sectionOrder = {};
-    const orderedSections = document.querySelectorAll('[data-section-id]');
-    
-    orderedSections.forEach((section) => {
-      const sectionId = section.getAttribute('data-section-id');
-      const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
-      if (sectionId) {
-        sectionOrder[sectionId] = orderIndex;
-      }
-    });
-
-    console.log('Saving section order:', sectionOrder);
-    console.log('Saving section visibility:', sectionVisibility);
-
-    // Save to Supabase using the dedicated landing_page_settings table
     try {
-      // Check if the record already exists
-      const { data, error: checkError } = await supabase
+      const sectionVisibility = {};
+      const sections = document.querySelectorAll('[data-section-id]');
+      
+      sections.forEach(section => {
+        const sectionId = section.getAttribute('data-section-id');
+        const isVisible = !section.classList.contains('hidden');
+        sectionVisibility[sectionId] = isVisible;
+      });
+      
+      const elementVisibility = {};
+      const elements = document.querySelectorAll('[data-editable-id]');
+      
+      elements.forEach(element => {
+        const elementId = element.getAttribute('data-editable-id');
+        const isVisible = !element.classList.contains('hidden');
+        elementVisibility[elementId] = isVisible;
+      });
+
+      const sectionOrder = {};
+      const orderedSections = document.querySelectorAll('[data-section-id]');
+      
+      orderedSections.forEach((section) => {
+        const sectionId = section.getAttribute('data-section-id');
+        const orderIndex = parseInt(section.getAttribute('data-section-order') || '0', 10);
+        if (sectionId) {
+          sectionOrder[sectionId] = orderIndex;
+        }
+      });
+
+      console.log('Saving section visibility:', sectionVisibility);
+      console.log('Saving section order:', sectionOrder);
+
+      const { error: updateError } = await supabase
         .from('landing_page_settings')
-        .select('id')
-        .eq('id', 1)
-        .single();
-      
-      let updateError = null;
-      
-      if (checkError && checkError.code !== 'PGRST116') {
-        // Some other error occurred
-        console.error('Error checking if settings record exists:', checkError);
-        throw checkError;
-      }
-      
-      if (data) {
-        // Update existing record
-        const { error } = await supabase
-          .from('landing_page_settings')
-          .update({ 
-            section_visibility: sectionVisibility,
-            element_visibility: elementVisibility,
-            section_order: sectionOrder,
-            updated_at: new Date().toISOString() 
-          })
-          .eq('id', 1);
-        
-        updateError = error;
-      } else {
-        // Insert new record
-        const { error } = await supabase
-          .from('landing_page_settings')
-          .insert({ 
-            id: 1,
-            section_visibility: sectionVisibility,
-            element_visibility: elementVisibility,
-            section_order: sectionOrder,
-            updated_at: new Date().toISOString() 
-          });
-        
-        updateError = error;
-      }
+        .update({ 
+          section_visibility: sectionVisibility,
+          element_visibility: elementVisibility,
+          section_order: sectionOrder,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', 1);
       
       if (updateError) throw updateError;
       
-      // Show success toast
       toast({
         title: "Changes saved",
         description: "Section and element visibility settings have been updated.",
       });
       
-      // Exit edit mode
       setIsEditMode(false);
       
-      // Notify other components about edit mode change
       window.dispatchEvent(new CustomEvent('editmodechange', { 
         detail: { isEditMode: false }
       }));
       
     } catch (error) {
       console.error('Error saving visibility settings:', error);
-      
-      // Show error toast
       toast({
         title: "Error saving changes",
         description: "There was a problem saving your settings.",
         variant: "destructive",
       });
     } finally {
-      // Hide saving state
       setIsSaving(false);
-      // Close the menu
       setIsOpen(false);
     }
   };

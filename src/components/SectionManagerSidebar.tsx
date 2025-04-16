@@ -23,16 +23,30 @@ interface EditableElement {
   parentSection?: string;
 }
 
+interface LandingPageSettings {
+  section_visibility: Record<string, boolean>;
+  element_visibility: Record<string, boolean>;
+  section_order: Record<string, number>;
+}
+
 interface SectionManagerSidebarProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditMode: boolean;
+  settings: LandingPageSettings | null;
+  onSettingsChange: () => void;
 }
 
 type SectionVisibility = Record<string, boolean>;
 type ElementVisibility = Record<string, boolean>;
 
-const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionManagerSidebarProps) => {
+const SectionManagerSidebar = ({ 
+  isOpen, 
+  onOpenChange, 
+  isEditMode,
+  settings,
+  onSettingsChange 
+}: SectionManagerSidebarProps) => {
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
@@ -41,7 +55,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     if (isEditMode && isOpen) {
       loadSectionsAndElements();
     }
-  }, [isOpen, isEditMode]);
+  }, [isOpen, isEditMode, settings]);
 
   const loadSectionsAndElements = () => {
     const sectionElements = document.querySelectorAll('[data-section-id]');
@@ -49,7 +63,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     
     sectionElements.forEach((section, index) => {
       const sectionId = section.getAttribute('data-section-id') || '';
-      const isVisible = !section.classList.contains('hidden');
+      const isVisible = settings?.section_visibility[sectionId] ?? !section.classList.contains('hidden');
       const sectionName = section.getAttribute('data-section-name') || sectionId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const order = parseInt(section.getAttribute('data-section-order') || `${index}`);
       
@@ -72,7 +86,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     
     editableElementNodes.forEach(element => {
       const elementId = element.getAttribute('data-editable-id') || '';
-      const isVisible = !element.classList.contains('hidden');
+      const isVisible = settings?.element_visibility[elementId] ?? !element.classList.contains('hidden');
       
       let parentSection = '';
       let parent = element.parentElement;
@@ -123,7 +137,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       return;
     }
     
-    const isCurrentlyVisible = !section.classList.contains('hidden');
+    const isCurrentlyVisible = settings?.section_visibility[sectionId] ?? !section.classList.contains('hidden');
     
     try {
       // First update the DOM immediately for a responsive feel
@@ -139,53 +153,19 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
           s.id === sectionId ? { ...s, isVisible: !isCurrentlyVisible } : s
         )
       );
-      
-      // Then update the database
-      const { data, error } = await supabase
-        .from('landing_page_settings')
-        .select('section_visibility')
-        .eq('id', 1)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching current visibility settings:', error);
-        // Revert UI state on error
-        if (isCurrentlyVisible) {
-          section.classList.remove('hidden');
-        } else {
-          section.classList.add('hidden');
-        }
-        setSections(prev => 
-          prev.map(s => 
-            s.id === sectionId ? { ...s, isVisible: isCurrentlyVisible } : s
-          )
-        );
-        toast.error('Failed to fetch visibility settings');
-        return;
-      }
 
-      // Parse and ensure we have a valid section_visibility object
-      let currentVisibility: SectionVisibility = {};
-      
-      if (data?.section_visibility && typeof data.section_visibility === 'object') {
-        // Convert JSON data to proper SectionVisibility type
-        Object.entries(data.section_visibility).forEach(([key, value]) => {
-          if (typeof value === 'boolean') {
-            currentVisibility[key] = value;
-          }
-        });
-      }
-      
-      const updatedVisibility: SectionVisibility = {
-        ...currentVisibility,
-        [sectionId]: !isCurrentlyVisible
-      };
+      // Get current settings
+      let updatedVisibility = { ...settings?.section_visibility } || {};
+      updatedVisibility[sectionId] = !isCurrentlyVisible;
       
       console.log('Updating section visibility with:', updatedVisibility);
       
       const { error: updateError } = await supabase
         .from('landing_page_settings')
-        .update({ section_visibility: updatedVisibility })
+        .update({ 
+          section_visibility: updatedVisibility,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', 1);
       
       if (updateError) {
@@ -204,6 +184,8 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         toast.error('Failed to save visibility settings');
       } else {
         toast.success(`Section ${isCurrentlyVisible ? 'hidden' : 'shown'} successfully`);
+        // Notify parent to reload settings
+        onSettingsChange();
       }
     } catch (error) {
       console.error('Error saving section visibility:', error);
@@ -303,7 +285,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
       return;
     }
     
-    const isCurrentlyVisible = !element.classList.contains('hidden');
+    const isCurrentlyVisible = settings?.element_visibility[elementId] ?? !element.classList.contains('hidden');
     
     try {
       // First update the DOM immediately for a responsive feel
@@ -320,52 +302,18 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         )
       );
       
-      // Then update the database
-      const { data, error } = await supabase
-        .from('landing_page_settings')
-        .select('element_visibility')
-        .eq('id', 1)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching current element visibility settings:', error);
-        // Revert UI state on error
-        if (isCurrentlyVisible) {
-          element.classList.remove('hidden');
-        } else {
-          element.classList.add('hidden');
-        }
-        setEditableElements(prev => 
-          prev.map(e => 
-            e.id === elementId ? { ...e, isVisible: isCurrentlyVisible } : e
-          )
-        );
-        toast.error('Failed to fetch visibility settings');
-        return;
-      }
-
-      // Parse and ensure we have a valid element_visibility object
-      let currentVisibility: ElementVisibility = {};
-      
-      if (data?.element_visibility && typeof data.element_visibility === 'object') {
-        // Convert JSON data to proper ElementVisibility type
-        Object.entries(data.element_visibility).forEach(([key, value]) => {
-          if (typeof value === 'boolean') {
-            currentVisibility[key] = value;
-          }
-        });
-      }
-      
-      const updatedVisibility: ElementVisibility = {
-        ...currentVisibility,
-        [elementId]: !isCurrentlyVisible
-      };
+      // Get current settings
+      let updatedVisibility = { ...settings?.element_visibility } || {};
+      updatedVisibility[elementId] = !isCurrentlyVisible;
       
       console.log('Updating element visibility with:', updatedVisibility);
       
       const { error: updateError } = await supabase
         .from('landing_page_settings')
-        .update({ element_visibility: updatedVisibility })
+        .update({ 
+          element_visibility: updatedVisibility,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', 1);
       
       if (updateError) {
