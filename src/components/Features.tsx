@@ -1,69 +1,10 @@
 
 import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
 import EditableText from './EditableText';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-interface ElementVisibility {
-  [key: string]: boolean;
-}
+import { useElementVisibility } from '@/hooks/useElementVisibility';
 
 const Features = () => {
-  const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
-
-  // Load element visibility settings
-  useEffect(() => {
-    const loadElementVisibility = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('landing_page_settings')
-          .select('element_visibility')
-          .eq('id', 1)
-          .single();
-        
-        if (error) {
-          console.error('Error loading element visibility settings:', error);
-          return;
-        }
-
-        if (data && data.element_visibility) {
-          setElementVisibility(data.element_visibility as ElementVisibility);
-        }
-      } catch (error) {
-        console.error('Error in loadElementVisibility:', error);
-      }
-    };
-
-    loadElementVisibility();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('element_visibility_changes_features')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'landing_page_settings',
-          filter: 'id=eq.1'
-        },
-        (payload) => {
-          if (payload.new && payload.new.element_visibility) {
-            setElementVisibility(payload.new.element_visibility as ElementVisibility);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Check if an element should be visible
-  const isElementVisible = (elementId: string) => {
-    return elementVisibility[elementId] !== undefined ? elementVisibility[elementId] : true;
-  };
+  const { isElementVisible, isLoading } = useElementVisibility();
 
   const featuresList = [{
     icon: <Grid3X3 size={24} className="text-carmen-blue" />,
@@ -78,6 +19,10 @@ const Features = () => {
     title: 'AI-Powered Configuration',
     description: 'Use our AI chat to effortlessly customize Carmen to fit your business needs.'
   }];
+  
+  if (isLoading) {
+    return <div className="py-24 bg-white">Loading...</div>;
+  }
   
   return <section id="features" className="py-24 bg-white relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">

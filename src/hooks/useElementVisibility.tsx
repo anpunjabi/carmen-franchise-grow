@@ -66,5 +66,10 @@ export function useElementVisibility() {
     return elementVisibility[elementId] !== undefined ? elementVisibility[elementId] : true;
   };
 
-  return { elementVisibility, isElementVisible, isLoading };
+  // Get all element visibility settings (both visible and hidden)
+  const getAllElementVisibility = () => {
+    return elementVisibility;
+  };
+
+  return { elementVisibility, isElementVisible, getAllElementVisibility, isLoading };
 }

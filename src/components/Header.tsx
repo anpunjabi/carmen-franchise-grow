@@ -5,18 +5,14 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from '@/components/UserMenu';
 import AuthModal from '@/components/AuthModal';
-import { supabase } from '@/integrations/supabase/client';
-
-interface ElementVisibility {
-  [key: string]: boolean;
-}
+import { useElementVisibility } from '@/hooks/useElementVisibility';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, loading } = useAuth();
-  const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
+  const { isElementVisible } = useElementVisibility();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,60 +25,6 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Load element visibility settings
-  useEffect(() => {
-    const loadElementVisibility = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('landing_page_settings')
-          .select('element_visibility')
-          .eq('id', 1)
-          .single();
-        
-        if (error) {
-          console.error('Error loading element visibility settings:', error);
-          return;
-        }
-
-        if (data && data.element_visibility) {
-          setElementVisibility(data.element_visibility as ElementVisibility);
-        }
-      } catch (error) {
-        console.error('Error in loadElementVisibility:', error);
-      }
-    };
-
-    loadElementVisibility();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('element_visibility_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'landing_page_settings',
-          filter: 'id=eq.1'
-        },
-        (payload) => {
-          if (payload.new && payload.new.element_visibility) {
-            setElementVisibility(payload.new.element_visibility as ElementVisibility);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  // Check if an element should be visible
-  const isElementVisible = (elementId: string) => {
-    return elementVisibility[elementId] !== undefined ? elementVisibility[elementId] : true;
-  };
 
   const navigation = [{
     name: 'Features',
