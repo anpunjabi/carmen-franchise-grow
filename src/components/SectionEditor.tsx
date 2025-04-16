@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Eye, EyeOff, PanelLeft } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
 import { toast } from 'sonner';
@@ -58,26 +58,31 @@ const SectionEditor = () => {
           ).filter((id): id is string => id !== null);
           
           // Ensure all sections have an entry in section_visibility
-          const updatedSectionVisibility: SectionVisibility = {};
-          currentSectionIds.forEach(sectionId => {
-            // If section exists in settings, use that value, otherwise default to true
-            updatedSectionVisibility[sectionId] = settings.section_visibility[sectionId] ?? true;
-          });
+          const updatedSectionVisibility: SectionVisibility = { ...settings.section_visibility };
           
-          // Apply visibility settings
-          Object.entries(updatedSectionVisibility).forEach(([sectionId, isVisible]) => {
+          // Apply visibility settings to all sections based on what's in the database
+          currentSectionIds.forEach(sectionId => {
             const section = document.querySelector(`[data-section-id="${sectionId}"]`);
             if (section) {
-              if (!isVisible) {
-                section.classList.add('hidden');
-                console.log(`Hiding section ${sectionId}`);
+              // Check if this section has a visibility setting in the database
+              if (updatedSectionVisibility[sectionId] !== undefined) {
+                // Apply the visibility based on the database setting
+                if (!updatedSectionVisibility[sectionId]) {
+                  section.classList.add('hidden');
+                  console.log(`Hiding section ${sectionId} based on saved settings`);
+                } else {
+                  section.classList.remove('hidden');
+                  console.log(`Showing section ${sectionId} based on saved settings`);
+                }
               } else {
+                // If not in database, default to visible and add to the updated visibility
+                updatedSectionVisibility[sectionId] = true;
                 section.classList.remove('hidden');
-                console.log(`Showing section ${sectionId}`);
+                console.log(`Showing section ${sectionId} (default)`);
               }
             }
           });
-
+          
           // Apply element visibility settings
           if (settings.element_visibility) {
             Object.entries(settings.element_visibility).forEach(([elementId, isVisible]) => {

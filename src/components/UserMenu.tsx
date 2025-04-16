@@ -108,6 +108,7 @@ const UserMenu = () => {
     });
 
     console.log('Saving section order:', sectionOrder);
+    console.log('Saving section visibility:', sectionVisibility);
 
     // Save to Supabase using the dedicated landing_page_settings table
     try {

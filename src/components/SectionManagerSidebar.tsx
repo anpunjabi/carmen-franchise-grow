@@ -38,7 +38,7 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
   const [showElementsOnly, setShowElementsOnly] = useState(false);
 
   useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && isOpen) {
       loadSectionsAndElements();
     }
   }, [isOpen, isEditMode]);
@@ -222,6 +222,80 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
     }
   };
 
+  const moveSectionUp = (sectionId: string, currentIndex: number) => {
+    if (currentIndex <= 0) return;
+    
+    const prevSection = sections[currentIndex - 1];
+    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+    const prevSectionEl = document.querySelector(`[data-section-id="${prevSection.id}"]`);
+    
+    if (!section || !prevSectionEl || !section.parentNode) return;
+    
+    section.parentNode.insertBefore(section, prevSectionEl);
+    
+    section.setAttribute('data-section-order', `${currentIndex - 1}`);
+    prevSectionEl.setAttribute('data-section-order', `${currentIndex}`);
+    
+    const updatedSections = [...sections];
+    [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
+      [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
+    
+    setSections(updatedSections);
+
+    saveSectionOrder(updatedSections);
+  };
+  
+  const moveSectionDown = (sectionId: string, currentIndex: number) => {
+    if (currentIndex >= sections.length - 1) return;
+    
+    const nextSection = sections[currentIndex + 1];
+    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+    const nextSectionEl = document.querySelector(`[data-section-id="${nextSection.id}"]`);
+    
+    if (!section || !nextSectionEl || !section.parentNode) return;
+    
+    if (nextSectionEl.nextSibling) {
+      section.parentNode.insertBefore(section, nextSectionEl.nextSibling);
+    } else {
+      section.parentNode.appendChild(section);
+    }
+    
+    section.setAttribute('data-section-order', `${currentIndex + 1}`);
+    nextSectionEl.setAttribute('data-section-order', `${currentIndex}`);
+    
+    const updatedSections = [...sections];
+    [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
+      [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
+    
+    setSections(updatedSections);
+
+    saveSectionOrder(updatedSections);
+  };
+
+  const saveSectionOrder = async (orderedSections: Section[]) => {
+    try {
+      // Create section order object
+      const sectionOrder: Record<string, number> = {};
+      orderedSections.forEach((section, index) => {
+        sectionOrder[section.id] = index;
+      });
+
+      // Save to database
+      const { error } = await supabase
+        .from('landing_page_settings')
+        .update({ section_order: sectionOrder })
+        .eq('id', 1);
+
+      if (error) {
+        console.error('Error saving section order:', error);
+        toast.error('Failed to save section order');
+      }
+    } catch (error) {
+      console.error('Error in saveSectionOrder:', error);
+      toast.error('Failed to save section order');
+    }
+  };
+
   const toggleElementVisibility = async (elementId: string) => {
     const element = document.querySelector(`[data-editable-id="${elementId}"]`);
     if (!element) {
@@ -326,52 +400,6 @@ const SectionManagerSidebar = ({ isOpen, onOpenChange, isEditMode }: SectionMana
         )
       );
     }
-  };
-
-  const moveSectionUp = (sectionId: string, currentIndex: number) => {
-    if (currentIndex <= 0) return;
-    
-    const prevSection = sections[currentIndex - 1];
-    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-    const prevSectionEl = document.querySelector(`[data-section-id="${prevSection.id}"]`);
-    
-    if (!section || !prevSectionEl || !section.parentNode) return;
-    
-    section.parentNode.insertBefore(section, prevSectionEl);
-    
-    section.setAttribute('data-section-order', `${currentIndex - 1}`);
-    prevSectionEl.setAttribute('data-section-order', `${currentIndex}`);
-    
-    const updatedSections = [...sections];
-    [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
-      [updatedSections[currentIndex], updatedSections[currentIndex - 1]];
-    
-    setSections(updatedSections);
-  };
-  
-  const moveSectionDown = (sectionId: string, currentIndex: number) => {
-    if (currentIndex >= sections.length - 1) return;
-    
-    const nextSection = sections[currentIndex + 1];
-    const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-    const nextSectionEl = document.querySelector(`[data-section-id="${nextSection.id}"]`);
-    
-    if (!section || !nextSectionEl || !section.parentNode) return;
-    
-    if (nextSectionEl.nextSibling) {
-      section.parentNode.insertBefore(section, nextSectionEl.nextSibling);
-    } else {
-      section.parentNode.appendChild(section);
-    }
-    
-    section.setAttribute('data-section-order', `${currentIndex + 1}`);
-    nextSectionEl.setAttribute('data-section-order', `${currentIndex}`);
-    
-    const updatedSections = [...sections];
-    [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
-      [updatedSections[currentIndex + 1], updatedSections[currentIndex]];
-    
-    setSections(updatedSections);
   };
 
   if (!isEditMode) return null;
