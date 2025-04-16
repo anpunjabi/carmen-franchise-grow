@@ -80,7 +80,7 @@ async function handleGetAvailability(req: Request) {
     );
   }
 
-  // Initialize Google Calendar client
+  // Initialize Google Calendar client with detailed logging
   const calendar = await initializeGoogleCalendar();
   if (!calendar) {
     console.error('Failed to initialize Google Calendar');
@@ -96,7 +96,7 @@ async function handleGetAvailability(req: Request) {
   // Convert date string to Date object
   const requestDate = new Date(date);
   
-  // Set time to start of day in UTC (will convert to EST below)
+  // Set time to start of day in UTC
   requestDate.setUTCHours(0, 0, 0, 0);
   
   // Create start and end time for the day (10am to 7pm EST)
@@ -111,7 +111,7 @@ async function handleGetAvailability(req: Request) {
     
     // Get existing events for the specified date
     const events = await calendar.events.list({
-      calendarId: 'primary',
+      calendarId: 'hello@carmenbpm.com', // Explicitly specify the calendar ID
       timeMin: startTime.toISOString(),
       timeMax: endTime.toISOString(),
       singleEvents: true,
@@ -137,6 +137,14 @@ async function handleGetAvailability(req: Request) {
     );
   } catch (error) {
     console.error('Error fetching calendar events:', error);
+    
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
     return new Response(
       JSON.stringify({ 
         error: 'Failed to fetch calendar events',
@@ -279,14 +287,21 @@ ${message ? `Message: ${message}` : ''}
 
 async function initializeGoogleCalendar() {
   const privateKey = Deno.env.get('GMAIL_PRIVATE_KEY');
-  if (!privateKey) {
-    console.error('GMAIL_PRIVATE_KEY environment variable is not set');
+  const clientEmail = Deno.env.get('GMAIL_CLIENT_EMAIL');
+  
+  console.log('Initializing Google Calendar with client email:', clientEmail);
+  
+  if (!privateKey || !clientEmail) {
+    console.error('Missing required environment variables:', {
+      hasPrivateKey: !!privateKey,
+      hasClientEmail: !!clientEmail
+    });
     return null;
   }
 
   try {
     const auth = new google.auth.JWT(
-      Deno.env.get('GMAIL_CLIENT_EMAIL'),
+      clientEmail,
       undefined,
       privateKey.replace(/\\n/g, '\n'),
       [
@@ -296,10 +311,24 @@ async function initializeGoogleCalendar() {
       'hello@carmenbpm.com'
     );
 
+    // Test the authentication
+    try {
+      await auth.authorize();
+      console.log('Successfully authenticated with Google');
+    } catch (authError) {
+      console.error('Authentication error:', authError);
+      throw new Error('Failed to authenticate with Google Calendar');
+    }
+
     // Initialize Google Calendar API
-    return google.calendar({ version: 'v3', auth });
+    const calendar = google.calendar({ version: 'v3', auth });
+    console.log('Successfully initialized Google Calendar client');
+    return calendar;
   } catch (error) {
     console.error('Error initializing Google Calendar:', error);
+    if (error instanceof Error) {
+      console.error('Stack trace:', error.stack);
+    }
     return null;
   }
 }
