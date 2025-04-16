@@ -26,6 +26,7 @@ export function useElementVisibility() {
         }
 
         if (data && data.element_visibility) {
+          console.log('Loaded element visibility settings:', data.element_visibility);
           setElementVisibility(data.element_visibility as ElementVisibility);
         }
       } catch (error) {
@@ -50,6 +51,7 @@ export function useElementVisibility() {
         },
         (payload) => {
           if (payload.new && payload.new.element_visibility) {
+            console.log('Real-time update to element visibility:', payload.new.element_visibility);
             setElementVisibility(payload.new.element_visibility as ElementVisibility);
           }
         }
@@ -63,7 +65,8 @@ export function useElementVisibility() {
 
   // Function to check if an element should be visible
   const isElementVisible = (elementId: string) => {
-    return elementVisibility[elementId] !== undefined ? elementVisibility[elementId] : true;
+    // Default to true only if the element isn't found in the visibility settings
+    return elementVisibility[elementId] !== false;
   };
 
   // Get all element visibility settings (both visible and hidden)

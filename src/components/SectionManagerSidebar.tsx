@@ -118,10 +118,10 @@ const SectionManagerSidebar = ({
     
     editableElementNodes.forEach(element => {
       const elementId = element.getAttribute('data-editable-id') || '';
-      // Use the database value for visibility, falling back to true if not in database
-      const isVisible = typeof elementVisibility[elementId] !== 'undefined' 
-        ? elementVisibility[elementId] 
-        : true;
+      // Use the database value for visibility
+      // If undefined in database, default to true
+      // If explicitly set to false in database, use false
+      const isVisible = elementVisibility[elementId] !== false;
       
       let parentSection = '';
       let parent = element.parentElement;

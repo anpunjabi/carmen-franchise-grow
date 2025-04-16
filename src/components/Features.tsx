@@ -55,19 +55,19 @@ const Features = () => {
         
         <div className="flex flex-col md:flex-row gap-8 justify-center">
           {featuresList.map((feature, index) => (
-            isElementVisible(`feature-${index}`) !== false && (
+            isElementVisible(`feature-${index}`) && (
               <div key={index} className="bg-carmen-sand rounded-3xl p-6 shadow-soft border border-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 fade-in-up flex-1" style={{
                 animationDelay: `${0.1 + index * 0.1}s`
               }}>
                 <div className="rounded-full bg-white w-14 h-14 flex items-center justify-center mb-4 shadow-sm">
                   {feature.icon}
                 </div>
-                {isElementVisible(`feature-title-${index}`) !== false && (
+                {isElementVisible(`feature-title-${index}`) && (
                   <EditableText id={`feature-title-${index}`} as="h3" className="text-xl font-semibold text-carmen-navy mb-2">
                     {feature.title}
                   </EditableText>
                 )}
-                {isElementVisible(`feature-description-${index}`) !== false && (
+                {isElementVisible(`feature-description-${index}`) && (
                   <EditableText id={`feature-description-${index}`} as="p" className="text-gray-600">
                     {feature.description}
                   </EditableText>
