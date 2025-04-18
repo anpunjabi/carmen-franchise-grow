@@ -71,16 +71,25 @@ const Index = () => {
         if (data) {
           console.log('Loaded settings:', data);
           
-          const sectionVisData: SectionVisibility = data.section_visibility as SectionVisibility;
-          setSectionVisibility(sectionVisData);
+          // Handle section visibility
+          if (data.section_visibility) {
+            const sectionVisData: SectionVisibility = data.section_visibility as SectionVisibility;
+            setSectionVisibility(sectionVisData);
+          }
           
-          const elementVisData: ElementVisibility = data.element_visibility as ElementVisibility;
-          setElementVisibility(elementVisData);
+          // Handle element visibility
+          if (data.element_visibility) {
+            const elementVisData: ElementVisibility = data.element_visibility as ElementVisibility;
+            console.log('Setting element visibility state:', elementVisData);
+            setElementVisibility(elementVisData);
+          }
           
+          // Handle section order
           if (data.section_order && Object.keys(data.section_order).length > 0) {
             const orderData: SectionOrder = data.section_order as SectionOrder;
             setSectionOrder(orderData);
           } else {
+            // Set default order if none exists in database
             const defaultOrder = allSections.reduce((acc, section) => {
               acc[section.id] = section.defaultOrder;
               return acc;
@@ -97,6 +106,7 @@ const Index = () => {
 
     loadVisibilitySettings();
     
+    // Subscribe to real-time updates
     const channel = supabase
       .channel('landing_page_settings_changes')
       .on(
@@ -110,12 +120,20 @@ const Index = () => {
         (payload) => {
           console.log('Settings updated in database:', payload);
           if (payload.new) {
-            const sectionVisData = payload.new.section_visibility as SectionVisibility;
-            setSectionVisibility(sectionVisData);
+            // Update section visibility
+            if (payload.new.section_visibility) {
+              const sectionVisData = payload.new.section_visibility as SectionVisibility;
+              setSectionVisibility(sectionVisData);
+            }
             
-            const elementVisData = payload.new.element_visibility as ElementVisibility;
-            setElementVisibility(elementVisData);
+            // Update element visibility
+            if (payload.new.element_visibility) {
+              const elementVisData = payload.new.element_visibility as ElementVisibility;
+              console.log('Realtime update of element visibility:', elementVisData);
+              setElementVisibility(elementVisData);
+            }
             
+            // Update section order
             if (payload.new.section_order && Object.keys(payload.new.section_order).length > 0) {
               const orderData = payload.new.section_order as SectionOrder;
               setSectionOrder(orderData);
@@ -131,6 +149,7 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
+    // Add animation observer
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {

@@ -155,12 +155,17 @@ const SectionEditor = ({
           saveSettings({ section_visibility: updatedSectionVisibility });
         }}
         onToggleElementVisibility={(elementId, isVisible) => {
+          // Create a copy of the current element visibility
           const updatedElementVisibility = {
             ...localElementVisibility,
             [elementId]: isVisible
           };
           
+          // Update local state
           setLocalElementVisibility(updatedElementVisibility);
+          
+          // Save to database
+          console.log('Saving element visibility for', elementId, 'to', isVisible);
           saveSettings({ element_visibility: updatedElementVisibility });
         }}
         onUpdateSectionOrder={(updatedOrder) => {

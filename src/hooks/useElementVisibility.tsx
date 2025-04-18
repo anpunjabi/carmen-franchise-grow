@@ -66,6 +66,7 @@ export function useElementVisibility() {
   // Function to check if an element should be visible
   const isElementVisible = (elementId: string) => {
     // Default to true only if the element isn't found in the visibility settings
+    // or if it's explicitly set to true
     return elementVisibility[elementId] !== false;
   };
 

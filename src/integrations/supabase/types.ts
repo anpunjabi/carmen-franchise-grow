@@ -332,16 +332,19 @@ export type Database = {
           bpm_id: string
           bpm_name: string
           created_at: string | null
+          subdomain: string
         }
         Insert: {
           bpm_id?: string
           bpm_name: string
           created_at?: string | null
+          subdomain: string
         }
         Update: {
           bpm_id?: string
           bpm_name?: string
           created_at?: string | null
+          subdomain?: string
         }
         Relationships: []
       }
@@ -509,6 +512,36 @@ export type Database = {
           },
         ]
       }
+      bpm_roles: {
+        Row: {
+          bpm_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          is_system_role: boolean | null
+          name: string
+          role_id: string
+        }
+        Insert: {
+          bpm_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          is_system_role?: boolean | null
+          name: string
+          role_id?: string
+        }
+        Update: {
+          bpm_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          is_system_role?: boolean | null
+          name?: string
+          role_id?: string
+        }
+        Relationships: []
+      }
       bpm_theme_settings: {
         Row: {
           bpm_id: string
@@ -575,15 +608,15 @@ export type Database = {
       }
       bpm_users: {
         Row: {
-          bpm_id: string | null
+          bpm_id: string
           user_id: string
         }
         Insert: {
-          bpm_id?: string | null
+          bpm_id: string
           user_id: string
         }
         Update: {
-          bpm_id?: string | null
+          bpm_id?: string
           user_id?: string
         }
         Relationships: [
@@ -1199,6 +1232,7 @@ export type Database = {
           billing_address: Json | null
           client_id: string
           client_name: string
+          company_id: string | null
           contact_email: string | null
           created_at: string | null
           custom_fields: Json | null
@@ -1212,6 +1246,7 @@ export type Database = {
           billing_address?: Json | null
           client_id?: string
           client_name: string
+          company_id?: string | null
           contact_email?: string | null
           created_at?: string | null
           custom_fields?: Json | null
@@ -1225,6 +1260,7 @@ export type Database = {
           billing_address?: Json | null
           client_id?: string
           client_name?: string
+          company_id?: string | null
           contact_email?: string | null
           created_at?: string | null
           custom_fields?: Json | null
@@ -1236,6 +1272,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "clients_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fk_clients_module_instance"
             columns: ["module_instance_id"]
             isOneToOne: false
@@ -1243,6 +1286,39 @@ export type Database = {
             referencedColumns: ["module_instance_id"]
           },
         ]
+      }
+      companies: {
+        Row: {
+          billing_address: Json | null
+          created_at: string | null
+          id: string
+          industry: string | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
       }
       content_edits: {
         Row: {
@@ -1590,6 +1666,147 @@ export type Database = {
             referencedColumns: ["module_instance_id"]
           },
         ]
+      }
+      opportunities: {
+        Row: {
+          actual_close_date: string | null
+          amount: number | null
+          business_type: string
+          client_id: string | null
+          company_id: string | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          custom_fields: Json | null
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          module_instance_id: string | null
+          name: string
+          owner_id: string | null
+          stage_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_close_date?: string | null
+          amount?: number | null
+          business_type: string
+          client_id?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          module_instance_id?: string | null
+          name: string
+          owner_id?: string | null
+          stage_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_close_date?: string | null
+          amount?: number | null
+          business_type?: string
+          client_id?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          custom_fields?: Json | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          module_instance_id?: string | null
+          name?: string
+          owner_id?: string | null
+          stage_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "opportunities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_stages: {
+        Row: {
+          allow_backwards_progression: boolean | null
+          allow_skipping: boolean | null
+          bpm_id: string
+          color: string | null
+          funnel_group: string | null
+          id: string
+          is_terminal: boolean | null
+          key: string | null
+          likelihood_to_close: number | null
+          name: string | null
+          ordinal: number | null
+        }
+        Insert: {
+          allow_backwards_progression?: boolean | null
+          allow_skipping?: boolean | null
+          bpm_id: string
+          color?: string | null
+          funnel_group?: string | null
+          id?: string
+          is_terminal?: boolean | null
+          key?: string | null
+          likelihood_to_close?: number | null
+          name?: string | null
+          ordinal?: number | null
+        }
+        Update: {
+          allow_backwards_progression?: boolean | null
+          allow_skipping?: boolean | null
+          bpm_id?: string
+          color?: string | null
+          funnel_group?: string | null
+          id?: string
+          is_terminal?: boolean | null
+          key?: string | null
+          likelihood_to_close?: number | null
+          name?: string | null
+          ordinal?: number | null
+        }
+        Relationships: []
       }
       privacy_policy: {
         Row: {
