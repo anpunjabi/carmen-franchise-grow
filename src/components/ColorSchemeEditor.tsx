@@ -55,7 +55,17 @@ export const ColorSchemeEditor: React.FC<ColorSchemeEditorProps> = ({ isVisible,
       }
 
       if (data?.theme && typeof data.theme === 'object') {
-        setColors(data.theme as ColorScheme);
+        // Ensure all color values are strings and validate them
+        const themeColors = data.theme as Record<string, any>;
+        const validatedColors: ColorScheme = { ...defaultColors };
+        
+        Object.entries(themeColors).forEach(([key, value]) => {
+          if (typeof value === 'string' && value.trim()) {
+            validatedColors[key] = value;
+          }
+        });
+        
+        setColors(validatedColors);
       }
     } catch (error) {
       console.error('Error loading theme:', error);
@@ -110,7 +120,26 @@ export const ColorSchemeEditor: React.FC<ColorSchemeEditorProps> = ({ isVisible,
   };
 
   const hslToHex = (hsl: string): string => {
-    const [h, s, l] = hsl.split(' ').map(v => parseFloat(v.replace('%', '')));
+    // Validate input - ensure it's a string and has content
+    if (!hsl || typeof hsl !== 'string') {
+      console.warn('Invalid HSL value provided to hslToHex:', hsl);
+      return '#000000'; // Return black as fallback
+    }
+    
+    const parts = hsl.trim().split(' ');
+    if (parts.length !== 3) {
+      console.warn('Invalid HSL format:', hsl);
+      return '#000000';
+    }
+    
+    const [h, s, l] = parts.map(v => parseFloat(v.replace('%', '')));
+    
+    // Validate parsed values
+    if (isNaN(h) || isNaN(s) || isNaN(l)) {
+      console.warn('Invalid HSL values after parsing:', { h, s, l });
+      return '#000000';
+    }
+    
     const a = (s / 100) * Math.min(l / 100, 1 - l / 100);
     const f = (n: number) => {
       const k = (n + h / 30) % 12;
