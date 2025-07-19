@@ -176,17 +176,17 @@ export const ColorSchemeEditor: React.FC<ColorSchemeEditorProps> = ({ isVisible,
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <CardHeader className="flex flex-row items-center justify-between bg-white dark:bg-gray-900">
+          <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
             <Palette className="w-5 h-5" />
             Color Scheme Editor
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
             ×
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 bg-white dark:bg-gray-900">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(colors).map(([key, value]) => (
               <div key={key} className="space-y-2">
