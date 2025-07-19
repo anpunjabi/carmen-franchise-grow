@@ -12,6 +12,7 @@ import Partner from '@/components/Partner';
 import Footer from '@/components/Footer';
 import SectionEditor from '@/components/SectionEditor';
 import BookingSection from '@/components/BookingSection';
+import { ThemeLoader } from '@/components/ThemeLoader';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SectionData {
@@ -184,6 +185,7 @@ const Franchise = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ThemeLoader />
       <Header />
       <SectionEditor 
         allSections={allSections} 

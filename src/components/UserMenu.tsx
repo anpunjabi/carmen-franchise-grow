@@ -8,10 +8,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Edit, LogOut, Save } from 'lucide-react';
+import { Edit, LogOut, Save, Palette } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
+import { ColorSchemeEditor } from './ColorSchemeEditor';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
@@ -20,6 +21,7 @@ const UserMenu = () => {
   const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showColorEditor, setShowColorEditor] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -106,52 +108,73 @@ const UserMenu = () => {
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <button className="focus:outline-none">
-          <Avatar className="h-9 w-9 cursor-pointer bg-white border-2 border-carmen-blue">
-            <AvatarFallback className="text-carmen-blue font-semibold">{getInitials()}</AvatarFallback>
-          </Avatar>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-48 p-2" align="end">
-        <div className="space-y-2">
-          <p className="text-sm font-medium truncate px-2 py-1">
-            {user.email}
-          </p>
-          
-          {isCarmenAdmin && (
+    <>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button className="focus:outline-none">
+            <Avatar className="h-9 w-9 cursor-pointer bg-white border-2 border-carmen-blue">
+              <AvatarFallback className="text-carmen-blue font-semibold">{getInitials()}</AvatarFallback>
+            </Avatar>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-48 p-2" align="end">
+          <div className="space-y-2">
+            <p className="text-sm font-medium truncate px-2 py-1">
+              {user.email}
+            </p>
+            
+            {isCarmenAdmin && (
+              <>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start px-2"
+                  onClick={isEditMode ? saveEdits : toggleEditMode}
+                  disabled={isSaving}
+                >
+                  {isEditMode ? (
+                    <>
+                      <Save className="mr-2 h-4 w-4 text-green-500" />
+                      {isSaving ? "Saving..." : "Save Edits"}
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </>
+                  )}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start px-2"
+                  onClick={() => {
+                    setShowColorEditor(true);
+                    setIsOpen(false);
+                  }}
+                >
+                  <Palette className="mr-2 h-4 w-4" />
+                  Colors
+                </Button>
+              </>
+            )}
+            
             <Button
               variant="ghost"
-              className="w-full justify-start px-2"
-              onClick={isEditMode ? saveEdits : toggleEditMode}
-              disabled={isSaving}
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 px-2"
+              onClick={handleSignOut}
             >
-              {isEditMode ? (
-                <>
-                  <Save className="mr-2 h-4 w-4 text-green-500" />
-                  {isSaving ? "Saving..." : "Save Edits"}
-                </>
-              ) : (
-                <>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
-                </>
-              )}
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
             </Button>
-          )}
-          
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 px-2"
-            onClick={handleSignOut}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      <ColorSchemeEditor 
+        isVisible={showColorEditor} 
+        onClose={() => setShowColorEditor(false)} 
+      />
+    </>
   );
 };
 
