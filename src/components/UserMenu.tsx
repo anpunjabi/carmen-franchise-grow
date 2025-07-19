@@ -28,15 +28,15 @@ const UserMenu = () => {
         try {
           const { data, error } = await supabase
             .from('users')
-            .select('"Carmen Admin"')
+            .select('is_super_admin')
             .eq('user_id', user.id)
             .single();
           
           console.log('Admin check response:', { data, error });
           
           if (data && !error) {
-            setIsCarmenAdmin(data['Carmen Admin'] === true);
-            console.log('User Carmen Admin status:', data['Carmen Admin']);
+            setIsCarmenAdmin(data.is_super_admin === true);
+            console.log('User is_super_admin status:', data.is_super_admin);
           } else if (error) {
             console.error('Error checking admin status:', error);
           }
