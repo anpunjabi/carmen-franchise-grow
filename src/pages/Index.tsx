@@ -41,10 +41,10 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const allSections: SectionData[] = [
-    { id: 'hero', component: <Hero pagePrefix="home" />, defaultOrder: 0 },
+    { id: 'hero', component: <Hero />, defaultOrder: 0 },
     { id: 'hero-secondary', component: <HeroSecondary />, defaultOrder: 1 },
     { id: 'hero-tertiary', component: <HeroTertiary />, defaultOrder: 2 },
-    { id: 'features', component: <Features pagePrefix="home" />, defaultOrder: 3 },
+    { id: 'features', component: <Features />, defaultOrder: 3 },
     { id: 'hero-quaternary', component: <HeroQuaternary />, defaultOrder: 4 },
     { id: 'modules', component: <Modules />, defaultOrder: 5 },
     { id: 'booking', component: <BookingSection />, defaultOrder: 6 },

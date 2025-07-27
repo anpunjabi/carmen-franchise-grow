@@ -3,11 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EditableText from '@/components/EditableText';
 
-interface HeroProps {
-  pagePrefix?: string;
-}
-
-const Hero: React.FC<HeroProps> = ({ pagePrefix = '' }) => {
+const Hero: React.FC = () => {
   return (
     <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero" data-section-id="hero" data-section-name="Main Hero">
       <div className="absolute inset-0 pointer-events-none">
@@ -21,13 +17,13 @@ const Hero: React.FC<HeroProps> = ({ pagePrefix = '' }) => {
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{
           animationDelay: '0.1s'
         }}>
-            <EditableText id={`${pagePrefix}hero-heading-1`} as="h1" className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
+            <EditableText id="hero-heading-1" as="h1" className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
               You're losing revenue at the unit level{' '}
               <span className="bg-carmen-gradient bg-clip-text text-transparent">
                 shouldn't be this hard
               </span>
             </EditableText>
-            <EditableText id={`${pagePrefix}hero-description-1`} as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
+            <EditableText id="hero-description-1" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
               Now, it isn't. Carmen is a flexible, modular BPM builder that adapts to your business needs, not the other way around. Create a custom solution with only the features you need.
             </EditableText>
             
