@@ -1,22 +1,12 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface EditableTextProps {
   id: string;
   children: React.ReactNode;
   as?: keyof JSX.IntrinsicElements;
   className?: string;
-}
-
-// Define the content_edits interface to match our database structure
-interface ContentEdit {
-  id: string;
-  content: string;
-  created_at?: string;
-  updated_at: string;
 }
 
 const EditableText: React.FC<EditableTextProps> = ({ 
@@ -29,11 +19,8 @@ const EditableText: React.FC<EditableTextProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
-  const { toast } = useToast();
   const contentRef = useRef<HTMLElement | null>(null);
   const [originalContent, setOriginalContent] = useState<string>('');
-  const [contentLoaded, setContentLoaded] = useState(false);
-  const [loadedContent, setLoadedContent] = useState<string | null>(null);
 
   // Check if user is in admin edit mode
   useEffect(() => {
@@ -95,62 +82,11 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   };
 
-  const handleBlur = async () => {
+  const handleBlur = () => {
     if (isEditing) {
       // Make content non-editable
       if (contentRef.current) {
         contentRef.current.contentEditable = 'false';
-        
-        // Save the edited content to Supabase
-        const newContent = contentRef.current.innerHTML;
-        
-        if (newContent !== originalContent) {
-          try {
-            console.log('Saving content for ID:', id, 'Content:', newContent);
-            
-            // Extract page identifier from id (e.g., "franchise-hero-heading-1" -> "franchise")
-            const pageIdentifier = id.includes('-') ? id.split('-')[0] : 'home';
-            
-            // Use type assertion to tell TypeScript about our content_edits table
-            const { error } = await (supabase as any)
-              .from('content_edits')
-              .upsert(
-                { 
-                  id, 
-                  content: newContent,
-                  page_identifier: pageIdentifier,
-                  updated_at: new Date().toISOString()
-                } as ContentEdit,
-                { onConflict: 'id' }
-              );
-            
-            if (error) {
-              console.error('Error saving edited content:', error);
-              throw error;
-            }
-            
-            // Update the loadedContent state with the new content
-            setLoadedContent(newContent);
-            
-            toast({
-              title: "Content updated",
-              description: "Text has been saved successfully.",
-            });
-          } catch (error) {
-            console.error('Error saving edited content:', error);
-            
-            // Revert to original content on error
-            if (contentRef.current) {
-              contentRef.current.innerHTML = originalContent;
-            }
-            
-            toast({
-              title: "Error saving changes",
-              description: "There was a problem updating the text.",
-              variant: "destructive",
-            });
-          }
-        }
       }
       
       setIsEditing(false);
@@ -175,44 +111,6 @@ const EditableText: React.FC<EditableTextProps> = ({
     }
   };
 
-  // Load saved content from Supabase
-  useEffect(() => {
-    const loadContent = async () => {
-      try {
-        console.log('Loading content for ID:', id);
-        
-        const { data, error } = await (supabase as any)
-          .from('content_edits')
-          .select('content')
-          .eq('id', id)
-          .single();
-        
-        if (data && !error) {
-          console.log('Content loaded:', data.content);
-          setLoadedContent(data.content);
-        } else if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error code
-          console.error('Error loading content:', error);
-        } else {
-          console.log('No saved content found, using default');
-        }
-        
-        setContentLoaded(true);
-      } catch (error) {
-        console.error('Error loading content:', error);
-        setContentLoaded(true);
-      }
-    };
-    
-    loadContent();
-  }, [id]);
-
-  // Update the ref content when loadedContent changes
-  useEffect(() => {
-    if (contentRef.current && loadedContent) {
-      contentRef.current.innerHTML = loadedContent;
-    }
-  }, [loadedContent, contentRef]);
-
   // Create the element based on the "as" prop
   const Component = as as any;
 
@@ -226,7 +124,7 @@ const EditableText: React.FC<EditableTextProps> = ({
       data-editable-text-id={id}
       suppressContentEditableWarning={true}
     >
-      {(!loadedContent && contentLoaded) ? children : null}
+      {children}
     </Component>
   );
 };
