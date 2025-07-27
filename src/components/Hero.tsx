@@ -19,7 +19,7 @@ const Hero = () => {
         }}>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl" data-editable-id="hero-heading">
               <EditableText id="hero-heading-1" as="span">
-                Finding business software that fits
+                You're losing revenue at the unit level
               </EditableText>
               <EditableText id="hero-heading-2" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
                 {' shouldn\'t be this hard'}
