@@ -30,28 +30,24 @@ interface SectionEditorProps {
   sectionVisibility: SectionVisibility;
   elementVisibility: ElementVisibility;
   sectionOrder: SectionOrder;
+  onSectionVisibilityChange: (sectionId: string, isVisible: boolean) => void;
+  onElementVisibilityChange: (elementId: string, isVisible: boolean) => void;
+  onSectionOrderChange: (newOrder: SectionOrder) => void;
 }
 
 const SectionEditor = ({ 
   allSections, 
   sectionVisibility, 
   elementVisibility, 
-  sectionOrder 
+  sectionOrder,
+  onSectionVisibilityChange,
+  onElementVisibilityChange,
+  onSectionOrderChange
 }: SectionEditorProps) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [localSectionVisibility, setLocalSectionVisibility] = useState<SectionVisibility>(sectionVisibility);
-  const [localElementVisibility, setLocalElementVisibility] = useState<ElementVisibility>(elementVisibility);
-  const [localSectionOrder, setLocalSectionOrder] = useState<SectionOrder>(sectionOrder);
   
-  // Update local state when props change
-  useEffect(() => {
-    setLocalSectionVisibility(sectionVisibility);
-    setLocalElementVisibility(elementVisibility);
-    setLocalSectionOrder(sectionOrder);
-  }, [sectionVisibility, elementVisibility, sectionOrder]);
-  
-  // Save settings to database whenever they change in the sidebar
+  // Save settings to database and update parent component state
   const saveSettings = async (
     updatedSettings: {
       section_visibility?: SectionVisibility,
@@ -65,9 +61,9 @@ const SectionEditor = ({
       const { error } = await supabase
         .from('landing_page_settings')
         .update({
-          section_visibility: updatedSettings.section_visibility || localSectionVisibility,
-          element_visibility: updatedSettings.element_visibility || localElementVisibility,
-          section_order: updatedSettings.section_order || localSectionOrder,
+          section_visibility: updatedSettings.section_visibility || sectionVisibility,
+          element_visibility: updatedSettings.element_visibility || elementVisibility,
+          section_order: updatedSettings.section_order || sectionOrder,
           updated_at: new Date().toISOString()
         })
         .eq('id', 1);
@@ -76,19 +72,6 @@ const SectionEditor = ({
         console.error('Error saving settings:', error);
         toast.error('Failed to save settings');
         return false;
-      }
-      
-      // Update local state to reflect saved changes
-      if (updatedSettings.section_visibility) {
-        setLocalSectionVisibility(updatedSettings.section_visibility);
-      }
-      
-      if (updatedSettings.element_visibility) {
-        setLocalElementVisibility(updatedSettings.element_visibility);
-      }
-      
-      if (updatedSettings.section_order) {
-        setLocalSectionOrder(updatedSettings.section_order);
       }
       
       console.log('Settings saved successfully');
@@ -120,9 +103,9 @@ const SectionEditor = ({
     
     const handleSaveChanges = () => {
       saveSettings({
-        section_visibility: localSectionVisibility,
-        element_visibility: localElementVisibility,
-        section_order: localSectionOrder
+        section_visibility: sectionVisibility,
+        element_visibility: elementVisibility,
+        section_order: sectionOrder
       });
     };
     
@@ -133,7 +116,7 @@ const SectionEditor = ({
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
       window.removeEventListener('savechanges', handleSaveChanges);
     };
-  }, [localSectionVisibility, localElementVisibility, localSectionOrder]);
+  }, [sectionVisibility, elementVisibility, sectionOrder]);
   
   return (
     <>
@@ -142,34 +125,32 @@ const SectionEditor = ({
         onOpenChange={setIsSidebarOpen} 
         isEditMode={isEditMode}
         allSections={allSections}
-        sectionVisibility={localSectionVisibility}
-        elementVisibility={localElementVisibility}
-        sectionOrder={localSectionOrder}
+        sectionVisibility={sectionVisibility}
+        elementVisibility={elementVisibility}
+        sectionOrder={sectionOrder}
         onToggleSectionVisibility={(sectionId, isVisible) => {
+          console.log('Section visibility changed:', sectionId, isVisible);
           const updatedSectionVisibility = {
-            ...localSectionVisibility,
+            ...sectionVisibility,
             [sectionId]: isVisible
           };
           
-          setLocalSectionVisibility(updatedSectionVisibility);
+          onSectionVisibilityChange(sectionId, isVisible);
           saveSettings({ section_visibility: updatedSectionVisibility });
         }}
         onToggleElementVisibility={(elementId, isVisible) => {
-          // Create a copy of the current element visibility
+          console.log('Element visibility changed:', elementId, isVisible);
           const updatedElementVisibility = {
-            ...localElementVisibility,
+            ...elementVisibility,
             [elementId]: isVisible
           };
           
-          // Update local state
-          setLocalElementVisibility(updatedElementVisibility);
-          
-          // Save to database
-          console.log('Saving element visibility for', elementId, 'to', isVisible);
+          onElementVisibilityChange(elementId, isVisible);
           saveSettings({ element_visibility: updatedElementVisibility });
         }}
         onUpdateSectionOrder={(updatedOrder) => {
-          setLocalSectionOrder(updatedOrder);
+          console.log('Section order changed:', updatedOrder);
+          onSectionOrderChange(updatedOrder);
           saveSettings({ section_order: updatedOrder });
         }}
       />

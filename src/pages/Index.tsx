@@ -191,6 +191,18 @@ const Index = () => {
         sectionVisibility={sectionVisibility}
         elementVisibility={elementVisibility}
         sectionOrder={sectionOrder}
+        onSectionVisibilityChange={(sectionId, isVisible) => {
+          console.log('Parent: Section visibility changing:', sectionId, isVisible);
+          setSectionVisibility(prev => ({ ...prev, [sectionId]: isVisible }));
+        }}
+        onElementVisibilityChange={(elementId, isVisible) => {
+          console.log('Parent: Element visibility changing:', elementId, isVisible);
+          setElementVisibility(prev => ({ ...prev, [elementId]: isVisible }));
+        }}
+        onSectionOrderChange={(newOrder) => {
+          console.log('Parent: Section order changing:', newOrder);
+          setSectionOrder(newOrder);
+        }}
       />
       <main className="flex-grow">
         {sortedSections.map((section) => {
