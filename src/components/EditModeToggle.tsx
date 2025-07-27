@@ -1,9 +1,17 @@
+
 import { useTextStore } from '@/contexts/TextStore';
 import { Button } from '@/components/ui/button';
 import { Edit3, Save } from 'lucide-react';
 
 export const EditModeToggle: React.FC = () => {
-  const { isEditMode, setEditMode } = useTextStore();
+  const textStore = useTextStore();
+  
+  // If context is not available, don't render the toggle
+  if (!textStore) {
+    return null;
+  }
+  
+  const { isEditMode, setEditMode } = textStore;
 
   return (
     <Button
