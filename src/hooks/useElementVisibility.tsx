@@ -6,7 +6,7 @@ interface ElementVisibility {
   [key: string]: boolean;
 }
 
-export function useElementVisibility() {
+export function useElementVisibility(pageIdentifier: string = 'home') {
   const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -17,8 +17,8 @@ export function useElementVisibility() {
         const { data, error } = await supabase
           .from('landing_page_settings')
           .select('element_visibility')
-          .eq('id', 1)
-          .single();
+          .eq('page_identifier', pageIdentifier)
+          .maybeSingle();
         
         if (error) {
           console.error('Error loading element visibility settings:', error);
@@ -40,14 +40,14 @@ export function useElementVisibility() {
     
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('element_visibility_changes_hook')
+      .channel(`element_visibility_changes_${pageIdentifier}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'landing_page_settings',
-          filter: 'id=eq.1'
+          filter: `page_identifier=eq.${pageIdentifier}`
         },
         (payload) => {
           if (payload.new && payload.new.element_visibility) {
@@ -61,7 +61,7 @@ export function useElementVisibility() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [pageIdentifier]);
 
   // Function to check if an element should be visible
   const isElementVisible = (elementId: string) => {

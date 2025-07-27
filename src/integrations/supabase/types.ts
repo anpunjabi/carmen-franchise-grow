@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       backup_appointments: {
@@ -238,48 +243,55 @@ export type Database = {
       }
       bookable_services: {
         Row: {
+          "base price": number | null
+          bpm_id: string | null
           category: string | null
           created_at: string | null
           custom_fields: Json | null
           default_duration: number
-          module_instance_id: string | null
-          price: number | null
+          module_instance_id: string
           pricing_metadata: Json | null
-          service_category: string | null
           service_id: string
           service_name: string
           updated_at: string | null
-          updated_by_user_id: string | null
+          updated_by: string | null
         }
         Insert: {
+          "base price"?: number | null
+          bpm_id?: string | null
           category?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           default_duration: number
-          module_instance_id?: string | null
-          price?: number | null
+          module_instance_id: string
           pricing_metadata?: Json | null
-          service_category?: string | null
           service_id?: string
           service_name: string
           updated_at?: string | null
-          updated_by_user_id?: string | null
+          updated_by?: string | null
         }
         Update: {
+          "base price"?: number | null
+          bpm_id?: string | null
           category?: string | null
           created_at?: string | null
           custom_fields?: Json | null
           default_duration?: number
-          module_instance_id?: string | null
-          price?: number | null
+          module_instance_id?: string
           pricing_metadata?: Json | null
-          service_category?: string | null
           service_id?: string
           service_name?: string
           updated_at?: string | null
-          updated_by_user_id?: string | null
+          updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bookable_services_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
           {
             foreignKeyName: "bookable_services_module_instance_id_fkey"
             columns: ["module_instance_id"]
@@ -386,10 +398,14 @@ export type Database = {
           created_at: string | null
           embedded_modules: string[] | null
           instance_name: string
+          linkable_entities: Json | null
+          linked_module_instances: Json[] | null
           masks: Json | null
+          metadata_core_fields: Json | null
           metadata_custom_fields: Json | null
           module_id: string
           module_instance_id: string
+          pricing_metadata: Json | null
           settings_metadata: Json | null
           updated_at: string | null
         }
@@ -398,10 +414,14 @@ export type Database = {
           created_at?: string | null
           embedded_modules?: string[] | null
           instance_name: string
+          linkable_entities?: Json | null
+          linked_module_instances?: Json[] | null
           masks?: Json | null
+          metadata_core_fields?: Json | null
           metadata_custom_fields?: Json | null
           module_id: string
           module_instance_id?: string
+          pricing_metadata?: Json | null
           settings_metadata?: Json | null
           updated_at?: string | null
         }
@@ -410,10 +430,14 @@ export type Database = {
           created_at?: string | null
           embedded_modules?: string[] | null
           instance_name?: string
+          linkable_entities?: Json | null
+          linked_module_instances?: Json[] | null
           masks?: Json | null
+          metadata_core_fields?: Json | null
           metadata_custom_fields?: Json | null
           module_id?: string
           module_instance_id?: string
+          pricing_metadata?: Json | null
           settings_metadata?: Json | null
           updated_at?: string | null
         }
@@ -436,6 +460,7 @@ export type Database = {
       }
       bpm_modules: {
         Row: {
+          associated_tables: Json | null
           created_at: string | null
           description: string | null
           embed_usage_context_ids: string[] | null
@@ -446,6 +471,7 @@ export type Database = {
           module_name: string
         }
         Insert: {
+          associated_tables?: Json | null
           created_at?: string | null
           description?: string | null
           embed_usage_context_ids?: string[] | null
@@ -456,6 +482,7 @@ export type Database = {
           module_name: string
         }
         Update: {
+          associated_tables?: Json | null
           created_at?: string | null
           description?: string | null
           embed_usage_context_ids?: string[] | null
@@ -758,134 +785,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bpm_module_instances"
             referencedColumns: ["module_instance_id"]
-          },
-        ]
-      }
-      categorical_list_values: {
-        Row: {
-          bpm_id: string
-          categorical_list_id: string
-          category_value: string
-          created_at: string | null
-          created_by: string | null
-          custom_fields_metadata: Json | null
-          description: string | null
-          display_order: number | null
-          id: string
-          is_active: boolean | null
-          pricing_rules_metadata: Json | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          bpm_id: string
-          categorical_list_id: string
-          category_value: string
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields_metadata?: Json | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          pricing_rules_metadata?: Json | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          bpm_id?: string
-          categorical_list_id?: string
-          category_value?: string
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields_metadata?: Json | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          pricing_rules_metadata?: Json | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categorical_list_values_bpm_id_fkey"
-            columns: ["bpm_id"]
-            isOneToOne: false
-            referencedRelation: "bpm_instances"
-            referencedColumns: ["bpm_id"]
-          },
-        ]
-      }
-      categorical_list_values_history: {
-        Row: {
-          archived_at: string | null
-          archived_by: string | null
-          bpm_id: string
-          categorical_list_id: string
-          category_value: string
-          created_at: string | null
-          created_by: string | null
-          custom_fields_metadata: Json | null
-          description: string | null
-          display_order: number | null
-          id: string
-          is_active: boolean | null
-          original_id: string | null
-          pricing_rules_metadata: Json | null
-          updated_at: string | null
-          updated_by: string | null
-        }
-        Insert: {
-          archived_at?: string | null
-          archived_by?: string | null
-          bpm_id: string
-          categorical_list_id: string
-          category_value: string
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields_metadata?: Json | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          original_id?: string | null
-          pricing_rules_metadata?: Json | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Update: {
-          archived_at?: string | null
-          archived_by?: string | null
-          bpm_id?: string
-          categorical_list_id?: string
-          category_value?: string
-          created_at?: string | null
-          created_by?: string | null
-          custom_fields_metadata?: Json | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          original_id?: string | null
-          pricing_rules_metadata?: Json | null
-          updated_at?: string | null
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categorical_list_values_history_bpm_id_fkey"
-            columns: ["bpm_id"]
-            isOneToOne: false
-            referencedRelation: "bpm_instances"
-            referencedColumns: ["bpm_id"]
-          },
-          {
-            foreignKeyName: "categorical_list_values_history_original_id_fkey"
-            columns: ["original_id"]
-            isOneToOne: false
-            referencedRelation: "categorical_list_values"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -1230,11 +1129,13 @@ export type Database = {
       clients: {
         Row: {
           billing_address: Json | null
+          bpm_id: string | null
           client_id: string
           client_name: string
           company_id: string | null
           contact_email: string | null
           created_at: string | null
+          created_by: string | null
           custom_fields: Json | null
           invoicing_metadata: Json | null
           module_instance_id: string
@@ -1244,11 +1145,13 @@ export type Database = {
         }
         Insert: {
           billing_address?: Json | null
+          bpm_id?: string | null
           client_id?: string
           client_name: string
           company_id?: string | null
           contact_email?: string | null
           created_at?: string | null
+          created_by?: string | null
           custom_fields?: Json | null
           invoicing_metadata?: Json | null
           module_instance_id: string
@@ -1258,11 +1161,13 @@ export type Database = {
         }
         Update: {
           billing_address?: Json | null
+          bpm_id?: string | null
           client_id?: string
           client_name?: string
           company_id?: string | null
           contact_email?: string | null
           created_at?: string | null
+          created_by?: string | null
           custom_fields?: Json | null
           invoicing_metadata?: Json | null
           module_instance_id?: string
@@ -1272,11 +1177,18 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "clients_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
             foreignKeyName: "clients_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "fk_clients_module_instance"
@@ -1289,54 +1201,98 @@ export type Database = {
       }
       companies: {
         Row: {
-          billing_address: Json | null
+          bpm_id: string | null
+          company_id: string
+          company_name: string
           created_at: string | null
-          id: string
-          industry: string | null
-          name: string
-          phone: string | null
+          created_by: string | null
+          custom_fields: Json | null
+          invoicing_metadata: Json | null
+          module_instance_id: string
+          primary_contact_id: string | null
+          primary_contact_role: string | null
+          quoting_metadata: Json | null
           updated_at: string | null
-          website: string | null
         }
         Insert: {
-          billing_address?: Json | null
+          bpm_id?: string | null
+          company_id?: string
+          company_name: string
           created_at?: string | null
-          id?: string
-          industry?: string | null
-          name: string
-          phone?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          invoicing_metadata?: Json | null
+          module_instance_id: string
+          primary_contact_id?: string | null
+          primary_contact_role?: string | null
+          quoting_metadata?: Json | null
           updated_at?: string | null
-          website?: string | null
         }
         Update: {
-          billing_address?: Json | null
+          bpm_id?: string | null
+          company_id?: string
+          company_name?: string
           created_at?: string | null
-          id?: string
-          industry?: string | null
-          name?: string
-          phone?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          invoicing_metadata?: Json | null
+          module_instance_id?: string
+          primary_contact_id?: string | null
+          primary_contact_role?: string | null
+          quoting_metadata?: Json | null
           updated_at?: string | null
-          website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "companies_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "fk_created_by_user"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "fk_primary_contact"
+            columns: ["primary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["client_id"]
+          },
+        ]
       }
       content_edits: {
         Row: {
           content: string
           created_at: string
           id: string
+          page_identifier: string | null
           updated_at: string
         }
         Insert: {
           content: string
           created_at?: string
           id: string
+          page_identifier?: string | null
           updated_at?: string
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
+          page_identifier?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1417,44 +1373,115 @@ export type Database = {
       }
       entity_links: {
         Row: {
+          bpm_id: string | null
+          context: Json | null
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           id: string
-          relationship_type: string | null
-          row_id_1: string
-          row_id_2: string
-          table_1: string
-          table_2: string
+          relationship_type: string
+          source_column: string
+          source_id: string
+          source_module_instance_id: string | null
+          source_type: string
+          target_column: string
+          target_id: string
+          target_module_instance_id: string | null
+          target_type: string
+          updated_at: string | null
+          updated_by: string | null
         }
         Insert: {
+          bpm_id?: string | null
+          context?: Json | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
-          relationship_type?: string | null
-          row_id_1: string
-          row_id_2: string
-          table_1: string
-          table_2: string
+          relationship_type: string
+          source_column: string
+          source_id: string
+          source_module_instance_id?: string | null
+          source_type: string
+          target_column: string
+          target_id: string
+          target_module_instance_id?: string | null
+          target_type: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Update: {
+          bpm_id?: string | null
+          context?: Json | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           id?: string
-          relationship_type?: string | null
-          row_id_1?: string
-          row_id_2?: string
-          table_1?: string
-          table_2?: string
+          relationship_type?: string
+          source_column?: string
+          source_id?: string
+          source_module_instance_id?: string | null
+          source_type?: string
+          target_column?: string
+          target_id?: string
+          target_module_instance_id?: string | null
+          target_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "entity_links_created_by_fkey"
-            columns: ["created_by"]
+            foreignKeyName: "entity_links_bpm_id_fkey"
+            columns: ["bpm_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "entity_links_source_module_instance_id_fkey"
+            columns: ["source_module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "entity_links_target_module_instance_id_fkey"
+            columns: ["target_module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
           },
         ]
+      }
+      field_configuration_history: {
+        Row: {
+          field_name: string
+          id: string
+          modified_at: string | null
+          modified_by: string | null
+          module_instance_id: string
+          new_config: Json | null
+          old_config: Json | null
+        }
+        Insert: {
+          field_name: string
+          id?: string
+          modified_at?: string | null
+          modified_by?: string | null
+          module_instance_id: string
+          new_config?: Json | null
+          old_config?: Json | null
+        }
+        Update: {
+          field_name?: string
+          id?: string
+          modified_at?: string | null
+          modified_by?: string | null
+          module_instance_id?: string
+          new_config?: Json | null
+          old_config?: Json | null
+        }
+        Relationships: []
       }
       inventory_history: {
         Row: {
@@ -1603,6 +1630,7 @@ export type Database = {
           created_at: string | null
           element_visibility: Json
           id: number
+          page_identifier: string | null
           section_order: Json
           section_visibility: Json
           updated_at: string | null
@@ -1611,6 +1639,7 @@ export type Database = {
           created_at?: string | null
           element_visibility?: Json
           id?: number
+          page_identifier?: string | null
           section_order?: Json
           section_visibility?: Json
           updated_at?: string | null
@@ -1619,6 +1648,7 @@ export type Database = {
           created_at?: string | null
           element_visibility?: Json
           id?: number
+          page_identifier?: string | null
           section_order?: Json
           section_visibility?: Json
           updated_at?: string | null
@@ -1628,29 +1658,52 @@ export type Database = {
       module_permissions: {
         Row: {
           action: string
-          bpm_id: string
+          allowed: boolean
+          bpm_id: string | null
+          conditions: Json | null
           created_at: string | null
+          expression_preview: string | null
           module_instance_id: string
           permission_id: string
           role: string
         }
         Insert: {
           action: string
-          bpm_id: string
+          allowed?: boolean
+          bpm_id?: string | null
+          conditions?: Json | null
           created_at?: string | null
+          expression_preview?: string | null
           module_instance_id: string
           permission_id?: string
           role: string
         }
         Update: {
           action?: string
-          bpm_id?: string
+          allowed?: boolean
+          bpm_id?: string | null
+          conditions?: Json | null
           created_at?: string | null
+          expression_preview?: string | null
           module_instance_id?: string
           permission_id?: string
           role?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_module_permissions_bpm"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "fk_module_permissions_module"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
           {
             foreignKeyName: "module_permissions_bpm_id_fkey"
             columns: ["bpm_id"]
@@ -1671,84 +1724,68 @@ export type Database = {
         Row: {
           actual_close_date: string | null
           amount: number | null
-          business_type: string
-          client_id: string | null
-          company_id: string | null
           created_at: string | null
           created_by: string | null
           currency: string | null
           custom_fields: Json | null
-          description: string | null
           expected_close_date: string | null
-          id: string
-          module_instance_id: string | null
-          name: string
+          manual_probability: number | null
+          module_instance_id: string
+          mrr: number | null
+          opportunity_id: string
+          opportunity_name: string
           owner_id: string | null
           stage_id: string | null
-          status: string | null
           updated_at: string | null
         }
         Insert: {
           actual_close_date?: string | null
           amount?: number | null
-          business_type: string
-          client_id?: string | null
-          company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           currency?: string | null
           custom_fields?: Json | null
-          description?: string | null
           expected_close_date?: string | null
-          id?: string
-          module_instance_id?: string | null
-          name: string
+          manual_probability?: number | null
+          module_instance_id: string
+          mrr?: number | null
+          opportunity_id?: string
+          opportunity_name: string
           owner_id?: string | null
           stage_id?: string | null
-          status?: string | null
           updated_at?: string | null
         }
         Update: {
           actual_close_date?: string | null
           amount?: number | null
-          business_type?: string
-          client_id?: string | null
-          company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           currency?: string | null
           custom_fields?: Json | null
-          description?: string | null
           expected_close_date?: string | null
-          id?: string
-          module_instance_id?: string | null
-          name?: string
+          manual_probability?: number | null
+          module_instance_id?: string
+          mrr?: number | null
+          opportunity_id?: string
+          opportunity_name?: string
           owner_id?: string | null
           stage_id?: string | null
-          status?: string | null
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "opportunities_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["client_id"]
-          },
-          {
-            foreignKeyName: "opportunities_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "opportunities_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "opportunities_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
           },
           {
             foreignKeyName: "opportunities_owner_id_fkey"
@@ -1772,11 +1809,12 @@ export type Database = {
           allow_skipping: boolean | null
           bpm_id: string
           color: string | null
-          funnel_group: string | null
+          custom_fields: Json | null
           id: string
           is_terminal: boolean | null
           key: string | null
           likelihood_to_close: number | null
+          module_instance_id: string | null
           name: string | null
           ordinal: number | null
         }
@@ -1785,11 +1823,12 @@ export type Database = {
           allow_skipping?: boolean | null
           bpm_id: string
           color?: string | null
-          funnel_group?: string | null
+          custom_fields?: Json | null
           id?: string
           is_terminal?: boolean | null
           key?: string | null
           likelihood_to_close?: number | null
+          module_instance_id?: string | null
           name?: string | null
           ordinal?: number | null
         }
@@ -1798,15 +1837,169 @@ export type Database = {
           allow_skipping?: boolean | null
           bpm_id?: string
           color?: string | null
-          funnel_group?: string | null
+          custom_fields?: Json | null
           id?: string
           is_terminal?: boolean | null
           key?: string | null
           likelihood_to_close?: number | null
+          module_instance_id?: string | null
           name?: string | null
           ordinal?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_stages_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "opportunity_stages_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+        ]
+      }
+      option_set_values: {
+        Row: {
+          bpm_id: string
+          category_list_id: string
+          category_value: string
+          created_at: string | null
+          created_by: string | null
+          custom_fields_metadata: Json | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          module_instance_id: string | null
+          pricing_rules_metadata: Json | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          bpm_id: string
+          category_list_id: string
+          category_value: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields_metadata?: Json | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          module_instance_id?: string | null
+          pricing_rules_metadata?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          bpm_id?: string
+          category_list_id?: string
+          category_value?: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields_metadata?: Json | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          module_instance_id?: string | null
+          pricing_rules_metadata?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categorical_list_values_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "option_set_values_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+        ]
+      }
+      option_set_values_history: {
+        Row: {
+          archived_at: string | null
+          archived_by: string | null
+          bpm_id: string
+          categorical_list_id: string
+          category_value: string
+          created_at: string | null
+          created_by: string | null
+          custom_fields_metadata: Json | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          original_id: string | null
+          pricing_rules_metadata: Json | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
+          bpm_id: string
+          categorical_list_id: string
+          category_value: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields_metadata?: Json | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          original_id?: string | null
+          pricing_rules_metadata?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by?: string | null
+          bpm_id?: string
+          categorical_list_id?: string
+          category_value?: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields_metadata?: Json | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          original_id?: string | null
+          pricing_rules_metadata?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categorical_list_values_history_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "categorical_list_values_history_original_id_fkey"
+            columns: ["original_id"]
+            isOneToOne: false
+            referencedRelation: "option_set_values"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       privacy_policy: {
         Row: {
@@ -1909,6 +2102,67 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bookable_services"
             referencedColumns: ["service_id"]
+          },
+        ]
+      }
+      provider_availability: {
+        Row: {
+          availability_id: string
+          bpm_id: string | null
+          created_at: string | null
+          custom_fields: Json | null
+          end_time: string
+          module_instance_id: string | null
+          provider_id: string
+          recurrence_rule: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          availability_id?: string
+          bpm_id?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          end_time: string
+          module_instance_id?: string | null
+          provider_id: string
+          recurrence_rule?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          availability_id?: string
+          bpm_id?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          end_time?: string
+          module_instance_id?: string | null
+          provider_id?: string
+          recurrence_rule?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_availability_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "provider_availability_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "provider_availability_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["provider_id"]
           },
         ]
       }
@@ -2015,6 +2269,96 @@ export type Database = {
           },
         ]
       }
+      provider_credentials: {
+        Row: {
+          bpm_id: string | null
+          created_at: string
+          credential_number: string | null
+          credential_type_id: string
+          custom_fields: Json | null
+          document_url: string | null
+          expiration_date: string | null
+          id: string
+          issue_date: string | null
+          module_instance_id: string | null
+          provider_id: string
+          state: string | null
+          status: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bpm_id?: string | null
+          created_at?: string
+          credential_number?: string | null
+          credential_type_id: string
+          custom_fields?: Json | null
+          document_url?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          module_instance_id?: string | null
+          provider_id: string
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bpm_id?: string | null
+          created_at?: string
+          credential_number?: string | null
+          credential_type_id?: string
+          custom_fields?: Json | null
+          document_url?: string | null
+          expiration_date?: string | null
+          id?: string
+          issue_date?: string | null
+          module_instance_id?: string | null
+          provider_id?: string
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_credentials_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "provider_credentials_credential_type_id_fkey"
+            columns: ["credential_type_id"]
+            isOneToOne: false
+            referencedRelation: "option_set_values"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_credentials_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "provider_credentials_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "providers"
+            referencedColumns: ["provider_id"]
+          },
+          {
+            foreignKeyName: "provider_credentials_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       provider_services: {
         Row: {
           id: string
@@ -2035,6 +2379,73 @@ export type Database = {
           {
             foreignKeyName: "provider_services_provider_id_fkey"
             columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          bpm_id: string
+          created_at: string | null
+          created_by: string | null
+          custom_fields: Json | null
+          email: string | null
+          module_instance_id: string
+          name: string
+          phone: string | null
+          provider_id: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bpm_id: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          module_instance_id: string
+          name: string
+          phone?: string | null
+          provider_id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bpm_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          email?: string | null
+          module_instance_id?: string
+          name?: string
+          phone?: string | null
+          provider_id?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "providers_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "providers_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "providers_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["user_id"]
@@ -2303,75 +2714,92 @@ export type Database = {
       }
       service_instances: {
         Row: {
-          client_id: string
+          bpm_id: string | null
+          client_id: string | null
           completed_at: string | null
+          corporate_client_id: string | null
           created_at: string | null
+          custom_fields: Json | null
           inventory_used: Json | null
           invoice_id: string | null
-          is_booked: boolean | null
           is_completed: boolean | null
           is_paid: boolean | null
           module_instance_id: string
           notes: string | null
           pricing_metadata: Json | null
-          provider_id: string
+          provider_id: string | null
           quote_id: string | null
-          review: Json | null
           scheduled_at: string | null
           service_id: string
           service_instance_id: string
           updated_at: string | null
-          updated_by_user_id: string | null
+          updated_by: string | null
         }
         Insert: {
-          client_id: string
+          bpm_id?: string | null
+          client_id?: string | null
           completed_at?: string | null
+          corporate_client_id?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           inventory_used?: Json | null
           invoice_id?: string | null
-          is_booked?: boolean | null
           is_completed?: boolean | null
           is_paid?: boolean | null
           module_instance_id: string
           notes?: string | null
           pricing_metadata?: Json | null
-          provider_id: string
+          provider_id?: string | null
           quote_id?: string | null
-          review?: Json | null
           scheduled_at?: string | null
           service_id: string
           service_instance_id?: string
           updated_at?: string | null
-          updated_by_user_id?: string | null
+          updated_by?: string | null
         }
         Update: {
-          client_id?: string
+          bpm_id?: string | null
+          client_id?: string | null
           completed_at?: string | null
+          corporate_client_id?: string | null
           created_at?: string | null
+          custom_fields?: Json | null
           inventory_used?: Json | null
           invoice_id?: string | null
-          is_booked?: boolean | null
           is_completed?: boolean | null
           is_paid?: boolean | null
           module_instance_id?: string
           notes?: string | null
           pricing_metadata?: Json | null
-          provider_id?: string
+          provider_id?: string | null
           quote_id?: string | null
-          review?: Json | null
           scheduled_at?: string | null
           service_id?: string
           service_instance_id?: string
           updated_at?: string | null
-          updated_by_user_id?: string | null
+          updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_instances_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
           {
             foreignKeyName: "service_instances_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["client_id"]
+          },
+          {
+            foreignKeyName: "service_instances_Corporate Client ID_fkey"
+            columns: ["corporate_client_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["company_id"]
           },
           {
             foreignKeyName: "service_instances_invoice_id_fkey"
@@ -2391,8 +2819,8 @@ export type Database = {
             foreignKeyName: "service_instances_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["user_id"]
+            referencedRelation: "providers"
+            referencedColumns: ["provider_id"]
           },
           {
             foreignKeyName: "service_instances_quote_id_fkey"
@@ -2525,21 +2953,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
-          bpm_id: string
+          bpm_id: string | null
           created_at: string | null
           role: string
           user_id: string
           user_role_id: string
         }
         Insert: {
-          bpm_id: string
+          bpm_id?: string | null
           created_at?: string | null
           role: string
           user_id: string
           user_role_id?: string
         }
         Update: {
-          bpm_id?: string
+          bpm_id?: string | null
           created_at?: string | null
           role?: string
           user_id?: string
@@ -2599,7 +3027,6 @@ export type Database = {
       }
       users: {
         Row: {
-          "Carmen Admin": boolean
           created_at: string | null
           email: string
           full_name: string
@@ -2609,7 +3036,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          "Carmen Admin"?: boolean
           created_at?: string | null
           email: string
           full_name: string
@@ -2619,7 +3045,6 @@ export type Database = {
           user_id?: string
         }
         Update: {
-          "Carmen Admin"?: boolean
           created_at?: string | null
           email?: string
           full_name?: string
@@ -2635,12 +3060,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_bpm: {
+        Args: { _bpm: string }
+        Returns: boolean
+      }
+      can_user_read: {
+        Args: { p_table: string; p_id: string }
+        Returns: boolean
+      }
       check_module_permission: {
         Args: {
           _user_id: string
           _bpm_id: string
           _module_instance_id: string
           _action: string
+        }
+        Returns: boolean
+      }
+      check_module_permission_with_conditions: {
+        Args: {
+          _user_id: string
+          _bpm_id: string
+          _module_instance_id: string
+          _action: string
+          _entity_data?: Json
         }
         Returns: boolean
       }
@@ -2654,12 +3097,36 @@ export type Database = {
         }
         Returns: boolean
       }
+      evaluate_permission_conditions: {
+        Args: {
+          p_conditions: Json
+          p_row: Record<string, unknown>
+          p_entity_data?: Json
+        }
+        Returns: boolean
+      }
+      get_primary_key_column: {
+        Args: { table_name: string }
+        Returns: string
+      }
       get_terms_of_service: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       has_segment_access: {
         Args: { segment_id: string }
+        Returns: boolean
+      }
+      read_permission: {
+        Args: { module_name: string }
+        Returns: boolean
+      }
+      set_carmen_roles: {
+        Args: { p_bpm_override?: string }
+        Returns: undefined
+      }
+      update_permission: {
+        Args: { module_name: string }
         Returns: boolean
       }
       update_terms_of_service: {
@@ -2680,21 +3147,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -2712,14 +3183,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -2735,14 +3208,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -2758,14 +3233,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -2773,14 +3250,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

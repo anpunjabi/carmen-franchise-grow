@@ -60,8 +60,8 @@ const Franchise = () => {
         const { data, error } = await supabase
           .from('landing_page_settings')
           .select('section_visibility, element_visibility, section_order')
-          .eq('id', 1)
-          .single();
+          .eq('page_identifier', 'franchise')
+          .maybeSingle();
         
         if (error) {
           console.error('Error loading visibility settings:', error);
@@ -108,14 +108,14 @@ const Franchise = () => {
     
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('landing_page_settings_changes')
+      .channel('landing_page_settings_changes_franchise')
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'landing_page_settings',
-          filter: 'id=eq.1'
+          filter: 'page_identifier=eq.franchise'
         },
         (payload) => {
           console.log('Settings updated in database:', payload);

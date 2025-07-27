@@ -108,6 +108,9 @@ const EditableText: React.FC<EditableTextProps> = ({
           try {
             console.log('Saving content for ID:', id, 'Content:', newContent);
             
+            // Extract page identifier from id (e.g., "franchise-hero-heading-1" -> "franchise")
+            const pageIdentifier = id.includes('-') ? id.split('-')[0] : 'home';
+            
             // Use type assertion to tell TypeScript about our content_edits table
             const { error } = await (supabase as any)
               .from('content_edits')
@@ -115,6 +118,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                 { 
                   id, 
                   content: newContent,
+                  page_identifier: pageIdentifier,
                   updated_at: new Date().toISOString()
                 } as ContentEdit,
                 { onConflict: 'id' }
