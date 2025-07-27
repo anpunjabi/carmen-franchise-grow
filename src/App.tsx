@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { TextStoreProvider } from "./contexts/TextStore";
 import Index from "./pages/Index";
 import Franchise from "./pages/Franchise";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -17,9 +18,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <TextStoreProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/franchise" element={<Franchise />} />
@@ -29,6 +31,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </TextStoreProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
