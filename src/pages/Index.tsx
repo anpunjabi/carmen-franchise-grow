@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
+import { EditModeToggle } from '@/components/EditModeToggle';
 import Hero from '@/components/Hero';
 import HeroSecondary from '@/components/HeroSecondary';
 import HeroTertiary from '@/components/HeroTertiary';
@@ -185,6 +186,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <EditModeToggle />
       <Header />
       <SectionEditor 
         allSections={allSections} 

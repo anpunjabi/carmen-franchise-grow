@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTextStore } from '@/contexts/TextStore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Popover,
@@ -18,15 +17,11 @@ import { ColorSchemeEditor } from './ColorSchemeEditor';
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const { toast: uiToast } = useToast();
-  const textStore = useTextStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showColorEditor, setShowColorEditor] = useState(false);
-
-  // Use TextStore's edit mode if available, otherwise fallback to false
-  const isEditMode = textStore?.isEditMode || false;
-  const setEditMode = textStore?.setEditMode;
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -69,20 +64,27 @@ const UserMenu = () => {
   };
 
   const toggleEditMode = () => {
-    if (setEditMode) {
-      setEditMode(!isEditMode);
-    }
+    setIsEditMode(!isEditMode);
     setIsOpen(false);
+    
+    window.dispatchEvent(new CustomEvent('editmodechange', { 
+      detail: { isEditMode: !isEditMode }
+    }));
   };
 
   const saveEdits = async () => {
     setIsSaving(true);
     
     try {
-      // Exit edit mode - TextStore will handle localStorage persistence
-      if (setEditMode) {
-        setEditMode(false);
-      }
+      // Dispatch event to notify all components that we're saving changes
+      window.dispatchEvent(new CustomEvent('savechanges'));
+      
+      // Just exit edit mode here - actual saving is triggered by the event
+      setIsEditMode(false);
+      
+      window.dispatchEvent(new CustomEvent('editmodechange', { 
+        detail: { isEditMode: false }
+      }));
       
       uiToast({
         title: "Changes saved",
