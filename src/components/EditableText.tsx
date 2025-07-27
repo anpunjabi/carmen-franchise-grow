@@ -24,6 +24,7 @@ const EditableText: React.FC<EditableTextProps> = ({
 
   // Check if user is in admin edit mode
   useEffect(() => {
+    console.log('EditableText setting up event listener for editmodechange');
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('EditableText received edit mode change:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
@@ -35,6 +36,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
     
     return () => {
+      console.log('EditableText removing event listener for editmodechange');
       window.removeEventListener('editmodechange', handleEditModeChange as EventListener);
     };
   }, [isEditing]);
