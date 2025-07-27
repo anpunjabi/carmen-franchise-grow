@@ -1,18 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import UserMenu from '@/components/UserMenu';
 import AuthModal from '@/components/AuthModal';
-import { useElementVisibility } from '@/hooks/useElementVisibility';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user, loading } = useAuth();
-  const { isElementVisible } = useElementVisibility();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,19 +23,11 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navigation = [{
-    name: 'Features',
-    href: '#features',
-    id: 'nav-features'
-  }, {
-    name: 'Modules',
-    href: '#modules',
-    id: 'nav-modules'
-  }, {
-    name: 'Partner',
-    href: '#partner',
-    id: 'nav-partner'
-  }];
+  const navigation = [
+    { name: 'Features', href: '#features' },
+    { name: 'Modules', href: '#modules' },
+    { name: 'Partner', href: '#partner' }
+  ];
 
   const openAuthModal = () => {
     setAuthModalOpen(true);
@@ -59,42 +48,35 @@ const Header = () => {
             {/* Desktop navigation */}
             <nav className="hidden md:flex items-center space-x-8">
               {navigation.map(item => (
-                isElementVisible(item.id) && (
-                  <a 
-                    key={item.name} 
-                    href={item.href} 
-                    className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
-                    data-editable-id={item.id}
-                  >
-                    {item.name}
-                  </a>
-                )
+                <a 
+                  key={item.name} 
+                  href={item.href} 
+                  className="text-carmen-navy hover:text-carmen-blue transition-colors duration-200 font-medium text-sm"
+                >
+                  {item.name}
+                </a>
               ))}
               
               {!loading && (
                 user ? (
                   <UserMenu />
                 ) : (
-                  isElementVisible('login-button') && (
-                    <Button 
-                      className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform" 
-                      onClick={openAuthModal}
-                      data-editable-id="login-button"
-                    >
-                      Log In
-                    </Button>
-                  )
+                  <Button 
+                    className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-md shadow-md hover:shadow-lg active:scale-95 transform" 
+                    onClick={openAuthModal}
+                  >
+                    Log In
+                  </Button>
                 )
               )}
             </nav>
             
             {/* Mobile menu button */}
             <div className="flex md:hidden">
-              {!loading && !user && isElementVisible('login-button-mobile') && (
+              {!loading && !user && (
                 <Button 
                   className="bg-carmen-gradient text-white mr-2 hover:opacity-90 transition-all duration-300 px-4 py-2" 
                   onClick={openAuthModal}
-                  data-editable-id="login-button-mobile"
                 >
                   Log In
                 </Button>
@@ -106,22 +88,19 @@ const Header = () => {
                 </div>
               )}
               
-              {isElementVisible('mobile-menu-button') && (
-                <button 
-                  type="button" 
-                  className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-blue focus:outline-none" 
-                  aria-controls="mobile-menu" 
-                  aria-expanded="false" 
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  data-editable-id="mobile-menu-button"
-                >
-                  <span className="sr-only">Open main menu</span>
-                  {mobileMenuOpen ? 
-                    <X className="block h-6 w-6" aria-hidden="true" /> : 
-                    <Menu className="block h-6 w-6" aria-hidden="true" />
-                  }
-                </button>
-              )}
+              <button 
+                type="button" 
+                className="inline-flex items-center justify-center p-2 rounded-md text-carmen-navy hover:text-carmen-blue focus:outline-none" 
+                aria-controls="mobile-menu" 
+                aria-expanded="false" 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? 
+                  <X className="block h-6 w-6" aria-hidden="true" /> : 
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                }
+              </button>
             </div>
           </div>
         </div>
@@ -135,32 +114,26 @@ const Header = () => {
         >
           <div className="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md shadow-lg">
             {navigation.map(item => (
-              isElementVisible(`${item.id}-mobile`) && (
-                <a 
-                  key={item.name} 
-                  href={item.href} 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-editable-id={`${item.id}-mobile`}
-                >
-                  {item.name}
-                </a>
-              )
+              <a 
+                key={item.name} 
+                href={item.href} 
+                className="block px-3 py-2 rounded-md text-base font-medium text-carmen-navy hover:text-carmen-blue hover:bg-carmen-light-blue/10" 
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </a>
             ))}
-            {isElementVisible('contact-button-mobile') && (
-              <div className="px-3 py-2">
-                <Button 
-                  className="bg-carmen-gradient text-white w-full hover:opacity-90 transition-all duration-300" 
-                  onClick={() => {
-                    window.location.href = '#contact';
-                    setMobileMenuOpen(false);
-                  }}
-                  data-editable-id="contact-button-mobile"
-                >
-                  Build with Us
-                </Button>
-              </div>
-            )}
+            <div className="px-3 py-2">
+              <Button 
+                className="bg-carmen-gradient text-white w-full hover:opacity-90 transition-all duration-300" 
+                onClick={() => {
+                  window.location.href = '#contact';
+                  setMobileMenuOpen(false);
+                }}
+              >
+                Build with Us
+              </Button>
+            </div>
           </div>
         </div>
       </header>

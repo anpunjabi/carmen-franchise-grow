@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { useElementVisibility } from '@/hooks/useElementVisibility';
+
 
 interface Section {
   id: string;
@@ -70,7 +70,7 @@ const SectionManagerSidebar = ({
   const [sections, setSections] = useState<Section[]>([]);
   const [editableElements, setEditableElements] = useState<EditableElement[]>([]);
   const [showElementsOnly, setShowElementsOnly] = useState(false);
-  const { isLoading } = useElementVisibility();
+  const isLoading = false;
 
   // Load sections and elements from the DOM and props
   useEffect(() => {
