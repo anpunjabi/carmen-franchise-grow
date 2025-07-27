@@ -1,6 +1,7 @@
 
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import EditableText from '@/components/EditableText';
 
 interface HeroProps {
   pagePrefix?: string;
@@ -20,15 +21,15 @@ const Hero: React.FC<HeroProps> = ({ pagePrefix = '' }) => {
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{
           animationDelay: '0.1s'
         }}>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
+            <EditableText id={`${pagePrefix}hero-heading-1`} as="h1" className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl">
               You're losing revenue at the unit level{' '}
               <span className="bg-carmen-gradient bg-clip-text text-transparent">
                 shouldn't be this hard
               </span>
-            </h1>
-            <p className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
+            </EditableText>
+            <EditableText id={`${pagePrefix}hero-description-1`} as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
               Now, it isn't. Carmen is a flexible, modular BPM builder that adapts to your business needs, not the other way around. Create a custom solution with only the features you need.
-            </p>
+            </EditableText>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>

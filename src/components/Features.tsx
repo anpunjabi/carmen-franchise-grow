@@ -1,5 +1,6 @@
 
 import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
+import EditableText from '@/components/EditableText';
 
 interface FeaturesProps {
   pagePrefix?: string;
@@ -31,16 +32,16 @@ const Features: React.FC<FeaturesProps> = ({ pagePrefix = '' }) => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 fade-in-up">
-          <h2 className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
+          <EditableText id={`${pagePrefix}features-heading-1`} as="h2" className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
             Powerful Features, {' '}
             <span className="bg-carmen-gradient bg-clip-text text-transparent">
               Limitless Flexibility
             </span>
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          </EditableText>
+          <EditableText id={`${pagePrefix}features-description-1`} as="p" className="text-lg text-gray-600 max-w-2xl mx-auto">
             Carmen combines powerful BPM capabilities with unprecedented flexibility,
             allowing you to create a solution that works exactly how you need it to.
-          </p>
+          </EditableText>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8 justify-center">
