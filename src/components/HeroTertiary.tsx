@@ -1,9 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const HeroTertiary = () => {
-  return (
-    <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero-tertiary" data-section-id="hero-tertiary" data-section-name="Product Benefits Hero">
+  return <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero-tertiary" data-section-id="hero-tertiary" data-section-name="Product Benefits Hero">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-carmen-soft-teal/20 blur-3xl"></div>
         <div className="absolute top-1/2 -left-40 w-96 h-96 rounded-full bg-carmen-sky/20 blur-3xl"></div>
@@ -21,9 +19,7 @@ const HeroTertiary = () => {
                 {' shouldn\'t be this hard'}
               </span>
             </h1>
-            <p className="text-lg text-gray-600 mb-8 max-w-lg text-balance">
-              Now, it isn't. Carmen is a flexible, modular BPM builder that adapts to your business needs, not the other way around. Create a custom solution with only the features you need.
-            </p>
+            <p className="text-lg text-gray-600 mb-8 max-w-lg text-balance">That's where Carmen comes in.</p>
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>
@@ -37,8 +33,8 @@ const HeroTertiary = () => {
           </div>
           
           <div className="md:w-1/2 md:pl-12 fade-in-up" style={{
-            animationDelay: '0.3s'
-          }}>
+          animationDelay: '0.3s'
+        }}>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-carmen-teal/20 to-carmen-sky/20 rounded-3xl blur-xl animate-floating"></div>
               <div className="relative bg-white p-2 rounded-3xl shadow-soft overflow-hidden border border-white">
@@ -58,8 +54,6 @@ const HeroTertiary = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroTertiary;
