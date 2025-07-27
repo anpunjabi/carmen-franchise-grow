@@ -1,15 +1,11 @@
 
 import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
-import EditableText from './EditableText';
-import { useElementVisibility } from '@/hooks/useElementVisibility';
 
 interface FeaturesProps {
   pagePrefix?: string;
 }
 
 const Features: React.FC<FeaturesProps> = ({ pagePrefix = '' }) => {
-  const { isElementVisible, isLoading } = useElementVisibility();
-  const getContentId = (id: string) => pagePrefix ? `${pagePrefix}-${id}` : id;
 
   const featuresList = [{
     icon: <Grid3X3 size={24} className="text-carmen-blue" />,
@@ -25,9 +21,6 @@ const Features: React.FC<FeaturesProps> = ({ pagePrefix = '' }) => {
     description: 'Use our AI chat to effortlessly customize Carmen to fit your business needs.'
   }];
   
-  if (isLoading) {
-    return <div className="py-24 bg-white">Loading...</div>;
-  }
   
   return <section id="features" className="py-24 bg-white relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
@@ -38,47 +31,33 @@ const Features: React.FC<FeaturesProps> = ({ pagePrefix = '' }) => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16 fade-in-up">
-          {isElementVisible('features-heading-1') && (
-            <h2 className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
-              <EditableText id={getContentId("features-heading-1")} as="span">
-                Powerful Features, 
-              </EditableText>
-              {isElementVisible('features-heading-2') && (
-                <EditableText id={getContentId("features-heading-2")} as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
-                  Limitless Flexibility
-                </EditableText>
-              )}
-            </h2>
-          )}
-          {isElementVisible('features-description') && (
-            <EditableText id={getContentId("features-description")} as="p" className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Carmen combines powerful BPM capabilities with unprecedented flexibility,
-              allowing you to create a solution that works exactly how you need it to.
-            </EditableText>
-          )}
+          <h2 className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
+            Powerful Features, {' '}
+            <span className="bg-carmen-gradient bg-clip-text text-transparent">
+              Limitless Flexibility
+            </span>
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Carmen combines powerful BPM capabilities with unprecedented flexibility,
+            allowing you to create a solution that works exactly how you need it to.
+          </p>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8 justify-center">
           {featuresList.map((feature, index) => (
-            isElementVisible(`feature-${index}`) && (
-              <div key={index} className="bg-carmen-sand rounded-3xl p-6 shadow-soft border border-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 fade-in-up flex-1" style={{
-                animationDelay: `${0.1 + index * 0.1}s`
-              }}>
-                <div className="rounded-full bg-white w-14 h-14 flex items-center justify-center mb-4 shadow-sm">
-                  {feature.icon}
-                </div>
-                {isElementVisible(`feature-title-${index}`) && (
-                  <EditableText id={getContentId(`feature-title-${index}`)} as="h3" className="text-xl font-semibold text-carmen-navy mb-2">
-                    {feature.title}
-                  </EditableText>
-                )}
-                {isElementVisible(`feature-description-${index}`) && (
-                  <EditableText id={getContentId(`feature-description-${index}`)} as="p" className="text-gray-600">
-                    {feature.description}
-                  </EditableText>
-                )}
+            <div key={index} className="bg-carmen-sand rounded-3xl p-6 shadow-soft border border-white hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 fade-in-up flex-1" style={{
+              animationDelay: `${0.1 + index * 0.1}s`
+            }}>
+              <div className="rounded-full bg-white w-14 h-14 flex items-center justify-center mb-4 shadow-sm">
+                {feature.icon}
               </div>
-            )
+              <h3 className="text-xl font-semibold text-carmen-navy mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600">
+                {feature.description}
+              </p>
+            </div>
           ))}
         </div>
       </div>
