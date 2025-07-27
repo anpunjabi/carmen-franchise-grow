@@ -58,12 +58,12 @@ const EditableText: React.FC<EditableTextProps> = ({
         try {
           const { data, error } = await supabase
             .from('users')
-            .select('"Carmen Admin"')
+            .select('is_super_admin')
             .eq('user_id', user.id)
             .single();
           
           if (data && !error) {
-            setIsAdmin(data['Carmen Admin'] === true);
+            setIsAdmin(data.is_super_admin === true);
           }
         } catch (error) {
           console.error('Error checking admin status:', error);

@@ -3,8 +3,13 @@ import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
 import EditableText from './EditableText';
 import { useElementVisibility } from '@/hooks/useElementVisibility';
 
-const Features = () => {
+interface FeaturesProps {
+  pagePrefix?: string;
+}
+
+const Features: React.FC<FeaturesProps> = ({ pagePrefix = '' }) => {
   const { isElementVisible, isLoading } = useElementVisibility();
+  const getContentId = (id: string) => pagePrefix ? `${pagePrefix}-${id}` : id;
 
   const featuresList = [{
     icon: <Grid3X3 size={24} className="text-carmen-blue" />,
@@ -35,18 +40,18 @@ const Features = () => {
         <div className="text-center mb-16 fade-in-up">
           {isElementVisible('features-heading-1') && (
             <h2 className="text-3xl md:text-4xl font-bold text-carmen-navy mb-4">
-              <EditableText id="features-heading-1" as="span">
+              <EditableText id={getContentId("features-heading-1")} as="span">
                 Powerful Features, 
               </EditableText>
               {isElementVisible('features-heading-2') && (
-                <EditableText id="features-heading-2" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
+                <EditableText id={getContentId("features-heading-2")} as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
                   Limitless Flexibility
                 </EditableText>
               )}
             </h2>
           )}
           {isElementVisible('features-description') && (
-            <EditableText id="features-description" as="p" className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <EditableText id={getContentId("features-description")} as="p" className="text-lg text-gray-600 max-w-2xl mx-auto">
               Carmen combines powerful BPM capabilities with unprecedented flexibility,
               allowing you to create a solution that works exactly how you need it to.
             </EditableText>
@@ -63,12 +68,12 @@ const Features = () => {
                   {feature.icon}
                 </div>
                 {isElementVisible(`feature-title-${index}`) && (
-                  <EditableText id={`feature-title-${index}`} as="h3" className="text-xl font-semibold text-carmen-navy mb-2">
+                  <EditableText id={getContentId(`feature-title-${index}`)} as="h3" className="text-xl font-semibold text-carmen-navy mb-2">
                     {feature.title}
                   </EditableText>
                 )}
                 {isElementVisible(`feature-description-${index}`) && (
-                  <EditableText id={`feature-description-${index}`} as="p" className="text-gray-600">
+                  <EditableText id={getContentId(`feature-description-${index}`)} as="p" className="text-gray-600">
                     {feature.description}
                   </EditableText>
                 )}
