@@ -11,10 +11,7 @@ const TextStoreContext = createContext<TextStoreContextType | undefined>(undefin
 
 export const useTextStore = () => {
   const context = useContext(TextStoreContext);
-  if (!context) {
-    throw new Error('useTextStore must be used within a TextStoreProvider');
-  }
-  return context;
+  return context; // Return undefined if not within provider instead of throwing
 };
 
 export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

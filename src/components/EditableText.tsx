@@ -14,7 +14,19 @@ const EditableText: React.FC<EditableTextProps> = ({
   as = 'span', 
   className = ''
 }) => {
-  const { getText, setText, isEditMode } = useTextStore();
+  const textStore = useTextStore();
+  
+  // If context is not available, render as non-editable text
+  if (!textStore) {
+    const Component = as as any;
+    return (
+      <Component className={className}>
+        {children}
+      </Component>
+    );
+  }
+  
+  const { getText, setText, isEditMode } = textStore;
   const [isEditing, setIsEditing] = useState(false);
   const contentRef = useRef<HTMLElement | null>(null);
 
