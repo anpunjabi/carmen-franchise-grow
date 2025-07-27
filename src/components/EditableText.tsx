@@ -25,6 +25,7 @@ const EditableText: React.FC<EditableTextProps> = ({
   // Check if user is in admin edit mode
   useEffect(() => {
     const handleEditModeChange = (event: CustomEvent) => {
+      console.log('EditableText received edit mode change:', event.detail.isEditMode);
       setIsEditMode(event.detail.isEditMode);
       if (!event.detail.isEditMode && isEditing) {
         setIsEditing(false);
@@ -43,6 +44,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     const checkAdminStatus = async () => {
       if (user) {
         try {
+          console.log('EditableText checking admin status for user:', user.id, user.email);
           const { data, error } = await supabase
             .from('users')
             .select('is_super_admin')
@@ -50,6 +52,7 @@ const EditableText: React.FC<EditableTextProps> = ({
             .single();
           
           if (data && !error) {
+            console.log('EditableText admin status result:', data.is_super_admin);
             setIsAdmin(data.is_super_admin === true);
           }
         } catch (error) {
@@ -62,7 +65,9 @@ const EditableText: React.FC<EditableTextProps> = ({
   }, [user]);
 
   const handleClick = () => {
+    console.log('EditableText clicked. State:', { isEditMode, isAdmin, isEditing, id });
     if (isEditMode && isAdmin && !isEditing) {
+      console.log('Starting edit mode for:', id);
       setIsEditing(true);
       // Store original content for potential cancel
       setOriginalContent(contentRef.current?.innerHTML || '');
@@ -79,6 +84,8 @@ const EditableText: React.FC<EditableTextProps> = ({
         selection?.removeAllRanges();
         selection?.addRange(range);
       }
+    } else {
+      console.log('Edit conditions not met:', { isEditMode, isAdmin, isEditing });
     }
   };
 
