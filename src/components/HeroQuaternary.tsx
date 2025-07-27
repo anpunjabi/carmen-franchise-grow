@@ -1,8 +1,10 @@
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import EditableText from './EditableText';
+import { useElementVisibility } from '@/hooks/useElementVisibility';
 
 const HeroQuaternary = () => {
+  const { isElementVisible } = useElementVisibility();
   return (
     <section className="relative pt-20 md:pt-32 pb-16 md:pb-24 overflow-hidden bg-carmen-cream" id="hero-quaternary" data-section-id="hero-quaternary" data-section-name="Advanced Workflow Hero">
       <div className="absolute inset-0 pointer-events-none">
@@ -16,57 +18,65 @@ const HeroQuaternary = () => {
           <div className="md:w-1/2 mb-12 md:mb-0 fade-in-up" style={{
             animationDelay: '0.1s'
           }}>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl" data-editable-id="hero-quaternary-heading">
-              <EditableText id="hero-quaternary-heading-1" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
-                Advanced workflow
+            {isElementVisible('hero-quaternary-heading') && (
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-carmen-navy mb-6 leading-tight text-balance max-w-md lg:max-w-xl" data-editable-id="hero-quaternary-heading">
+                <EditableText id="hero-quaternary-heading-1" as="span" className="bg-carmen-gradient bg-clip-text text-transparent">
+                  Advanced workflow
+                </EditableText>
+                <EditableText id="hero-quaternary-heading-2" as="span">
+                  {' customization tools'}
+                </EditableText>
+              </h1>
+            )}
+            {isElementVisible('hero-quaternary-description') && (
+              <EditableText id="hero-quaternary-paragraph" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance" data-editable-id="hero-quaternary-description">
+                Transform your business processes with our powerful, intuitive customization tools. Design, automate, and optimize workflows in minutes.
               </EditableText>
-              <EditableText id="hero-quaternary-heading-2" as="span">
-                {' customization tools'}
-              </EditableText>
-            </h1>
-            <EditableText id="hero-quaternary-paragraph" as="p" className="text-lg text-gray-600 mb-8 max-w-lg text-balance" data-editable-id="hero-quaternary-description">
-              Transform your business processes with our powerful, intuitive customization tools. Design, automate, and optimize workflows in minutes.
-            </EditableText>
+            )}
             
-            <div className="flex flex-col sm:flex-row gap-4" data-editable-id="hero-quaternary-buttons">
-              <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>
-                <EditableText id="hero-quaternary-button-primary">
-                  Explore Customization
-                </EditableText>
-                <ArrowRight size={16} className="ml-2" />
-              </Button>
-              <Button variant="outline" className="border-carmen-teal text-carmen-teal hover:bg-carmen-teal/10 rounded-xl" onClick={() => window.location.href = '#modules'}>
-                <EditableText id="hero-quaternary-button-secondary">
-                  View Modules
-                </EditableText>
-              </Button>
-            </div>
+            {isElementVisible('hero-quaternary-buttons') && (
+              <div className="flex flex-col sm:flex-row gap-4" data-editable-id="hero-quaternary-buttons">
+                <Button className="bg-carmen-gradient text-white hover:opacity-90 transition-all duration-300 font-medium px-6 py-3 rounded-xl shadow-soft active:scale-95 transform" onClick={() => window.location.href = '#contact'}>
+                  <EditableText id="hero-quaternary-button-primary">
+                    Explore Customization
+                  </EditableText>
+                  <ArrowRight size={16} className="ml-2" />
+                </Button>
+                <Button variant="outline" className="border-carmen-teal text-carmen-teal hover:bg-carmen-teal/10 rounded-xl" onClick={() => window.location.href = '#modules'}>
+                  <EditableText id="hero-quaternary-button-secondary">
+                    View Modules
+                  </EditableText>
+                </Button>
+              </div>
+            )}
           </div>
           
-          <div className="md:w-1/2 md:pl-12 fade-in-up" style={{
-            animationDelay: '0.3s'
-          }} data-editable-id="hero-quaternary-image-section">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-carmen-teal/20 to-carmen-sky/20 rounded-3xl blur-xl animate-floating"></div>
-              <div className="relative bg-white p-2 rounded-3xl shadow-soft overflow-hidden border border-white">
-                <img 
-                  src="https://images.unsplash.com/photo-1531297484001-80022131f5a1" 
-                  alt="Workflow Customization" 
-                  className="w-full h-auto rounded-2xl shadow-sm" 
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-white/0 p-4">
-                  <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white">
-                    <EditableText id="hero-quaternary-card-title" as="h3" className="text-carmen-navy font-semibold mb-1">
-                      Workflow Designer
-                    </EditableText>
-                    <EditableText id="hero-quaternary-card-description" as="p" className="text-sm text-gray-600">
-                      Intuitive drag-and-drop interface for process optimization
-                    </EditableText>
+          {isElementVisible('hero-quaternary-image-section') && (
+            <div className="md:w-1/2 md:pl-12 fade-in-up" style={{
+              animationDelay: '0.3s'
+            }} data-editable-id="hero-quaternary-image-section">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-carmen-teal/20 to-carmen-sky/20 rounded-3xl blur-xl animate-floating"></div>
+                <div className="relative bg-white p-2 rounded-3xl shadow-soft overflow-hidden border border-white">
+                  <img 
+                    src="https://images.unsplash.com/photo-1531297484001-80022131f5a1" 
+                    alt="Workflow Customization" 
+                    className="w-full h-auto rounded-2xl shadow-sm" 
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white/90 to-white/0 p-4">
+                    <div className="bg-white/90 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white">
+                      <EditableText id="hero-quaternary-card-title" as="h3" className="text-carmen-navy font-semibold mb-1">
+                        Workflow Designer
+                      </EditableText>
+                      <EditableText id="hero-quaternary-card-description" as="p" className="text-sm text-gray-600">
+                        Intuitive drag-and-drop interface for process optimization
+                      </EditableText>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
