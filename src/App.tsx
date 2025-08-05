@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { TextStoreProvider } from "./contexts/TextStore";
+import { SectionConfigProvider } from "./contexts/SectionConfigContext";
 import Index from "./pages/Index";
 import Franchise from "./pages/Franchise";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -19,18 +20,20 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <TextStoreProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/franchise" element={<Franchise />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+          <SectionConfigProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/franchise" element={<Franchise />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+          </SectionConfigProvider>
         </TextStoreProvider>
       </AuthProvider>
     </TooltipProvider>

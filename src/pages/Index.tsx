@@ -14,7 +14,7 @@ import Partner from '@/components/Partner';
 import Footer from '@/components/Footer';
 import SectionEditor from '@/components/SectionEditor';
 import BookingSection from '@/components/BookingSection';
-import { supabase } from '@/integrations/supabase/client';
+import { useSectionConfig } from '@/contexts/SectionConfigContext';
 
 interface SectionData {
   id: string;
@@ -35,10 +35,9 @@ interface SectionOrder {
 }
 
 const Index = () => {
-  const [sectionVisibility, setSectionVisibility] = useState<SectionVisibility>({});
+  const { sectionVisibility, sectionOrder, updateSectionVisibility, updateSectionOrder } = useSectionConfig();
   const [elementVisibility, setElementVisibility] = useState<ElementVisibility>({});
-  const [sectionOrder, setSectionOrder] = useState<SectionOrder>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const allSections: SectionData[] = [
     { id: 'hero', component: <Hero />, defaultOrder: 0 },
@@ -55,101 +54,7 @@ const Index = () => {
     { id: 'footer', component: <Footer />, defaultOrder: 11 }
   ];
 
-  useEffect(() => {
-    const loadVisibilitySettings = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('landing_page_settings')
-          .select('section_visibility, element_visibility, section_order')
-          .eq('page_identifier', 'home')
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Error loading visibility settings:', error);
-          return;
-        }
-
-        if (data) {
-          console.log('Loaded settings:', data);
-          
-          // Handle section visibility
-          if (data.section_visibility) {
-            const sectionVisData: SectionVisibility = data.section_visibility as SectionVisibility;
-            setSectionVisibility(sectionVisData);
-          }
-          
-          // Handle element visibility
-          if (data.element_visibility) {
-            const elementVisData: ElementVisibility = data.element_visibility as ElementVisibility;
-            console.log('Setting element visibility state:', elementVisData);
-            setElementVisibility(elementVisData);
-          }
-          
-          // Handle section order
-          if (data.section_order && Object.keys(data.section_order).length > 0) {
-            const orderData: SectionOrder = data.section_order as SectionOrder;
-            setSectionOrder(orderData);
-          } else {
-            // Set default order if none exists in database
-            const defaultOrder = allSections.reduce((acc, section) => {
-              acc[section.id] = section.defaultOrder;
-              return acc;
-            }, {} as SectionOrder);
-            setSectionOrder(defaultOrder);
-          }
-        }
-      } catch (error) {
-        console.error('Error in loadVisibilitySettings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadVisibilitySettings();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('landing_page_settings_changes_home')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'landing_page_settings',
-          filter: 'page_identifier=eq.home'
-        },
-        (payload) => {
-          console.log('Settings updated in database:', payload);
-          if (payload.new) {
-            // Update section visibility
-            if (payload.new.section_visibility) {
-              const sectionVisData = payload.new.section_visibility as SectionVisibility;
-              setSectionVisibility(sectionVisData);
-            }
-            
-            // Update element visibility
-            if (payload.new.element_visibility) {
-              const elementVisData = payload.new.element_visibility as ElementVisibility;
-              console.log('Realtime update of element visibility:', elementVisData);
-              setElementVisibility(elementVisData);
-            }
-            
-            // Update section order
-            if (payload.new.section_order && Object.keys(payload.new.section_order).length > 0) {
-              const orderData = payload.new.section_order as SectionOrder;
-              setSectionOrder(orderData);
-            }
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
+  // No Supabase loading needed - data comes from config file
   useEffect(() => {
     // Add animation observer
     const observer = new IntersectionObserver(
@@ -170,6 +75,7 @@ const Index = () => {
 
     return () => observer.disconnect();
   }, []);
+
 
   const sortedSections = [...allSections].sort((a, b) => {
     const orderA = sectionOrder[a.id] !== undefined ? sectionOrder[a.id] : a.defaultOrder;
@@ -193,18 +99,11 @@ const Index = () => {
         sectionVisibility={sectionVisibility}
         elementVisibility={elementVisibility}
         sectionOrder={sectionOrder}
-        onSectionVisibilityChange={(sectionId, isVisible) => {
-          console.log('Parent: Section visibility changing:', sectionId, isVisible);
-          setSectionVisibility(prev => ({ ...prev, [sectionId]: isVisible }));
-        }}
+        onSectionVisibilityChange={updateSectionVisibility}
         onElementVisibilityChange={(elementId, isVisible) => {
-          console.log('Parent: Element visibility changing:', elementId, isVisible);
           setElementVisibility(prev => ({ ...prev, [elementId]: isVisible }));
         }}
-        onSectionOrderChange={(newOrder) => {
-          console.log('Parent: Section order changing:', newOrder);
-          setSectionOrder(newOrder);
-        }}
+        onSectionOrderChange={updateSectionOrder}
       />
       <main className="flex-grow">
         {sortedSections.map((section) => {

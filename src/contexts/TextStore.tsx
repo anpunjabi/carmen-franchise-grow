@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { getContentConfig, updateContentConfig } from '@/data/contentConfig';
 
 interface TextStoreContextType {
   getText: (id: string, defaultText: string) => string;
   setText: (id: string, text: string) => void;
   isEditMode: boolean;
   setEditMode: (mode: boolean) => void;
+  exportConfig: () => void;
 }
 
 const TextStoreContext = createContext<TextStoreContextType | undefined>(undefined);
@@ -19,101 +19,64 @@ export const useTextStore = () => {
 export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [texts, setTexts] = useState<Record<string, string>>({});
   const [isEditMode, setEditMode] = useState(false);
-  const { user } = useAuth() || {};
 
-  // Load texts from Supabase on mount
+  // Load texts from content config on mount
   useEffect(() => {
-    const loadTexts = async () => {
-      try {
-        // Try to get from landing_page_settings table using element_visibility column for text data
-        const { data, error } = await supabase
-          .from('landing_page_settings')
-          .select('element_visibility')
-          .eq('page_identifier', 'home_texts')
-          .maybeSingle();
-
-        if (error) {
-          console.warn('Error loading texts from database:', error);
-          // Fallback to localStorage
-          const saved = localStorage.getItem('editableTexts');
-          if (saved) {
-            try {
-              setTexts(JSON.parse(saved));
-            } catch (e) {
-              console.warn('Failed to load saved texts from localStorage:', e);
-            }
-          }
-          return;
-        }
-
-        if (data?.element_visibility) {
-          const textsFromDb = data.element_visibility as Record<string, string>;
-          setTexts(textsFromDb);
-          
-          // Also save to localStorage as cache
-          localStorage.setItem('editableTexts', JSON.stringify(textsFromDb));
-        } else {
-          // Fallback to localStorage if no data in database
-          const saved = localStorage.getItem('editableTexts');
-          if (saved) {
-            try {
-              setTexts(JSON.parse(saved));
-            } catch (e) {
-              console.warn('Failed to load saved texts from localStorage:', e);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('Error in loadTexts:', error);
-        // Fallback to localStorage
-        const saved = localStorage.getItem('editableTexts');
-        if (saved) {
-          try {
-            setTexts(JSON.parse(saved));
-          } catch (e) {
-            console.warn('Failed to load saved texts from localStorage:', e);
-          }
-        }
-      }
-    };
-
-    loadTexts();
+    const config = getContentConfig();
+    setTexts(config.texts);
   }, []);
 
   const getText = (id: string, defaultText: string): string => {
     return texts[id] || defaultText;
   };
 
-  const setText = async (id: string, text: string) => {
+  const setText = (id: string, text: string) => {
     // Update local state immediately
-    setTexts(prev => ({ ...prev, [id]: text }));
-    
-    // Save to localStorage as cache
     const updatedTexts = { ...texts, [id]: text };
-    localStorage.setItem('editableTexts', JSON.stringify(updatedTexts));
+    setTexts(updatedTexts);
+    
+    // Update runtime config
+    updateContentConfig({
+      texts: updatedTexts
+    });
+  };
 
-    // Save to Supabase if user is super admin
-    if (user?.user_metadata?.is_super_admin) {
-      try {
-        const { error } = await supabase
-          .from('landing_page_settings')
-          .upsert({
-            page_identifier: 'home_texts',
-            element_visibility: updatedTexts,
-            updated_at: new Date().toISOString()
-          });
+  const exportConfig = () => {
+    const config = getContentConfig();
+    const configString = `import { Module } from './moduleData';
+import { modules } from './moduleData';
 
-        if (error) {
-          console.error('Error saving text to database:', error);
-        }
-      } catch (error) {
-        console.error('Error in setText database save:', error);
-      }
-    }
+export interface ContentConfig {
+  texts: Record<string, string>;
+  sections: {
+    visibility: Record<string, boolean>;
+    order: Record<string, number>;
+  };
+  modules: Module[];
+  images: Record<string, string>;
+  meta: {
+    version: string;
+    lastUpdated: string;
+  };
+}
+
+export const defaultContentConfig: ContentConfig = ${JSON.stringify(config, null, 2)};
+
+// ... keep existing code (helper functions)`;
+    
+    const blob = new Blob([configString], { type: 'text/typescript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'contentConfig.ts';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <TextStoreContext.Provider value={{ getText, setText, isEditMode, setEditMode }}>
+    <TextStoreContext.Provider value={{ getText, setText, isEditMode, setEditMode, exportConfig }}>
       {children}
     </TextStoreContext.Provider>
   );
