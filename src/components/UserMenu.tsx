@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTextStore } from '@/contexts/TextStore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Popover,
@@ -17,11 +18,14 @@ import { ColorSchemeEditor } from './ColorSchemeEditor';
 const UserMenu = () => {
   const { user, signOut } = useAuth();
   const { toast: uiToast } = useToast();
+  const textStore = useTextStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showColorEditor, setShowColorEditor] = useState(false);
+  
+  // Get edit mode from text store
+  const isEditMode = textStore?.isEditMode || false;
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -64,9 +68,12 @@ const UserMenu = () => {
   };
 
   const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
+    if (textStore) {
+      textStore.setEditMode(!isEditMode);
+    }
     setIsOpen(false);
     
+    // Still dispatch for compatibility with other components
     window.dispatchEvent(new CustomEvent('editmodechange', { 
       detail: { isEditMode: !isEditMode }
     }));
@@ -76,11 +83,13 @@ const UserMenu = () => {
     setIsSaving(true);
     
     try {
+      // Exit edit mode
+      if (textStore) {
+        textStore.setEditMode(false);
+      }
+      
       // Dispatch event to notify all components that we're saving changes
       window.dispatchEvent(new CustomEvent('savechanges'));
-      
-      // Just exit edit mode here - actual saving is triggered by the event
-      setIsEditMode(false);
       
       window.dispatchEvent(new CustomEvent('editmodechange', { 
         detail: { isEditMode: false }
@@ -88,15 +97,15 @@ const UserMenu = () => {
       
       uiToast({
         title: "Changes saved",
-        description: "Your edits have been applied to the landing page.",
+        description: "Your text edits have been saved to the page.",
       });
       
-      toast.success("Changes saved successfully");
+      toast.success("Text changes saved successfully");
     } catch (error) {
       console.error('Error in saveEdits:', error);
       uiToast({
         title: "Error saving changes",
-        description: "There was a problem saving your settings.",
+        description: "There was a problem saving your text edits.",
         variant: "destructive",
       });
       
