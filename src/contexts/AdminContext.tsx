@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getContentConfig } from '@/data/contentConfig';
 
 interface AdminContextType {
   isSuperAdmin: boolean;
@@ -59,8 +60,53 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const exportConfig = () => {
     try {
       // Get current runtime config and export it
-      const { exportContentConfig } = require('@/data/contentConfig');
-      const configCode = exportContentConfig();
+      const currentConfig = getContentConfig();
+      console.log('Exporting config:', currentConfig);
+      
+      const configCode = `import { Module } from './moduleData';
+import { modules } from './moduleData';
+
+export interface ContentConfig {
+  texts: Record<string, string>;
+  sections: {
+    visibility: Record<string, boolean>;
+    order: Record<string, number>;
+  };
+  modules: Module[];
+  images: Record<string, string>;
+  meta: {
+    version: string;
+    lastUpdated: string;
+  };
+}
+
+export const defaultContentConfig: ContentConfig = ${JSON.stringify(currentConfig, null, 2)};
+
+// Runtime storage for edits (in-memory only)
+let runtimeConfig: ContentConfig = JSON.parse(JSON.stringify(defaultContentConfig));
+
+export const getContentConfig = (): ContentConfig => {
+  return runtimeConfig;
+};
+
+export const updateContentConfig = (updates: Partial<ContentConfig>): void => {
+  runtimeConfig = {
+    ...runtimeConfig,
+    ...updates,
+    meta: {
+      ...runtimeConfig.meta,
+      lastUpdated: new Date().toISOString(),
+    }
+  };
+};
+
+export const resetContentConfig = (): void => {
+  runtimeConfig = JSON.parse(JSON.stringify(defaultContentConfig));
+};
+
+export const exportContentConfig = (): string => {
+  return JSON.stringify(runtimeConfig, null, 2);
+};`;
       
       // Create and download file
       const blob = new Blob([configCode], { type: 'text/typescript' });
