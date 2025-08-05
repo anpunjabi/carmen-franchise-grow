@@ -27,18 +27,22 @@ export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const getText = (id: string, defaultText: string): string => {
-    return texts[id] || defaultText;
+    // Always read from the current runtime config to ensure freshest data
+    const config = getContentConfig();
+    return config.texts[id] || defaultText;
   };
 
   const setText = (id: string, text: string) => {
-    // Update local state immediately
-    const updatedTexts = { ...texts, [id]: text };
-    setTexts(updatedTexts);
+    // Update runtime config first
+    const currentConfig = getContentConfig();
+    const updatedTexts = { ...currentConfig.texts, [id]: text };
     
-    // Update runtime config
     updateContentConfig({
       texts: updatedTexts
     });
+    
+    // Update local state to trigger re-renders
+    setTexts(updatedTexts);
   };
 
   const exportConfig = () => {
