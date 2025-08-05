@@ -66,17 +66,14 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				carmen: {
-					'navy': '#0049a4',     // Darker blue from shirt
-					'blue': '#0069e4',     // Medium blue from shirt
-					'light-blue': '#4a89f8', // Lighter blue from shirt
-					'lavender': '#bbc1ff',  // Light lavender accent from hair
-					'sky': '#8ab5ff',     // Sky blue accent
-					'white': '#ffffff',    // Pure white background
-					'cream': '#f9f8ff',    // Very light cream/off-white
-					'teal': '#33c3f0',     // Teal accent color
-					'soft-teal': '#7fdbff' // Soft teal color
-				}
+				'demo-coral': '#f87171',    // Primary coral color
+				'demo-gold': '#f6cf70',     // Accent gold/yellow
+				'demo-cream': '#fefcf3',    // Warm cream background
+				'demo-steel': '#64748b',    // Steel gray
+				'demo-coral-light': '#fda4af', // Light coral
+				'demo-coral-dark': '#ef4444',  // Dark coral
+				'demo-gold-light': '#fde047', // Light gold
+				'demo-gold-dark': '#eab308',  // Dark gold
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -127,10 +124,8 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-				'carmen-gradient': 'linear-gradient(to right, #0069e4, #4a89f8)',
-				'carmen-gradient-light': 'linear-gradient(to right, #4a89f8, #8ab5ff)',
-				'carmen-gradient-dark': 'linear-gradient(to right, #0049a4, #0069e4)',
-				'carmen-gradient-soft': 'linear-gradient(to right, #8ab5ff, #bbc1ff)',
+				'demo-gradient': 'linear-gradient(to right, #f87171, #f6cf70)',
+				'demo-gradient-warm': 'linear-gradient(to right, #fda4af, #fde047)',
 				'pattern-dots': "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1H1.5M5.5 1H6M10 1H10.5M14.5 1H15M19 1H19.5M1 5.5H1.5M5.5 5.5H6M10 5.5H10.5M14.5 5.5H15M19 5.5H19.5M1 10H1.5M5.5 10H6M10 10H10.5M14.5 10H15M19 10H19.5M1 14.5H1.5M5.5 14.5H6M10 14.5H10.5M14.5 14.5H15M19 14.5H19.5M1 19H1.5M5.5 19H6M10 19H10.5M14.5 19H15M19 19H19.5' stroke='rgba(10, 66, 115, 0.1)' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")"
 			},
 			boxShadow: {
