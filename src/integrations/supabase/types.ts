@@ -1483,6 +1483,99 @@ export type Database = {
         }
         Relationships: []
       }
+      franchise_locations: {
+        Row: {
+          bpm_id: string | null
+          created_at: string | null
+          created_by: string | null
+          custom_fields: Json | null
+          location_address: string
+          location_id: string
+          location_name: string
+          module_instance_id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          bpm_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          location_address: string
+          location_id?: string
+          location_name: string
+          module_instance_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          bpm_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_fields?: Json | null
+          location_address?: string
+          location_id?: string
+          location_name?: string
+          module_instance_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      integrations: {
+        Row: {
+          access_token_encrypted: string | null
+          bpm_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          integration_type: string
+          last_sync_at: string | null
+          metadata: Json | null
+          module_instance_id: string | null
+          site_id: string | null
+          site_name: string | null
+          staff_username: string | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          bpm_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          integration_type: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          module_instance_id?: string | null
+          site_id?: string | null
+          site_name?: string | null
+          staff_username?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          bpm_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          integration_type?: string
+          last_sync_at?: string | null
+          metadata?: Json | null
+          module_instance_id?: string | null
+          site_id?: string | null
+          site_name?: string | null
+          staff_username?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_history: {
         Row: {
           action: string
@@ -1719,6 +1812,36 @@ export type Database = {
             referencedColumns: ["module_instance_id"]
           },
         ]
+      }
+      oauth_sessions: {
+        Row: {
+          bpm_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          integration_type: string
+          state_token: string
+          user_id: string
+        }
+        Insert: {
+          bpm_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          integration_type: string
+          state_token: string
+          user_id: string
+        }
+        Update: {
+          bpm_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          integration_type?: string
+          state_token?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       opportunities: {
         Row: {
@@ -2879,6 +3002,92 @@ export type Database = {
           },
         ]
       }
+      task_list: {
+        Row: {
+          bpm_id: string | null
+          created_at: string | null
+          created_by: string | null
+          estimated_impact: string | null
+          franchise_location_id: string | null
+          id: string
+          is_completed: boolean
+          module_instance_id: string
+          parent_task: string | null
+          task_detail: string | null
+          task_detail_json: Json | null
+          task_title: string
+          task_type: string
+          updated_at: string | null
+          updated_by: string | null
+          urgency: string | null
+        }
+        Insert: {
+          bpm_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          estimated_impact?: string | null
+          franchise_location_id?: string | null
+          id?: string
+          is_completed: boolean
+          module_instance_id: string
+          parent_task?: string | null
+          task_detail?: string | null
+          task_detail_json?: Json | null
+          task_title: string
+          task_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+          urgency?: string | null
+        }
+        Update: {
+          bpm_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          estimated_impact?: string | null
+          franchise_location_id?: string | null
+          id?: string
+          is_completed?: boolean
+          module_instance_id?: string
+          parent_task?: string | null
+          task_detail?: string | null
+          task_detail_json?: Json | null
+          task_title?: string
+          task_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          urgency?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_list_bpm_id_fkey"
+            columns: ["bpm_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_instances"
+            referencedColumns: ["bpm_id"]
+          },
+          {
+            foreignKeyName: "task_list_franchise_location_id_fkey"
+            columns: ["franchise_location_id"]
+            isOneToOne: false
+            referencedRelation: "franchise_locations"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "task_list_module_instance_id_fkey"
+            columns: ["module_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bpm_module_instances"
+            referencedColumns: ["module_instance_id"]
+          },
+          {
+            foreignKeyName: "task_list_parent_task_fkey"
+            columns: ["parent_task"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       terms_of_service: {
         Row: {
           content: string
@@ -3096,6 +3305,14 @@ export type Database = {
           _segment_id?: string
         }
         Returns: boolean
+      }
+      decrypt_access_token: {
+        Args: { encrypted_token: string }
+        Returns: string
+      }
+      encrypt_access_token: {
+        Args: { token: string }
+        Returns: string
       }
       evaluate_permission_conditions: {
         Args: {
