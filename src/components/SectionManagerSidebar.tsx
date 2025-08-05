@@ -192,13 +192,9 @@ const SectionManagerSidebar = ({
     
     const updatedSections = [...sections];
     
-    // Swap the order values between current section and the one above it
+    // Get the sections we're swapping
     const currentSection = updatedSections[currentIndex];
     const prevSection = updatedSections[currentIndex - 1];
-    
-    const tempOrder = currentSection.order;
-    currentSection.order = prevSection.order;
-    prevSection.order = tempOrder;
     
     // Swap positions in array for UI update
     [updatedSections[currentIndex - 1], updatedSections[currentIndex]] = 
@@ -206,10 +202,10 @@ const SectionManagerSidebar = ({
     
     setSections(updatedSections);
 
-    // Update section order for database
+    // Create a completely new order based on the new array positions
     const updatedOrder: SectionOrder = { ...sectionOrder };
-    updatedSections.forEach(section => {
-      updatedOrder[section.id] = section.order;
+    updatedSections.forEach((section, index) => {
+      updatedOrder[section.id] = index;
     });
     
     // Call parent handler to update database
@@ -221,13 +217,9 @@ const SectionManagerSidebar = ({
     
     const updatedSections = [...sections];
     
-    // Swap the order values between current section and the one below it
+    // Get the sections we're swapping
     const currentSection = updatedSections[currentIndex];
     const nextSection = updatedSections[currentIndex + 1];
-    
-    const tempOrder = currentSection.order;
-    currentSection.order = nextSection.order;
-    nextSection.order = tempOrder;
     
     // Swap positions in array for UI update
     [updatedSections[currentIndex], updatedSections[currentIndex + 1]] = 
@@ -235,10 +227,10 @@ const SectionManagerSidebar = ({
     
     setSections(updatedSections);
 
-    // Update section order for database
+    // Create a completely new order based on the new array positions
     const updatedOrder: SectionOrder = { ...sectionOrder };
-    updatedSections.forEach(section => {
-      updatedOrder[section.id] = section.order;
+    updatedSections.forEach((section, index) => {
+      updatedOrder[section.id] = index;
     });
     
     // Call parent handler to update database
