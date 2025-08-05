@@ -3,7 +3,7 @@ import EditableText from '@/components/EditableText';
 
 const HeroSixth: React.FC = () => {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 overflow-hidden" id="hero-sixth" data-section-id="hero-sixth" data-section-name="Hero 6">
+    <section className="relative min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 overflow-hidden pt-20 md:pt-24" id="hero-sixth" data-section-id="hero-sixth" data-section-name="Hero 6">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-orange-200/30 blur-xl"></div>
