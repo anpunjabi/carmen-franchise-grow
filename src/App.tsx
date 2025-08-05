@@ -10,6 +10,7 @@ import { TextStoreProvider } from "./contexts/TextStore";
 import { SectionConfigProvider } from "./contexts/SectionConfigContext";
 import Index from "./pages/Index";
 import Franchise from "./pages/Franchise";
+import Demo from "./pages/Demo";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService"; // New import
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/franchise" element={<Franchise />} />
+              <Route path="/demo" element={<Demo />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
