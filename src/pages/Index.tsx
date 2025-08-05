@@ -7,6 +7,7 @@ import HeroSecondary from '@/components/HeroSecondary';
 import HeroTertiary from '@/components/HeroTertiary';
 import HeroQuaternary from '@/components/HeroQuaternary';
 import HeroQuinary from '@/components/HeroQuinary';
+import HeroSixth from '@/components/HeroSixth';
 import Features from '@/components/Features';
 import Modules from '@/components/Modules';
 import Partnerships from '@/components/Partnerships';
@@ -49,9 +50,10 @@ const Index = () => {
     { id: 'modules', component: <Modules />, defaultOrder: 5 },
     { id: 'booking', component: <BookingSection />, defaultOrder: 6 },
     { id: 'hero-quinary', component: <HeroQuinary />, defaultOrder: 7 },
-    { id: 'partnerships', component: <Partnerships />, defaultOrder: 8 },
-    { id: 'partner', component: <Partner />, defaultOrder: 9 },
-    { id: 'footer', component: <Footer />, defaultOrder: 10 }
+    { id: 'hero-sixth', component: <HeroSixth />, defaultOrder: 8 },
+    { id: 'partnerships', component: <Partnerships />, defaultOrder: 9 },
+    { id: 'partner', component: <Partner />, defaultOrder: 10 },
+    { id: 'footer', component: <Footer />, defaultOrder: 11 }
   ];
 
   useEffect(() => {
