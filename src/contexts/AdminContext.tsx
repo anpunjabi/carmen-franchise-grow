@@ -5,8 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface AdminContextType {
   isSuperAdmin: boolean;
   isLoading: boolean;
-  publishChanges: () => Promise<boolean>;
-  loadPublishedConfig: () => Promise<void>;
+  exportConfig: () => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -35,9 +34,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       try {
         const { data, error } = await supabase
-          .from('profiles')
+          .from('users')
           .select('is_super_admin')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (error) {
@@ -57,57 +56,26 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     checkAdminStatus();
   }, [user]);
 
-  const publishChanges = async (): Promise<boolean> => {
-    if (!isSuperAdmin) {
-      console.error('User is not a super admin');
-      return false;
-    }
-
+  const exportConfig = () => {
     try {
-      // Get current runtime config
-      const { getContentConfig } = await import('@/data/contentConfig');
-      const config = getContentConfig();
-
-      const { error } = await supabase
-        .from('published_content_config')
-        .upsert({
-          id: 1,
-          config: config,
-          published_by: user?.id,
-          published_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Error publishing changes:', error);
-        return false;
-      }
-
-      return true;
+      // Get current runtime config and export it
+      const { exportContentConfig } = require('@/data/contentConfig');
+      const configCode = exportContentConfig();
+      
+      // Create and download file
+      const blob = new Blob([configCode], { type: 'text/typescript' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'contentConfig.ts';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      console.log('Config exported successfully');
     } catch (error) {
-      console.error('Error publishing changes:', error);
-      return false;
-    }
-  };
-
-  const loadPublishedConfig = async (): Promise<void> => {
-    try {
-      const { data, error } = await supabase
-        .from('published_content_config')
-        .select('config')
-        .eq('id', 1)
-        .single();
-
-      if (error) {
-        console.error('Error loading published config:', error);
-        return;
-      }
-
-      if (data?.config) {
-        const { updateContentConfig } = await import('@/data/contentConfig');
-        updateContentConfig(data.config);
-      }
-    } catch (error) {
-      console.error('Error loading published config:', error);
+      console.error('Error exporting config:', error);
     }
   };
 
@@ -115,8 +83,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <AdminContext.Provider value={{
       isSuperAdmin,
       isLoading,
-      publishChanges,
-      loadPublishedConfig
+      exportConfig
     }}>
       {children}
     </AdminContext.Provider>
