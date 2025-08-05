@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { getContentConfig, updateContentConfig } from '@/data/contentConfig';
 
 interface SectionConfigContextType {
@@ -19,15 +19,10 @@ export const useSectionConfig = () => {
 };
 
 export const SectionConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>({});
-  const [sectionOrder, setSectionOrder] = useState<Record<string, number>>({});
-
-  // Load section config on mount
-  useEffect(() => {
-    const config = getContentConfig();
-    setSectionVisibility(config.sections.visibility);
-    setSectionOrder(config.sections.order);
-  }, []);
+  // Initialize state directly from config to avoid timing issues
+  const config = getContentConfig();
+  const [sectionVisibility, setSectionVisibility] = useState<Record<string, boolean>>(config.sections.visibility);
+  const [sectionOrder, setSectionOrder] = useState<Record<string, number>>(config.sections.order);
 
   const updateSectionVisibility = (sectionId: string, visible: boolean) => {
     const updatedVisibility = { ...sectionVisibility, [sectionId]: visible };
