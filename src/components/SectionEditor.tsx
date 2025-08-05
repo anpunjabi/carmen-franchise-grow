@@ -1,10 +1,8 @@
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SectionManagerSidebar from './SectionManagerSidebar';
-import { toast } from 'sonner';
 
 // Define proper types for the visibility states
 interface SectionVisibility {
@@ -47,42 +45,6 @@ const SectionEditor = ({
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Save settings to database and update parent component state
-  const saveSettings = async (
-    updatedSettings: {
-      section_visibility?: SectionVisibility,
-      element_visibility?: ElementVisibility,
-      section_order?: SectionOrder
-    }
-  ) => {
-    try {
-      console.log('Saving settings:', updatedSettings);
-      
-      const { error } = await supabase
-        .from('landing_page_settings')
-        .update({
-          section_visibility: updatedSettings.section_visibility || sectionVisibility,
-          element_visibility: updatedSettings.element_visibility || elementVisibility,
-          section_order: updatedSettings.section_order || sectionOrder,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', 1);
-        
-      if (error) {
-        console.error('Error saving settings:', error);
-        toast.error('Failed to save settings');
-        return false;
-      }
-      
-      console.log('Settings saved successfully');
-      return true;
-    } catch (error) {
-      console.error('Error in saveSettings:', error);
-      toast.error('Failed to save settings');
-      return false;
-    }
-  };
-  
   useEffect(() => {
     const handleEditModeChange = (event: CustomEvent) => {
       console.log('Edit mode changed:', event.detail.isEditMode);
@@ -102,11 +64,8 @@ const SectionEditor = ({
     };
     
     const handleSaveChanges = () => {
-      saveSettings({
-        section_visibility: sectionVisibility,
-        element_visibility: elementVisibility,
-        section_order: sectionOrder
-      });
+      // No longer saving to database - changes are only in memory
+      console.log('Save changes event received - changes stored in memory');
     };
     
     window.addEventListener('editmodechange', handleEditModeChange as EventListener);
@@ -130,28 +89,15 @@ const SectionEditor = ({
         sectionOrder={sectionOrder}
         onToggleSectionVisibility={(sectionId, isVisible) => {
           console.log('Section visibility changed:', sectionId, isVisible);
-          const updatedSectionVisibility = {
-            ...sectionVisibility,
-            [sectionId]: isVisible
-          };
-          
           onSectionVisibilityChange(sectionId, isVisible);
-          saveSettings({ section_visibility: updatedSectionVisibility });
         }}
         onToggleElementVisibility={(elementId, isVisible) => {
           console.log('Element visibility changed:', elementId, isVisible);
-          const updatedElementVisibility = {
-            ...elementVisibility,
-            [elementId]: isVisible
-          };
-          
           onElementVisibilityChange(elementId, isVisible);
-          saveSettings({ element_visibility: updatedElementVisibility });
         }}
         onUpdateSectionOrder={(updatedOrder) => {
           console.log('Section order changed:', updatedOrder);
           onSectionOrderChange(updatedOrder);
-          saveSettings({ section_order: updatedOrder });
         }}
       />
       {isEditMode && (

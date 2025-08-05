@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/contexts/AdminContext';
 import { useTextStore } from '@/contexts/TextStore';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -17,43 +18,17 @@ import { ColorSchemeEditor } from './ColorSchemeEditor';
 
 const UserMenu = () => {
   const { user, signOut } = useAuth();
+  const { isSuperAdmin, exportConfig } = useAdmin();
   const { toast: uiToast } = useToast();
   const textStore = useTextStore();
   const [isOpen, setIsOpen] = useState(false);
-  const [isCarmenAdmin, setIsCarmenAdmin] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showColorEditor, setShowColorEditor] = useState(false);
   
   // Get edit mode from text store
   const isEditMode = textStore?.isEditMode || false;
 
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        console.log('Checking admin status for user:', user.id, user.email);
-        try {
-          const { data, error } = await supabase
-            .from('users')
-            .select('is_super_admin')
-            .eq('user_id', user.id)
-            .single();
-          
-          console.log('Admin check response:', { data, error });
-          
-          if (data && !error) {
-            setIsCarmenAdmin(data.is_super_admin === true);
-            console.log('User is_super_admin status:', data.is_super_admin);
-          } else if (error) {
-            console.error('Error checking admin status:', error);
-          }
-        } catch (e) {
-          console.error('Exception checking admin status:', e);
-        }
-      }
-    };
-
-    checkAdminStatus();
-  }, [user]);
+  // Admin status is now handled by AdminContext
 
   if (!user) return null;
 
@@ -88,28 +63,28 @@ const UserMenu = () => {
         textStore.setEditMode(false);
       }
       
-      // Dispatch event to notify all components that we're saving changes
-      window.dispatchEvent(new CustomEvent('savechanges'));
+      // Export current configuration to file for super admin
+      exportConfig();
       
       window.dispatchEvent(new CustomEvent('editmodechange', { 
         detail: { isEditMode: false }
       }));
       
       uiToast({
-        title: "Changes saved",
-        description: "Your text edits have been saved to the page.",
+        title: "Configuration exported",
+        description: "Your changes have been exported to a file.",
       });
       
-      toast.success("Text changes saved successfully");
+      toast.success("Configuration exported successfully");
     } catch (error) {
       console.error('Error in saveEdits:', error);
       uiToast({
-        title: "Error saving changes",
-        description: "There was a problem saving your text edits.",
+        title: "Error exporting configuration",
+        description: "There was a problem exporting your changes.",
         variant: "destructive",
       });
       
-      toast.error("Error saving changes");
+      toast.error("Error exporting configuration");
     } finally {
       setIsSaving(false);
       setIsOpen(false);
@@ -132,7 +107,7 @@ const UserMenu = () => {
               {user.email}
             </p>
             
-            {isCarmenAdmin && (
+            {isSuperAdmin && (
               <>
                 <Button
                   variant="ghost"
