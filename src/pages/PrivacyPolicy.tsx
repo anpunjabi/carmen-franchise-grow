@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/contexts/AdminContext';
 import { supabase } from '@/integrations/supabase/client';
 import PrivacyPolicyEditor from '@/components/PrivacyPolicyEditor';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
@@ -18,23 +19,7 @@ const PrivacyPolicy = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('users')
-          .select('"Carmen Admin"')
-          .eq('user_id', user.id)
-          .single();
-          
-        setIsAdmin(data && data['Carmen Admin'] === true);
-      }
-    };
-
-    checkAdminStatus();
-  }, [user]);
+  const { isSuperAdmin } = useAdmin();
 
   useEffect(() => {
     const fetchPrivacyPolicy = async () => {
@@ -170,7 +155,7 @@ const PrivacyPolicy = () => {
             Back to Home
           </Button>
 
-          {isAdmin && (
+          {isSuperAdmin && (
             <Button 
               onClick={handleToggleEdit}
               variant={isEditing ? "outline" : "default"}
