@@ -3,10 +3,8 @@ import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BookingSection from '@/components/BookingSection';
-
 const Demo = () => {
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
@@ -28,7 +26,7 @@ const Demo = () => {
               
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight mb-8">
                 The world's first<br />
-                <span className="text-primary">AI fitness</span><br />
+                <span className="text-red-400">Inconsistent ops are costing your system.</span><br />
                 franchise platform
               </h1>
 
@@ -37,19 +35,14 @@ const Demo = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button 
-                  size="lg"
-                  className="bg-primary hover:bg-demo-coral-dark text-primary-foreground px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-                  onClick={() => document.getElementById('book-appointment')?.scrollIntoView({ behavior: 'smooth' })}
-                >
+                <Button size="lg" className="bg-primary hover:bg-demo-coral-dark text-primary-foreground px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => document.getElementById('book-appointment')?.scrollIntoView({
+                behavior: 'smooth'
+              })}>
                   Start Your Franchise
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg rounded-full transition-all duration-300"
-                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                >
+                <Button variant="outline" size="lg" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg rounded-full transition-all duration-300" onClick={() => document.getElementById('features')?.scrollIntoView({
+                behavior: 'smooth'
+              })}>
                   Watch Demo
                 </Button>
               </div>
@@ -124,14 +117,20 @@ const Demo = () => {
                 </div>
 
                 {/* Floating Elements */}
-                <div className="absolute -top-4 -left-4 bg-white rounded-2xl p-4 shadow-lg animate-bounce" style={{ animationDelay: '1s', animationDuration: '3s' }}>
+                <div className="absolute -top-4 -left-4 bg-white rounded-2xl p-4 shadow-lg animate-bounce" style={{
+                animationDelay: '1s',
+                animationDuration: '3s'
+              }}>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-demo-coral">+23%</div>
                     <div className="text-xs text-muted-foreground">Revenue Growth</div>
                   </div>
                 </div>
 
-                <div className="absolute -bottom-8 -right-4 bg-white rounded-2xl p-4 shadow-lg animate-bounce" style={{ animationDelay: '2s', animationDuration: '3s' }}>
+                <div className="absolute -bottom-8 -right-4 bg-white rounded-2xl p-4 shadow-lg animate-bounce" style={{
+                animationDelay: '2s',
+                animationDuration: '3s'
+              }}>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-accent-foreground">94%</div>
                     <div className="text-xs text-muted-foreground">Retention Rate</div>
@@ -215,8 +214,6 @@ const Demo = () => {
       <BookingSection />
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Demo;
