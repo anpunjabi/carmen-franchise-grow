@@ -41,7 +41,7 @@ const Header = () => {
           <div className="flex justify-between items-center h-20 md:h-24">
             <div className="flex items-center">
               <a href="#" className="flex-shrink-0">
-                <img className="h-16 md:h-20 w-auto" src="/lovable-uploads/ce0d528b-e6e0-4e11-acd3-5b3a9f26ebf5.png" alt="Carmen BPM Logo" />
+                <img className="h-16 md:h-20 w-auto" src="/lovable-uploads/9310fec6-d8fd-4e34-a4e4-a2a634d7e4e9.png" alt="Carmen BPM Logo" />
               </a>
             </div>
             
