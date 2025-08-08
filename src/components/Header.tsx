@@ -26,7 +26,8 @@ const Header = () => {
   const navigation = [
     { name: 'Features', href: '#features' },
     { name: 'Modules', href: '#modules' },
-    { name: 'Partner', href: '#partner' }
+    { name: 'Partner', href: '#partner' },
+    { name: 'Franchise 2', href: '/franchise2' }
   ];
 
   const openAuthModal = () => {
