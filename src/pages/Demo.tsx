@@ -3,6 +3,7 @@ import { Grid3X3, LayoutGrid, Columns3 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BookingSection from '@/components/BookingSection';
+import EditableText from '@/components/EditableText';
 const Demo = () => {
   return <div className="min-h-screen bg-background">
       <Header />
@@ -25,9 +26,9 @@ const Demo = () => {
               </p>
               
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight mb-8">
-                The world's first<br />
-                <span className="text-red-400">Inconsistent ops are costing your system.</span><br />
-                franchise platform
+                <EditableText id="demo-hero-title-line1" as="span">The world's first</EditableText><br />
+                <span className="text-red-400"><EditableText id="demo-hero-title-line2" as="span">Inconsistent ops are costing your system.</EditableText></span><br />
+                <EditableText id="demo-hero-title-line3" as="span">franchise platform</EditableText>
               </h1>
 
               <p className="text-xl text-demo-steel mb-12 leading-relaxed max-w-lg">
