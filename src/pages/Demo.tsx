@@ -4,9 +4,12 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import BookingSection from '@/components/BookingSection';
 import EditableText from '@/components/EditableText';
+import { TextStoreProvider } from '@/contexts/TextStore';
+import { EditModeToggle } from '@/components/EditModeToggle';
 const Demo = () => {
-  return <div className="min-h-screen bg-background">
+  return (<TextStoreProvider localOnly><div className="min-h-screen bg-background">
       <Header />
+      <EditModeToggle />
       
       {/* Hero Section */}
       <section className="relative min-h-screen bg-gradient-to-br from-demo-cream via-muted to-demo-gold-light/20 overflow-hidden pt-20 md:pt-24" id="hero">
@@ -32,19 +35,19 @@ const Demo = () => {
               </h1>
 
               <p className="text-xl text-demo-steel mb-12 leading-relaxed max-w-lg">
-                Transform your fitness business with AI-powered insights, automated operations, and data-driven growth strategies.
+                <EditableText id="demo-hero-subtitle" as="span">Transform your fitness business with AI-powered insights, automated operations, and data-driven growth strategies.</EditableText>
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="bg-primary hover:bg-demo-coral-dark text-primary-foreground px-8 py-4 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => document.getElementById('book-appointment')?.scrollIntoView({
                 behavior: 'smooth'
               })}>
-                  Start Your Franchise
+                  <EditableText id="demo-cta-primary" as="span">Start Your Franchise</EditableText>
                 </Button>
                 <Button variant="outline" size="lg" className="border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-4 text-lg rounded-full transition-all duration-300" onClick={() => document.getElementById('features')?.scrollIntoView({
                 behavior: 'smooth'
               })}>
-                  Watch Demo
+                  <EditableText id="demo-cta-secondary" as="span">Watch Demo</EditableText>
                 </Button>
               </div>
             </div>
@@ -211,10 +214,7 @@ const Demo = () => {
         </div>
       </section>
 
-      {/* Booking Section */}
-      <BookingSection />
-
       <Footer />
-    </div>;
+    </div></TextStoreProvider>);
 };
 export default Demo;

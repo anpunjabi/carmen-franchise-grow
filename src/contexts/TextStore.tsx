@@ -16,19 +16,35 @@ export const useTextStore = () => {
   return context; // Return undefined if not within provider instead of throwing
 };
 
-export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const TextStoreProvider: React.FC<{ children: React.ReactNode; localOnly?: boolean }> = ({ children, localOnly = false }) => {
   const [texts, setTexts] = useState<Record<string, string>>({});
   const [isEditMode, setEditMode] = useState(false);
 
-  // Load texts from content config and Supabase on mount
+  // Load texts from content config and optionally Supabase on mount
   useEffect(() => {
     const config = getContentConfig();
+    const pageId = typeof window !== 'undefined' ? window.location.pathname : 'global';
+    
+    if (localOnly) {
+      // Front-end only: merge localStorage edits for this page
+      try {
+        const stored = localStorage.getItem(`textStore:${pageId}`);
+        const localEdits = stored ? JSON.parse(stored) as Record<string, string> : {};
+        const merged = { ...config.texts, ...localEdits };
+        updateContentConfig({ texts: merged });
+        setTexts(merged);
+      } catch (e) {
+        console.error('Error loading local text edits:', e);
+        setTexts(config.texts);
+      }
+      return; // Skip Supabase fetching
+    }
+
     setTexts(config.texts);
 
     // Fetch global edits from Supabase so everyone sees the same content
     const loadEdits = async () => {
       try {
-        const pageId = typeof window !== 'undefined' ? window.location.pathname : null;
         const { data, error } = await supabase
           .from('content_edits')
           .select('id, content, page_identifier');
@@ -59,7 +75,7 @@ export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     loadEdits();
-  }, []);
+  }, [localOnly]);
   const getText = (id: string, defaultText: string): string => {
     // Always read from the current runtime config to ensure freshest data
     const config = getContentConfig();
@@ -78,8 +94,19 @@ export const TextStoreProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Update local state to trigger re-renders
     setTexts(updatedTexts);
 
+    const pageId = typeof window !== 'undefined' ? window.location.pathname : 'global';
+
+    if (localOnly) {
+      // Front-end only persistence
+      try {
+        localStorage.setItem(`textStore:${pageId}`, JSON.stringify(updatedTexts));
+      } catch (e) {
+        console.error('Failed to save local text edit:', e);
+      }
+      return;
+    }
+
     // Persist globally via Supabase Edge Function
-    const pageId = typeof window !== 'undefined' ? window.location.pathname : null;
     supabase.functions.invoke('upsert-content-edit', {
       body: { id, content: text, page_identifier: pageId }
     }).then(({ error }) => {
