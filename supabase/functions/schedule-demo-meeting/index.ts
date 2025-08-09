@@ -23,6 +23,7 @@ serve(async (req) => {
   console.log('Request received:', new Date().toISOString());
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
+  console.log('Function redeployed at:', new Date().toISOString());
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
